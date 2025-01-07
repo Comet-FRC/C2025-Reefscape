@@ -20,12 +20,12 @@ import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.Frequency;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Mass;
-import edu.wpi.first.units.measure.MomentOfInertia;
+import edu.wpi.first.units.measure.measure.Current;
+import edu.wpi.first.units.measure.measure.Distance;
+import edu.wpi.first.units.measure.measure.Frequency;
+import edu.wpi.first.units.measure.measure.LinearVelocity;
+import edu.wpi.first.units.measure.measure.Mass;
+import edu.wpi.first.units.measure.measure.MomentOfInertia;
 
 public class DriveConstants {
   public static final LinearVelocity MAX_SPEED = FeetPerSecond.of(12.5);
