@@ -30,13 +30,9 @@ import edu.wpi.first.units.measure.MomentOfInertia;
 public class DriveConstants {
   public static final LinearVelocity MAX_SPEED = FeetPerSecond.of(12.5);
   public static final Frequency ODOMETRY_FREQUENCY = Hertz.of(100.0); // Hz
-  /**
-   * @see https://en.wikipedia.org/wiki/Axle_track
-   */
+  /** @see https://en.wikipedia.org/wiki/Axle_track */
   public static final Distance TRACK_WIDTH = Inches.of(19.5);
-  /**
-   * @see https://en.wikipedia.org/wiki/Wheelbase
-   */
+  /** @see https://en.wikipedia.org/wiki/Wheelbase */
   public static final Distance WHEELBASE = Inches.of(13.5);
 
   public static final Distance DRIVE_BASE_RADIUS =
