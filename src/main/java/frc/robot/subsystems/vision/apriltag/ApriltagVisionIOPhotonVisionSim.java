@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.vision;
+package frc.robot.subsystems.vision.apriltag;
 
 import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 
@@ -30,7 +30,7 @@ import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 
 /** IO implementation for physics sim using PhotonVision simulator. */
-public class VisionIOPhotonVisionSim implements VisionIO {
+public class ApriltagVisionIOPhotonVisionSim implements ApriltagVisionIO {
   private static VisionSystemSim visionSim;
 
   private final Supplier<Pose2d> poseSupplier;
@@ -44,7 +44,7 @@ public class VisionIOPhotonVisionSim implements VisionIO {
    * @param name The name of the camera.
    * @param poseSupplier Supplier for the robot pose to use in simulation.
    */
-  public VisionIOPhotonVisionSim(
+  public ApriltagVisionIOPhotonVisionSim(
       String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
     this.camera = new PhotonCamera(name);
     this.poseSupplier = poseSupplier;
@@ -63,7 +63,7 @@ public class VisionIOPhotonVisionSim implements VisionIO {
   }
 
   @Override
-  public void updateInputs(VisionIOInputs inputs) {
+  public void updateInputs(ApriltagVisionIOInputs inputs) {
     inputs.connected = camera.isConnected();
 
     // Read new camera observations

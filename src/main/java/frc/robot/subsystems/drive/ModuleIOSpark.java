@@ -26,6 +26,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -36,8 +37,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.measure.AngularVelocity;
-import edu.wpi.first.units.measure.measure.Voltage;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -284,13 +285,13 @@ public class ModuleIOSpark implements ModuleIO {
     double velocityRadPerSec = velocity.in(RadiansPerSecond);
     double ffVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
     driveController.setReference(
-        velocityRadPerSec, ControlType.kVelocity, 0, ffVolts, ArbFFUnits.kVoltage);
-  }
+        velocityRadPerSec, ControlType.kVelocity, ClosedLoopSlot.kSlot0, ffVolts, ArbFFUnits.kVoltage);
+    }
 
-  @Override
-  public void setTurnPosition(Rotation2d rotation) {
-    double setpoint =
-        MathUtil.inputModulus(rotation.getRadians(), turnPIDMinInput, turnPIDMaxInput);
-    turnController.setReference(setpoint, ControlType.kPosition);
-  }
+    @Override
+    public void setTurnPosition(Rotation2d rotation) {
+        double setpoint =
+            MathUtil.inputModulus(rotation.getRadians(), turnPIDMinInput, turnPIDMaxInput);
+        turnController.setReference(setpoint, ControlType.kPosition);
+    }
 }

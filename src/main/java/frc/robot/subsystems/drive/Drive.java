@@ -29,6 +29,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -36,10 +37,11 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.units.measure.measure.Angle;
-import edu.wpi.first.units.measure.measure.AngularVelocity;
-import edu.wpi.first.units.measure.measure.LinearVelocity;
-import edu.wpi.first.units.measure.measure.Voltage;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -57,7 +59,16 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class DriveSubsystem extends SubsystemBase {
+public class Drive extends SubsystemBase {
+  private static Drive instance;
+
+  public static Drive getInstance() {
+    if (instance == null) {
+      throw new java.lang.RuntimeException("Drive subsystem not instantiated");
+    }
+    return instance;
+  }
+
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
   private final frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged gyroInputs =
@@ -81,22 +92,25 @@ public class DriveSubsystem extends SubsystemBase {
           kinematics, rawGyroRotation, lastModulePositions, new Pose2d(10, 5, new Rotation2d()));
 
   private final PIDController angleController = new PIDController(5, 0.0, 0);
+  private final PIDController angularVelocityController = new PIDController(1.5, 0.0, 0);
   private Angle lastHeading = Radians.of(0);
+  private AngularVelocity lastAngularVelocity = RadiansPerSecond.of(0);
 
-  public DriveSubsystem(
+  public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
 
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    instance = this;
 
+    this.angleController.enableContinuousInput(-Math.PI, Math.PI);
     this.gyroIO = gyroIO;
-    modules[0] = new Module(flModuleIO, 0);
-    modules[1] = new Module(frModuleIO, 1);
-    modules[2] = new Module(blModuleIO, 2);
-    modules[3] = new Module(brModuleIO, 3);
+    this.modules[0] = new Module(flModuleIO, 0);
+    this.modules[1] = new Module(frModuleIO, 1);
+    this.modules[2] = new Module(blModuleIO, 2);
+    this.modules[3] = new Module(brModuleIO, 3);
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -202,28 +216,43 @@ public class DriveSubsystem extends SubsystemBase {
   public void runVelocity(ChassisSpeeds speeds) {
 
     // Calculate module setpoints
-    speeds.discretize(0.02);
+    speeds = ChassisSpeeds.discretize(speeds, 0.02);
 
     if (DriveConstants.useHeadingCorrection) {
-      double linearSpeed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+      // double linearSpeed = Math.hypot(speeds.vxMetersPerSecond,
+      // speeds.vyMetersPerSecond);
 
-      if (Math.abs(speeds.omegaRadiansPerSecond) < 0.01 && linearSpeed > 0.1) {
+      // if (Math.abs(speeds.omegaRadiansPerSecond) < 0.01 && linearSpeed > 0.1) {
 
-        Logger.recordOutput(
-            "Robot/Heading Correction Diff", lastHeading.minus(getRotation().getMeasure()));
+      // Logger.recordOutput(
+      // "Robot/Heading Correction Diff",
+      // lastHeading.minus(getRotation().getMeasure()));
 
-        double omegaAdjust =
-            angleController.calculate(
-                getRotation().getMeasure().in(Radians), lastHeading.in(Radians));
+      // double omegaAdjust =
+      // angleController.calculate(
+      // getRotation().getMeasure().in(Radians), lastHeading.in(Radians));
 
-        if (Math.abs(omegaAdjust) > 0.001) {
-          speeds.omegaRadiansPerSecond = omegaAdjust;
-          Logger.recordOutput("Robot/heading omega adjust", omegaAdjust);
-        }
+      // if (Math.abs(omegaAdjust) > 0.001) {
+      // speeds.omegaRadiansPerSecond = omegaAdjust;
+      // Logger.recordOutput("Robot/heading omega adjust", omegaAdjust);
+      // }
 
-      } else {
-        lastHeading = getRotation().getMeasure();
-      }
+      // } else {
+      // lastHeading = getRotation().getMeasure();
+      // }
+
+      double pid =
+          angularVelocityController.calculate(
+              lastAngularVelocity.in(RadiansPerSecond), speeds.omegaRadiansPerSecond);
+
+      Logger.recordOutput(
+          "Swerve/angular velocity correction", angularVelocityController.getError());
+
+      double correctedAngularVelocity = speeds.omegaRadiansPerSecond + pid;
+
+      lastAngularVelocity = this.gyroInputs.yawVelocity;
+
+      speeds.omegaRadiansPerSecond = correctedAngularVelocity;
     }
 
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
@@ -390,5 +419,9 @@ public class DriveSubsystem extends SubsystemBase {
 
   public Module[] getModules() {
     return modules;
+  }
+
+  public Distance getDistanceFrom(Translation2d other) {
+    return Meters.of(this.getPose().getTranslation().getDistance(other));
   }
 }

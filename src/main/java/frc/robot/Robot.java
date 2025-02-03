@@ -16,6 +16,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -93,11 +94,7 @@ public class Robot extends LoggedRobot {
     // Switch thread to high priority to improve loop timing
     Threads.setCurrentThreadPriority(true, 99);
 
-    // Runs the Scheduler. This is responsible for polling buttons, adding
-    // newly-scheduled commands, running already-scheduled commands, removing
-    // finished or interrupted commands, and running subsystem periodic() methods.
-    // This must be called from the robot's periodic block in order for anything in
-    // the Command-based framework to work.
+    VirtualSubsystem.periodicAll();
     CommandScheduler.getInstance().run();
 
     // Return to normal thread priority
@@ -115,6 +112,8 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    System.out.println("test");
+    System.out.println(robotContainer.getAutonomousCommand().getName());
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)

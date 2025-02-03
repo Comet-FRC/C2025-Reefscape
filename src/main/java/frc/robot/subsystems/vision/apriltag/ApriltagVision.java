@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.vision;
+package frc.robot.subsystems.vision.apriltag;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
@@ -25,25 +25,25 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
-public class Vision extends SubsystemBase {
+public class ApriltagVision extends SubsystemBase {
   private final VisionConsumer consumer;
-  private final VisionIO[] io;
-  private final VisionIOInputsAutoLogged[] inputs;
+  private final ApriltagVisionIO[] io;
+  private final ApriltagVisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
 
-  public Vision(VisionConsumer consumer, VisionIO... io) {
+  public ApriltagVision(VisionConsumer consumer, ApriltagVisionIO... io) {
     this.consumer = consumer;
     this.io = io;
 
     // Initialize inputs
-    this.inputs = new VisionIOInputsAutoLogged[io.length];
+    this.inputs = new ApriltagVisionIOInputsAutoLogged[io.length];
     for (int i = 0; i < inputs.length; i++) {
-      inputs[i] = new VisionIOInputsAutoLogged();
+      inputs[i] = new ApriltagVisionIOInputsAutoLogged();
     }
 
     // Initialize disconnected alerts
@@ -68,7 +68,7 @@ public class Vision extends SubsystemBase {
   public void periodic() {
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
-      Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
+      Logger.processInputs("ApriltagVision/Camera" + Integer.toString(i), inputs[i]);
     }
 
     // Initialize logging values
