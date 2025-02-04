@@ -46,6 +46,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -427,4 +429,36 @@ public class Drive extends SubsystemBase {
 	public Distance getDistanceFrom(Translation2d other) {
 		return Meters.of(this.getPose().getTranslation().getDistance(other));
 	}
+
+    private Field2d field = new Field2d();
+
+    public void initializePoseEstimator(
+            SwerveDriveKinematics kinematics,
+            Rotation2d gyroAngle,
+            SwerveModulePosition[] modulePositions,
+            Pose2d initialPoseMeters) {
+        poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
+        SmartDashboard.putData(field);
+        logOdometry();
+    }
+
+    public void addDriveMeasurement(Rotation2d rotation, SwerveModulePosition[] modulePositions) {
+        poseEstimator.update(rotation, modulePositions);
+    }
+
+    public void addVisionMeasurement(Pose2d pose, Matrix<N3, N1> stdDevs, double timestamp) {
+        poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
+        field.setRobotPose(getPose());
+    }
+
+    public void setPose(Rotation2d rotation, SwerveModulePosition[] modulePositions, Pose2d fieldToVehicle) {
+        poseEstimator.resetPosition(rotation, modulePositions, fieldToVehicle);
+    }
+
+    public void logOdometry() {
+        Pose2d pose = getPose();
+        Logger.recordOutput("Odometry/Robot", pose);
+        field.setRobotPose(pose);
+    }
+
 }
