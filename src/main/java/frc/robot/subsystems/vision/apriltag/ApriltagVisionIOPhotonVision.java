@@ -8,7 +8,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.RobotState;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
@@ -41,7 +41,7 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
         if ((!inputs.isConnected) || (photonPoseEstimator == null)) return;
 
         photonPoseEstimator.setRobotToCameraTransform(cam.getRobotToCam());
-        photonPoseEstimator.setReferencePose(RobotState.getInstance().getPose());
+        photonPoseEstimator.setReferencePose(Drive.getInstance().getPose());
 
         var result = photonCam.getLatestResult();
         var optRobotPose = photonPoseEstimator.update(result);
