@@ -26,129 +26,118 @@ import static edu.wpi.first.units.Units.*;
 
 
 public class IndexerIOSim implements IndexerIO {
-	private final FlywheelSim wheelMotor = configureWheelMotor();
-	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
+	private final SingleJointedArmSim leftMotor = configureLeftMotor();
+	private final SingleJointedArmSim rightMotor = configureRightMotor();
 
-	private static FlywheelSim configureWheelMotor() {
-		DCMotor wheelGearbox = DCMotor.getNEO(1);
-		LinearSystem<N1, N1, N1> wheelPlant = LinearSystemId.createFlywheelSystem(
-			wheelGearbox,
-			IndexerConstants.WHEEL_CONVERSION_FACTOR,
-			IndexerConstants.WHEEL_MOI
-		);
-		return new FlywheelSim(wheelPlant, wheelGearbox);
-	}
-
-	private static SingleJointedArmSim configurePivotMotor() {
+	private static SingleJointedArmSim configureLeftMotor() {
 		return new SingleJointedArmSim(
 			DCMotor.getNEO(1),
-			IndexerConstants.PIVOT_CONVERSION_FACTOR,
+			IndexerConstants.PULLEY_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,
 			Math.PI,
 			true,
 			0,
-			IndexerConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
+			IndexerConstants.ENCODER_DISTANCE_PER_PULSE,
+			0
+		);
+	}
+	private static SingleJointedArmSim configureRightMotor() {
+		return new SingleJointedArmSim(
+			DCMotor.getNEO(1),
+			IndexerConstants.PULLEY_CONVERSION_FACTOR,
+			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
+			IndexerConstants.LENGTH.in(Meters),
+			0.0,
+			Math.PI,
+			true,
+			0,
+			IndexerConstants.ENCODER_DISTANCE_PER_PULSE,
 			0
 		);
 	}
 
-	private final PIDController wheelPID =
+	private final PIDController leftPID =
 		new PIDController(
-			IndexerConstants.WHEEL_SIM_kP,
-			IndexerConstants.WHEEL_SIM_kI,
-			IndexerConstants.WHEEL_SIM_kD
+			IndexerConstants.LEFT_SIM_kP,
+			IndexerConstants.LEFT_SIM_kI,
+			IndexerConstants.LEFT_SIM_kD
 		);
 
-	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
-		IndexerConstants.WHEEL_SIM_kS,
-		IndexerConstants.WHEEL_SIM_kV,
-		IndexerConstants.WHEEL_SIM_kA
+	private final ArmFeedforward leftFF = new ArmFeedforward(
+		IndexerConstants.LEFT_SIM_kS,
+		IndexerConstants.LEFT_SIM_kG,
+		IndexerConstants.LEFT_SIM_kV,
+		IndexerConstants.LEFT_SIM_kA
 	);
 
-	private final PIDController pivotPID = 
+	private final PIDController rightPID = 
 		new PIDController(
-			IndexerConstants.PIVOT_SIM_kP,
-			IndexerConstants.PIVOT_SIM_kI,
-			IndexerConstants.PIVOT_SIM_kD
+			IndexerConstants.RIGHT_SIM_kP,
+			IndexerConstants.RIGHT_SIM_kI,
+			IndexerConstants.RIGHT_SIM_kD
 		);
 
-	private final ArmFeedforward pivotFF =
+	private final ArmFeedforward rightFF =
 		new ArmFeedforward(
-			IndexerConstants.PIVOT_SIM_kS,
-			IndexerConstants.PIVOT_SIM_kG,
-			IndexerConstants.PIVOT_SIM_kV,
-			IndexerConstants.PIVOT_SIM_kA
+			IndexerConstants.RIGHT_SIM_kS,
+			IndexerConstants.RIGHT_SIM_kG,
+			IndexerConstants.RIGHT_SIM_kV,
+			IndexerConstants.RIGHT_SIM_kA
 		);
 
 	@Override
 	public void updateInputs(IndexerIOInputs inputs) {
-		wheelMotor.update(0.02);
-		pivotMotor.update(0.02);
+		leftMotor.update(0.02);
+		rightMotor.update(0.02);
 
 		runLoopControl();
 
-		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
-		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getInputVoltage());
-		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getCurrentDrawAmps());
+		inputs.leftPosition = Radians.of(leftMotor.getAngleRads());
+		inputs.leftVelocity = RadiansPerSecond.of(leftMotor.getVelocityRadPerSec());
+		inputs.leftSupplyCurrent = Amps.of(leftMotor.getCurrentDrawAmps());
 
-		inputs.pivotPosition = Radians.of(pivotMotor.getAngleRads());
-		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getVelocityRadPerSec());
-		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getCurrentDrawAmps());
+		inputs.rightPosition = Radians.of(rightMotor.getAngleRads());
+		inputs.rightVelocity = RadiansPerSecond.of(rightMotor.getVelocityRadPerSec());
+		inputs.rightSupplyCurrent = Amps.of(rightMotor.getCurrentDrawAmps());
 	}
 
 	private void runLoopControl() {
-		setWheelVoltage(
+		this.setLeftVoltage(
 			Volts.of(
-				wheelPID.calculate(wheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				leftPID.calculate(leftMotor.getAngleRads())
 				+
-				wheelFF.calculate(wheelPID.getSetpoint())
+				leftFF.calculate(leftPID.getSetpoint(), 0)
 			)
 		);
-
-		setPivotVoltage(
+		this.setRightVoltage(
 			Volts.of(
-				pivotPID.calculate(pivotMotor.getAngleRads())
+				rightPID.calculate(rightMotor.getAngleRads())
 				+
-				pivotFF.calculate(pivotPID.getSetpoint(), 0)
+				rightFF.calculate(rightPID.getSetpoint(), 0)
 			)
 		);
 	}
 
 	@Override
-	public void setWheelVelocity(AngularVelocity velocity) {
-		wheelPID.setSetpoint(velocity.in(RadiansPerSecond));
+	public void setLeftPosition(Angle position) {
+		leftPID.setSetpoint(position.in(Radians));
+	}
+	@Override
+	public void setRightPosition(Angle position) {
+		rightPID.setSetpoint(position.in(Radians));
+	}
+
+	// TODO: Make sure these work
+	@Override
+	public void stopLeft() {
+		this.leftPID.setSetpoint(leftMotor.getAngleRads());
 	}
 
 	@Override
-	public void setWheelVoltage(Voltage volts) {
-		wheelMotor.setInputVoltage(volts.in(Volts));
+	public void stopRight() {
+		this.rightPID.setSetpoint(rightMotor.getAngleRads());
 	}
 
-	@Override
-	public void setWheelPID(double kP, double kI, double kD) {
-		wheelPID.setPID(kP, kI, kD);
-	}
-
-	@Override
-	public void stopWheel() {
-		wheelPID.setSetpoint(0);
-		setWheelVoltage(Volts.of(0.0));
-	}
-
-	@Override
-	public void setPivotPosition(Angle position) {
-		pivotPID.setSetpoint(position.in(Radians));
-	}
-
-	@Override
-	public void setPivotVoltage(Voltage volts) {
-		pivotMotor.setInputVoltage(volts.in(Volts));
-	}
-
-	@Override
-	public void runCharacterizationWheel(double input) {
-		setWheelVoltage(Volts.of(input));
-	}
 }
