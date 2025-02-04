@@ -27,17 +27,16 @@ public class Indexer extends SubsystemBase {
 		return
 			Commands.run(
 				() -> {
-					io.stopPivot();
-					io.stopWheel();
+					io.stop();
 				},
 			this);
 	}
 
-	public Command setPosition(Angle position) {
-		return Commands.run(() -> io.setPivotPosition(position), this);
+	public Command setLeftPosition(Angle position) {
+		return Commands.run(() -> io.setLeftPosition(position), this);
 	}
 
-	public Command setWheelVelocity(AngularVelocity velocity) {
-		return Commands.run(() -> io.setWheelVelocity(velocity), this);
+	public Command setRightPosition(Angle position) {
+		return Commands.run(() -> io.setRightPosition(position), this);
 	}
 }
