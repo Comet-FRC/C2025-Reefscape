@@ -13,10 +13,18 @@
 
 package frc.robot.subsystems.vision;
 
+import java.util.Arrays;
+import java.util.function.Supplier;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
+
+import static edu.wpi.first.units.Units.*;
+
 
 public class VisionConstants {
   // AprilTag layout
@@ -55,4 +63,96 @@ public class VisionConstants {
   public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
   public static double angularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
+              public static enum Camera {
+            LeftApriltag(
+                "Left Apriltag Cam",
+                0.6,
+                5,
+                new Transform3d(
+                    new Translation3d(
+                        Inches.of(+12.225),
+                        Inches.of(+9.557),
+                        Inches.of(+10.932)
+                    ),
+                    new Rotation3d(
+                        Units.degreesToRadians(0),
+                        Units.degreesToRadians(-12.348-5),
+                        Units.degreesToRadians(+0)
+                    )
+                )
+            ),
+            RightApriltag(
+                "Right Apriltag Cam",
+                1,
+                4,
+                new Transform3d(
+                    new Translation3d(
+                        Inches.of(+12.225),
+                        Inches.of(-9.557),
+                        Inches.of(+10.932)
+                    ),
+                    new Rotation3d(
+                        Units.degreesToRadians(0),
+                        Units.degreesToRadians(-32.414),
+                        Units.degreesToRadians(0)
+                    )
+                    // new Rotation3d(
+                    //     Units.degreesToRadians(-(90.0-87.654)),
+                    //     Units.degreesToRadians(-32.414),
+                    //     Units.degreesToRadians(-9.707)
+                    // )
+                )
+            ),
+            NoteVision(
+                "Note Cam",
+                0,
+                0,
+                new Transform3d(
+                    new Translation3d(
+                        Inches.of(-14.047),
+                        Inches.of(+0),
+                        Inches.of(+12.584)
+                    ),
+                    new Rotation3d(
+                        0,
+                        Degrees.of(15).in(Radians),
+                        Math.PI
+                    )
+                )
+            ),
+            ;
+            public final String hardwareName;
+            private final Transform3d intermediateToCamera;
+            public final double cameraStdCoef;
+            public final double trustDistance;
+            private Supplier<Transform3d> robotToIntermediate;
+            Camera(String hardwareName, double cameraStdCoef, double trustDistance, Transform3d finalToCamera) {
+                this.hardwareName = hardwareName;
+                this.cameraStdCoef = cameraStdCoef;
+                this.trustDistance = trustDistance;
+                this.intermediateToCamera = finalToCamera;
+                this.robotToIntermediate = Transform3d::new;
+            }
+            @SuppressWarnings("unused")
+            private static Transform3d robotToCameraFromCalibTag(Transform3d robotToCalibTag, Transform3d cameraToCalibTag) {
+                return robotToCalibTag.plus(cameraToCalibTag.inverse());
+            }
+            public Camera withRobotToIntermediate(Supplier<Transform3d> robotToFinal) {
+                this.robotToIntermediate = robotToFinal;
+                return this;
+            }
+
+            public Transform3d getRobotToCam() {
+                return robotToIntermediate.get().plus(intermediateToCamera);
+            }
+
+        
+
+        }
+
+        // TODO: figure out vision stdDevs
+        public static final double singleTagAmbiguityCutoff = 0.05;
+        public static final double minimumStdDev = 0.5;
+        public static final double stdDevEulerMultiplier = 0.3;
+        public static final double stdDevDistanceMultiplier = 0.4;
 }
