@@ -15,7 +15,7 @@ public final class IntakeConstants {
 	public static final double PIVOT_kP = 0;
 	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
-	public static final double PIVOT_SIM_kP = 0;
+	public static final double PIVOT_SIM_kP = 0.1;
 	public static final double PIVOT_SIM_kI = 0;
 	public static final double PIVOT_SIM_kD = 0;
 	public static final double PIVOT_kS = 0;

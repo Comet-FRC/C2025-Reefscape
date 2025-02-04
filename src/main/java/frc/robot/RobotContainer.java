@@ -34,7 +34,12 @@ import frc.robot.subsystems.drive.gyro.GyroIOSim;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOMapleSim;
 import frc.robot.subsystems.drive.module.ModuleIOSpark;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOSpark;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
 import frc.robot.subsystems.vision.VisionConstants;
@@ -66,6 +71,7 @@ public class RobotContainer {
 	private final Drive drive;
 	private final ApriltagVision vision;
 	private final Shooter shooter;
+	private final Intake intake;
 
 	private final CometController controller = new CometPS4Controller(0);
 
@@ -78,8 +84,7 @@ public class RobotContainer {
 	 */
 	public RobotContainer() {
 		switch (Constants.currentMode) {
-			case REAL:
-				// Real robot, instantiate hardware IO implementations
+			case REAL: // Real robot, instantiate hardware IO implementations
 				this.drive = new Drive(
 						new GyroIOPigeon2(),
 						new ModuleIOSpark(0),
@@ -89,6 +94,7 @@ public class RobotContainer {
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVision(Camera.LeftApriltag), new ApriltagVisionIOPhotonVision(Camera.RightApriltag));
 				this.shooter = new Shooter(new ShooterIOSpark());
+				this.intake = new Intake(new IntakeIOSpark());
 				break;
 
 			case SIM:
@@ -103,7 +109,6 @@ public class RobotContainer {
 						driveTrainSimulationConfig, // Specify Configuration
 						new Pose2d(3, 3, new Rotation2d()) // Specify starting pose
 				);
-
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
 
@@ -113,19 +118,17 @@ public class RobotContainer {
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
-
 				this.vision = new ApriltagVision(
 						drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVisionSim(
 								"limelight-shooter",
 								robotToCamera0,
 								swerveDriveSimulation::getSimulatedDriveTrainPose));
-
 				this.shooter = new Shooter(new ShooterIOSim());
+				this.intake = new Intake(new IntakeIOSim());
 				break;
 
-			default:
-				// Replayed robot, disable IO implementations
+			default: // Replayed robot, disable IO implementations
 				this.drive = new Drive(
 					new GyroIO() {},
 					new ModuleIO() {},
@@ -133,11 +136,9 @@ public class RobotContainer {
 					new ModuleIO() {},
 					new ModuleIO() {}
 				);
-
-				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {
-				});
-
-				this.shooter = new Shooter(new ShooterIOSpark());
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
+				this.shooter = new Shooter(new ShooterIO() {});
+				this.intake = new Intake(new IntakeIO() {});
 				break;
 		}
 
@@ -217,6 +218,14 @@ public class RobotContainer {
 				drive
 				)
 				.ignoringDisable(true));
+
+		this.controller.x().whileTrue(
+			this.intake.setPosition(Degrees.of(10))
+		);
+
+		this.controller.y().whileTrue(
+			this.intake.setPosition(Degrees.of(10))
+		);
 	}
 
 	/**
