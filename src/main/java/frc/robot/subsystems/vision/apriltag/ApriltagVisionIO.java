@@ -26,8 +26,8 @@ public interface ApriltagVisionIO {
     public PoseObservation[] poseObservations = new PoseObservation[0];
     public boolean hasResult;
     public double timestamp;
-    public int[] tagsSeen;
-    public double[] cameraToTagDist;
+    public int[] tagsSeen = new int[0];
+    public double[] cameraToTagDist = new double[0];
     public Pose3d estimatedRobotPose;
   }
 
