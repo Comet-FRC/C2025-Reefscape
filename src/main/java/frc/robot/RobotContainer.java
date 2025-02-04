@@ -16,6 +16,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
+import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -37,6 +38,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
 import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
@@ -48,6 +50,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -83,8 +86,8 @@ public class RobotContainer {
 						new ModuleIOSpark(1),
 						new ModuleIOSpark(2),
 						new ModuleIOSpark(3));
-				this.vision = new ApriltagVision(
-						new ApriltagVisionIOPhotonVision("front-camera", VisionConstants.robotToCamera0));
+				this.vision = new ApriltagVision(drive::addVisionMeasurement,
+						new ApriltagVisionIOPhotonVision(Camera.LeftApriltag), new ApriltagVisionIOPhotonVision(Camera.RightApriltag));
 				this.shooter = new Shooter(new ShooterIOSpark());
 				break;
 

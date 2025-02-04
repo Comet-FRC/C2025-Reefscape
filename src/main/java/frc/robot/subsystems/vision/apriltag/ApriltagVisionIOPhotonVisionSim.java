@@ -64,10 +64,10 @@ public class ApriltagVisionIOPhotonVisionSim implements ApriltagVisionIO {
 
   @Override
   public void updateInputs(ApriltagVisionIOInputs inputs) {
-    inputs.connected = camera.isConnected();
+    inputs.isConnected = camera.isConnected();
 
     // Read new camera observations
-    Set<Short> tagIds = new HashSet<>();
+    Set<Short> tagsSeen = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
@@ -96,7 +96,7 @@ public class ApriltagVisionIOPhotonVisionSim implements ApriltagVisionIO {
         }
 
         // Add tag IDs
-        tagIds.addAll(multitagResult.fiducialIDsUsed);
+        tagsSeen.addAll(multitagResult.fiducialIDsUsed);
 
         // Add observation
         poseObservations.add(
@@ -116,10 +116,10 @@ public class ApriltagVisionIOPhotonVisionSim implements ApriltagVisionIO {
       }
 
       // Save tag IDs to inputs objects
-      inputs.tagIds = new int[tagIds.size()];
+      inputs.tagsSeen = new int[tagsSeen.size()];
       int i = 0;
-      for (int id : tagIds) {
-        inputs.tagIds[i++] = id;
+      for (int id : tagsSeen) {
+        inputs.tagsSeen[i++] = id;
       }
     }
 

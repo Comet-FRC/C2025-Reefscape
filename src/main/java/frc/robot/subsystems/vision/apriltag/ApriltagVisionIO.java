@@ -20,11 +20,15 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ApriltagVisionIO {
   @AutoLog
   public static class ApriltagVisionIOInputs {
-    public boolean connected = false;
+    public boolean isConnected = false;
     public TargetObservation latestTargetObservation =
         new TargetObservation(new Rotation2d(), new Rotation2d());
     public PoseObservation[] poseObservations = new PoseObservation[0];
-    public int[] tagIds = new int[0];
+    public boolean hasResult;
+    public double timestamp;
+    public int[] tagsSeen;
+    public double[] cameraToTagDist;
+    public Pose3d estimatedRobotPose;
   }
 
   /** Represents the angle to a simple target, not used for pose estimation. */

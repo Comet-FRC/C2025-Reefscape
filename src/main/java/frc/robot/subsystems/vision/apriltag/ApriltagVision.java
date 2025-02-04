@@ -80,7 +80,7 @@ public class ApriltagVision extends SubsystemBase {
     // Loop over cameras
     for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
       // Update disconnected alert
-      disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
+      disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].isConnected);
 
       // Initialize logging values
       List<Pose3d> tagPoses = new LinkedList<>();
@@ -89,7 +89,7 @@ public class ApriltagVision extends SubsystemBase {
       List<Pose3d> robotPosesRejected = new LinkedList<>();
 
       // Add tag poses
-      for (int tagId : inputs[cameraIndex].tagIds) {
+      for (int tagId : inputs[cameraIndex].tagsSeen) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
         if (tagPose.isPresent()) {
           tagPoses.add(tagPose.get());
