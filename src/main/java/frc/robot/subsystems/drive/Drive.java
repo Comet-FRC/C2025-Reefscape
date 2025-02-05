@@ -336,7 +336,7 @@ public class Drive extends SubsystemBase {
 
 	/** Returns the measured chassis speeds of the robot. */
 	@AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-	private ChassisSpeeds getChassisSpeeds() {
+	public ChassisSpeeds getChassisSpeeds() {
 		return kinematics.toChassisSpeeds(getModuleStates());
 	}
 
@@ -420,6 +420,10 @@ public class Drive extends SubsystemBase {
 	/** Returns the maximum angular speed in radians per sec. */
 	public AngularVelocity getMaximumAngularSpeed() {
 		return RadiansPerSecond.of(MAX_SPEED.in(MetersPerSecond) / DRIVE_BASE_RADIUS.in(Meters));
+	}
+
+	public void getVelocity(){
+
 	}
 
 	public Module[] getModules() {

@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -184,5 +185,27 @@ public class ApriltagVision extends SubsystemBase {
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);
+  }
+  public double getBargeDistance(int cameraIndex) {
+    
+        // How many degrees back is your limelight rotated from perfectly vertical?
+        double limelightMountAngleDegrees = 25.0;
+
+        // Distance from the center of the Limelight lens to the floor (in inches)
+        double limelightLensHeightInches = 20.0;
+
+        // Distance from the target to the floor (in inches)
+        double goalHeightInches = 60.0;
+
+        // Calculate the total angle to the goal
+        double angleToGoalDegrees = limelightMountAngleDegrees + inputs[cameraIndex].latestTargetObservation.ty().getDegrees();
+
+        // Convert angle to radians
+        double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
+
+        // Calculate the distance from the Limelight to the target using the tangent function
+        double distanceFromLimelightToGoalInches;
+        distanceFromLimelightToGoalInches = (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
+        return distanceFromLimelightToGoalInches;
   }
 }
