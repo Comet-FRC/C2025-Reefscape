@@ -23,6 +23,8 @@ import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 public class IntakeIOSpark implements IntakeIO {
 
 	private final SparkMax wheelMotor = new SparkMax(IntakeConstants.HOODTAKE_MOTOR_ID, MotorType.kBrushless);
@@ -87,13 +89,13 @@ public class IntakeIOSpark implements IntakeIO {
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
+		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
+		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 	}

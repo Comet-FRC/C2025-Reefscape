@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,6 +50,8 @@ import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
 import frc.robot.util.controller.CometController;
 import frc.robot.util.controller.CometPS4Controller;
+import frc.robot.util.controller.CometXboxController;
+
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -145,6 +148,8 @@ public class RobotContainer {
 		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		setupAutoRoutines();
 		setupButtonBindings();
+
+		DriverStation.silenceJoystickConnectionWarning(true);
 	}
 
 	private void setupAutoRoutines() {
@@ -220,11 +225,15 @@ public class RobotContainer {
 				.ignoringDisable(true));
 
 		this.controller.x().whileTrue(
-			this.intake.setPosition(Degrees.of(10))
+			this.intake.setPosition(() -> Degrees.of(45))
 		);
 
 		this.controller.y().whileTrue(
-			this.intake.setPosition(Degrees.of(10))
+			this.intake.setPosition(() -> Degrees.of(135))
+		);
+
+		this.controller.b().whileTrue(
+			this.intake.sysIdRoutinePivot()
 		);
 	}
 

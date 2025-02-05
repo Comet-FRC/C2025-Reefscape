@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import org.littletonrobotics.junction.Logger;
@@ -25,22 +26,22 @@ public class ArmVisualizer {
 
     public ArmVisualizer(String name, Distance armLength) {
         this.name = name;
-        mechanism = new LoggedMechanism2d(60, 60);
-        root = mechanism.getRoot(this.name + "Root", 30, 30);
-        arm = root.append(new LoggedMechanismLigament2d("Arm", armLength.in(Meters), 90, 6, new Color8Bit(Color.kBlue)));
+        mechanism = new LoggedMechanism2d(1, 1);
+        root = mechanism.getRoot(this.name + "Root", 0.5, 0);
+        arm = root.append(new LoggedMechanismLigament2d(this.name, armLength.in(Meters), 0, 6, new Color8Bit(Color.kBlue)));
     }
 
     public void setArmAngle(Angle angle) {
         arm.setAngle(angle.in(Degrees));
-        Logger.recordOutput("Mechanism2D/" + this.name + "Angle", angle);
+        Logger.recordOutput("Mechanism2D/" +     this.name + "Angle", angle);
     }
 
     public void setArmLength(Distance length) {
         arm.setLength(length.in(Meters));
-        Logger.recordOutput("Mechanism2D/" + this.name + "Length", length.in(Meters));
+        Logger.recordOutput("Mechanism2D/" + this.name + "Length", length);
     }
 
     public void publish() {
-        Logger.recordOutput("Mechanism2D" + this.name, mechanism);
+        Logger.recordOutput("Mechanism2D/" + this.name, mechanism);
     }
 }

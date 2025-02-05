@@ -15,17 +15,17 @@ public final class IntakeConstants {
 	public static final double PIVOT_kP = 0;
 	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
-	public static final double PIVOT_SIM_kP = 0.1;
+	public static final double PIVOT_SIM_kP = 7.8183;
 	public static final double PIVOT_SIM_kI = 0;
-	public static final double PIVOT_SIM_kD = 0;
+	public static final double PIVOT_SIM_kD = 1.0482;
 	public static final double PIVOT_kS = 0;
 	public static final double PIVOT_kG = 0;
 	public static final double PIVOT_kV = 0;
 	public static final double PIVOT_kA = 0;
-	public static final double PIVOT_SIM_kS = 0;
-	public static final double PIVOT_SIM_kG = 0;
-	public static final double PIVOT_SIM_kV = 0;
-	public static final double PIVOT_SIM_kA = 0;
+	public static final double PIVOT_SIM_kS = 1.024;
+	public static final double PIVOT_SIM_kG = 6.8432;
+	public static final double PIVOT_SIM_kV = 0.048426;
+	public static final double PIVOT_SIM_kA = 0.21527;
 
 	public static final double WHEEL_kP = 0;
 	public static final double WHEEL_kI = 0;

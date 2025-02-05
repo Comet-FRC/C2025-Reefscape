@@ -19,8 +19,11 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import static edu.wpi.first.units.Units.*;
+
+import java.util.function.Supplier;
 
 
 public class IntakeIOSim implements IntakeIO {
@@ -80,6 +83,9 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_SIM_kA
 		);
 
+	private boolean pivotVoltageMode = false;
+	private Voltage pivotAppliedVoltage = Volts.of(0.0);
+
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		wheelMotor.update(0.02);
@@ -88,11 +94,14 @@ public class IntakeIOSim implements IntakeIO {
 		runLoopControl();
 
 		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
-		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getInputVoltage());
+		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
+		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getInputVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getCurrentDrawAmps());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getAngleRads());
+		inputs.pivotDesiredPosition = Radians.of(pivotPID.getSetpoint());
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getVelocityRadPerSec());
+		inputs.pivotAppliedVoltage = this.pivotAppliedVoltage;
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getCurrentDrawAmps());
 	}
 
@@ -105,13 +114,13 @@ public class IntakeIOSim implements IntakeIO {
 			)
 		);
 
-		setPivotVoltage(
-			Volts.of(
+		if (!pivotVoltageMode) {
+			pivotMotor.setInputVoltage(
 				pivotPID.calculate(pivotMotor.getAngleRads())
 				+
 				pivotFF.calculate(pivotPID.getSetpoint(), 0)
-			)
-		);
+			);
+		}
 	}
 
 	@Override
@@ -132,16 +141,24 @@ public class IntakeIOSim implements IntakeIO {
 
 	@Override
 	public void setPivotPosition(Angle position) {
+		this.pivotVoltageMode = false;
 		pivotPID.setSetpoint(position.in(Radians));
 	}
 
 	@Override
 	public void setPivotVoltage(Voltage volts) {
+		this.pivotVoltageMode = true;
 		pivotMotor.setInputVoltage(volts.in(Volts));
+		this.pivotAppliedVoltage = volts;
 	}
 
 	@Override
-	public void runCharacterizationWheel(double input) {
-		setWheelVoltage(Volts.of(input));
+	public void runCharacterizationWheel(Voltage input) {
+		setWheelVoltage(input);
+	}
+
+	@Override
+	public void runCharacterizationPivot(Voltage input) {
+		setWheelVoltage(input);
 	}
 }
