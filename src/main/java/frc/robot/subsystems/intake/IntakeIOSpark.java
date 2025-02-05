@@ -19,6 +19,9 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
@@ -54,7 +57,7 @@ public class IntakeIOSpark implements IntakeIO {
 		config
 			.inverted(false)
 			.idleMode(IdleMode.kCoast)
-			.smartCurrentLimit(30);
+			.smartCurrentLimit(20);
 		config.encoder
 			.positionConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR)
 			.velocityConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
@@ -67,13 +70,13 @@ public class IntakeIOSpark implements IntakeIO {
 		wheelMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 	}
-
 	private void configurePivotMotor() {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast);
+			.idleMode(IdleMode.kCoast)
+			.smartCurrentLimit(25); // TODO: Check if this is enough current
 		config.encoder
 			.positionConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR)
 			.velocityConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
@@ -86,9 +89,13 @@ public class IntakeIOSpark implements IntakeIO {
 		pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
 
+	MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.mutable(0);
+	MutAngle pivotDesiredPosition = Radians.mutable(0);
+
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
+		inputs.wheelDesiredVelocity = this.wheelDesiredVelocity.copy();
 		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
@@ -112,11 +119,13 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void setWheelVoltage(Voltage voltage) {
+		//TODO: Check if setting voltage directly automatically stops the closed loop control
+		//TODO: Check if we need to call this in a loop for voltage compensation to work
 		wheelMotor.setVoltage(voltage);
 	}
 	
 	@Override
-	public void setWheelVelocity(AngularVelocity velocity) {
+	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
 		double velocityRadiansPerSecond = velocity.in(RadiansPerSecond);
 		double feedforward = wheelFF.calculate(velocityRadiansPerSecond);
 
@@ -127,10 +136,12 @@ public class IntakeIOSpark implements IntakeIO {
 			feedforward,
 			ArbFFUnits.kVoltage
 		);
+
+		this.wheelDesiredVelocity.mut_replace(velocity);
 	}
 
 	@Override
-	public void setPivotPosition(Angle position) {
+	public void setPivotPositionSetpoint(Angle position) {
 		double positionRadians = position.in(Radians);
 		double feedforward = pivotFF.calculate(positionRadians, 0);
 
@@ -141,5 +152,7 @@ public class IntakeIOSpark implements IntakeIO {
 			feedforward,
 			ArbFFUnits.kVoltage
 		);
+
+		this.pivotDesiredPosition.mut_replace(position);
 	}
 }

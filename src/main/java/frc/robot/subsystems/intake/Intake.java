@@ -47,11 +47,11 @@ public class Intake extends SubsystemBase {
 	}
 
 	public Command setPosition(Supplier<Angle> position) {
-		return Commands.runOnce(() -> io.setPivotPosition(position.get()), this);
+		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
 	}
 
 	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
-		return Commands.runOnce(() -> io.setWheelVelocity(velocity.get()), this);
+		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
 
 

@@ -83,8 +83,12 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_SIM_kA
 		);
 
+	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean pivotVoltageMode = false;
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
+	/** true = controlled by voltage, false = controled by PID + FF */
+	private boolean wheelVoltageMode = false;
+	private Voltage wheelAppliedVoltage = Volts.of(0.0);
 
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
@@ -106,13 +110,13 @@ public class IntakeIOSim implements IntakeIO {
 	}
 
 	private void runLoopControl() {
-		setWheelVoltage(
-			Volts.of(
+		if (!wheelVoltageMode) {
+			wheelMotor.setInputVoltage(
 				wheelPID.calculate(wheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
 				wheelFF.calculate(wheelPID.getSetpoint())
-			)
-		);
+			);
+		}
 
 		if (!pivotVoltageMode) {
 			pivotMotor.setInputVoltage(
@@ -124,23 +128,24 @@ public class IntakeIOSim implements IntakeIO {
 	}
 
 	@Override
-	public void setWheelVelocity(AngularVelocity velocity) {
+	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
+		this.wheelVoltageMode = false;
 		wheelPID.setSetpoint(velocity.in(RadiansPerSecond));
 	}
 
 	@Override
 	public void setWheelVoltage(Voltage volts) {
+		this.wheelVoltageMode = true;
 		wheelMotor.setInputVoltage(volts.in(Volts));
 	}
 
 	@Override
 	public void stopWheel() {
-		wheelPID.setSetpoint(0);
 		setWheelVoltage(Volts.of(0.0));
 	}
 
 	@Override
-	public void setPivotPosition(Angle position) {
+	public void setPivotPositionSetpoint(Angle position) {
 		this.pivotVoltageMode = false;
 		pivotPID.setSetpoint(position.in(Radians));
 	}
@@ -151,14 +156,9 @@ public class IntakeIOSim implements IntakeIO {
 		pivotMotor.setInputVoltage(volts.in(Volts));
 		this.pivotAppliedVoltage = volts;
 	}
-
+	
 	@Override
-	public void runCharacterizationWheel(Voltage input) {
-		setWheelVoltage(input);
-	}
-
-	@Override
-	public void runCharacterizationPivot(Voltage input) {
-		setWheelVoltage(input);
+	public void stopPivot() {
+		setPivotVoltage(Volts.of(0.0));
 	}
 }

@@ -31,16 +31,16 @@ public interface IntakeIO {
 
 	public default void updateInputs(IntakeIOInputs inputs) {}
 
+	public default void stop() {
+		stopWheel();
+		stopPivot();
+	}
 	public default void stopWheel() {}
+	public default void stopPivot() {}
 
-	public default void setWheelVelocity(AngularVelocity velocity) {}
+	public default void setWheelVelocitySetpoint(AngularVelocity velocity) {}
 	public default void setWheelVoltage(Voltage volts) {}
 
-	public default void stopPivot() {}
-	public default void setPivotPosition(Angle position) {}
+	public default void setPivotPositionSetpoint(Angle position) {}
 	public default void setPivotVoltage(Voltage volts) {}
-
-	public default void runCharacterizationPivot(Voltage input) {}
-	public default void runCharacterizationWheel(Voltage input) {}
-
 }
