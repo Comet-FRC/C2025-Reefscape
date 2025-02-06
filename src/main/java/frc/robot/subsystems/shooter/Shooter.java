@@ -47,6 +47,7 @@ public class Shooter extends SubsystemBase {
 				AngularVelocity topSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getTopMotorSpeed();
 				AngularVelocity botSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getBotMotorSpeed();
 				io.setAngularVelocity(new ShooterSpeed(topSpeed, botSpeed));
+				
 		});
 	}
 

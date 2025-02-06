@@ -13,11 +13,9 @@
 
 package frc.robot.subsystems.vision;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -64,7 +62,7 @@ public class VisionConstants {
   public static double angularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
               public static enum Camera {
-            LeftApriltag(
+            FrontApriltag(
                 "Left Apriltag Cam",
                 0.6,
                 5,
@@ -81,7 +79,7 @@ public class VisionConstants {
                     )
                 )
             ),
-            RightApriltag(
+            BackApriltag(
                 "Right Apriltag Cam",
                 1,
                 4,
@@ -96,11 +94,6 @@ public class VisionConstants {
                         Units.degreesToRadians(-32.414),
                         Units.degreesToRadians(0)
                     )
-                    // new Rotation3d(
-                    //     Units.degreesToRadians(-(90.0-87.654)),
-                    //     Units.degreesToRadians(-32.414),
-                    //     Units.degreesToRadians(-9.707)
-                    // )
                 )
             ),
             NoteVision(

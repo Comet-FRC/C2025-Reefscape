@@ -16,7 +16,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
-import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -27,6 +26,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ShootOnMove;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -42,7 +42,6 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
-import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
@@ -92,7 +91,7 @@ public class RobotContainer {
 						new ModuleIOSpark(2),
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
-						new ApriltagVisionIOPhotonVision(Camera.LeftApriltag), new ApriltagVisionIOPhotonVision(Camera.RightApriltag));
+						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				break;
@@ -226,6 +225,8 @@ public class RobotContainer {
 		this.controller.y().whileTrue(
 			this.intake.setPosition(Degrees.of(10))
 		);
+
+		this.controller.b().whileTrue(new ShootOnMove(drive, shooter, vision));
 	}
 
 	/**
