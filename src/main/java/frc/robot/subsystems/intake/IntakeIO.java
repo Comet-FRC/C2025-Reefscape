@@ -14,29 +14,31 @@ public interface IntakeIO {
 	@AutoLog
 	public static class IntakeIOInputs {
 		public AngularVelocity wheelVelocity = RadiansPerSecond.of(0);
-		public Voltage wheelAppliedVolts = Volts.of(0);
+		public AngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0);
+		public Voltage wheelAppliedVoltage = Volts.of(0);
 		public Current wheelSupplyCurrent = Amps.of(0);
 		public Temperature wheelMotorTemperature = Celsius.of(0);
 
 		public Angle pivotPosition = Radians.of(0);
+		public Angle pivotDesiredPosition = Radians.of(0);
 		public AngularVelocity pivotVelocity = RadiansPerSecond.of(0);
-		public Voltage pivotAppliedVolts = Volts.of(0);
+		public Voltage pivotAppliedVoltage = Volts.of(0);
 		public Current pivotSupplyCurrent = Amps.of(0);
 		public Temperature pivotTemperature = Celsius.of(0);
 	}
 
 	public default void updateInputs(IntakeIOInputs inputs) {}
 
+	public default void stop() {
+		stopWheel();
+		stopPivot();
+	}
 	public default void stopWheel() {}
+	public default void stopPivot() {}
 
-	public default void setWheelVelocity(AngularVelocity velocity) {}
+	public default void setWheelVelocitySetpoint(AngularVelocity velocity) {}
 	public default void setWheelVoltage(Voltage volts) {}
 
-	public default void stopPivot() {}
-	public default void setPivotPosition(Angle position) {}
+	public default void setPivotPositionSetpoint(Angle position) {}
 	public default void setPivotVoltage(Voltage volts) {}
-
-	public default void runCharacterizationPivot(double input) {}
-	public default void runCharacterizationWheel(double input) {}
-
 }
