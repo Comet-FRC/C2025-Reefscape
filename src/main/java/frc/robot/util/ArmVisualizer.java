@@ -1,15 +1,11 @@
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import org.littletonrobotics.junction.Logger;
@@ -23,6 +19,11 @@ public class ArmVisualizer {
     private final LoggedMechanism2d mechanism;
     private final LoggedMechanismRoot2d root;
     private final LoggedMechanismLigament2d arm;
+
+    /*private final Distance x;
+    private final Distance y;
+    private final Distance z;*/
+
 
     public ArmVisualizer(String name, Distance armLength) {
         this.name = name;

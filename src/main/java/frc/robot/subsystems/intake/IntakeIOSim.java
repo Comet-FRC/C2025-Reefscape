@@ -19,11 +19,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
 import static edu.wpi.first.units.Units.*;
-
-import java.util.function.Supplier;
 
 
 public class IntakeIOSim implements IntakeIO {

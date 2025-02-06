@@ -16,7 +16,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
-import com.ctre.phoenix6.signals.Led1OffColorValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -43,14 +42,12 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
-import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
 import frc.robot.util.controller.CometController;
-import frc.robot.util.controller.CometPS4Controller;
-import frc.robot.util.controller.CometXboxController;
+import frc.robot.util.controller.*;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
@@ -76,7 +73,7 @@ public class RobotContainer {
 	private final Shooter shooter;
 	private final Intake intake;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -225,11 +222,11 @@ public class RobotContainer {
 				.ignoringDisable(true));
 
 		this.controller.x().whileTrue(
-			this.intake.setPosition(() -> Degrees.of(45))
+			this.intake.setPosition(() -> Degrees.of(25))
 		);
 
 		this.controller.y().whileTrue(
-			this.intake.setPosition(() -> Degrees.of(135))
+			this.intake.setPosition(() -> Degrees.of(90))
 		);
 
 		this.controller.b().whileTrue(

@@ -116,7 +116,7 @@ public class IndexerIOSpark implements IndexerIO {
 	}
 
 	@Override
-	public void setLeftPosition(Angle position) {
+	public void setLeftPositionSetpoint(Angle position) {
 		double positionRadians = position.in(Radians);
 		double feedforward = leftFF.calculate(positionRadians, 0);
 
@@ -130,7 +130,7 @@ public class IndexerIOSpark implements IndexerIO {
 	}
 
 	@Override
-	public void setRightPosition(Angle position) {
+	public void setRightPositionSetpoint(Angle position) {
 		double positionRadians = position.in(Radians);
 		double feedforward = rightFF.calculate(positionRadians, 0);
 

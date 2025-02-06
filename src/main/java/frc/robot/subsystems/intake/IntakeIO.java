@@ -10,8 +10,6 @@ import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
 
-import java.util.function.Supplier;
-
 public interface IntakeIO {
 	@AutoLog
 	public static class IntakeIOInputs {
