@@ -175,22 +175,18 @@ public class RobotContainer {
 		 */
 	}
 
-	/**
-	 * Use this method to define your button->command mappings. Buttons can be
-	 * created by
-	 * instantiating a {@link GenericHID} or one of its subclasses ({@link
-	 * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
-	 * it to a {@link
-	 * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-	 */
 	private void setupButtonBindings() {
-		// Default command, normal field-relative drive
 		this.drive.setDefaultCommand(
-				DriveCommands.joystickDrive(
-						drive,
-						() -> -controller.getLeftY(),
-						() -> -controller.getLeftX(),
-						() -> controller.getRightX()));
+			this.drive.joystickDrive(
+				() -> -controller.getLeftY(),
+				() -> -controller.getLeftX(),
+				() ->  {
+					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+					return right-left;
+				}
+			)
+		);
 
 		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 

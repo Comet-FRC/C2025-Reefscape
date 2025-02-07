@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.SwerveConstants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -271,7 +271,7 @@ public class DriveCommands {
 												wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
 											}
 											double wheelRadius =
-													(state.gyroDelta * DriveConstants.DRIVE_BASE_RADIUS.baseUnitMagnitude())
+													(state.gyroDelta * SwerveConstants.DRIVE_BASE_RADIUS.baseUnitMagnitude())
 															/ wheelDelta;
 
 											NumberFormat formatter = new DecimalFormat("#0.000");

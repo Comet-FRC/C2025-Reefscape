@@ -20,7 +20,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.SwerveConstants;
 import frc.robot.util.SparkUtil;
 import java.util.Arrays;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -47,11 +47,11 @@ public class ModuleIOMapleSim implements ModuleIO {
     this.driveMotor =
         moduleSimulation
             .useGenericMotorControllerForDrive()
-            .withCurrentLimit(DriveConstants.driveMotorCurrentLimit);
+            .withCurrentLimit(SwerveConstants.DRIVE_CURRENT_LIMIT);
     this.turnMotor =
         moduleSimulation
             .useGenericControllerForSteer()
-            .withCurrentLimit(DriveConstants.turnMotorCurrentLimit);
+            .withCurrentLimit(SwerveConstants.AZIMUTH_CURRENT_LIMIT);
 
     turnController.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -130,8 +130,8 @@ public class ModuleIOMapleSim implements ModuleIO {
     driveClosedLoop = true;
     driveFFVolts =
         Volts.of(
-            DriveConstants.driveSimKs * Math.signum(velocityRadPerSec)
-                + DriveConstants.driveSimKv * velocityRadPerSec);
+            SwerveConstants.DRIVE_SIM_kS * Math.signum(velocityRadPerSec)
+                + SwerveConstants.DRIVE_SIM_kV * velocityRadPerSec);
     driveController.setSetpoint(velocityRadPerSec);
   }
 

@@ -18,7 +18,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static frc.robot.subsystems.drive.DriveConstants.*;
+import static frc.robot.subsystems.drive.SwerveConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -85,20 +85,20 @@ public class ModuleIOSpark implements ModuleIO {
     driveSpark =
         new SparkMax(
             switch (module) {
-              case 0 -> frontLeftDriveCanId;
-              case 1 -> frontRightDriveCanId;
-              case 2 -> backLeftDriveCanId;
-              case 3 -> backRightDriveCanId;
+              case 0 -> FL_DRIVE_ID;
+              case 1 -> FR_DRIVE_ID;
+              case 2 -> BL_DRIVE_ID;
+              case 3 -> BR_DRIVE_ID;
               default -> 0;
             },
             MotorType.kBrushless);
     turnSpark =
         new SparkMax(
             switch (module) {
-              case 0 -> frontLeftTurnCanId;
-              case 1 -> frontRightTurnCanId;
-              case 2 -> backLeftTurnCanId;
-              case 3 -> backRightTurnCanId;
+              case 0 -> FL_AZIMUTH_ID;
+              case 1 -> FR_AZIMUTH_ID;
+              case 2 -> BL_AZIMUTH_ID;
+              case 3 -> BR_AZIMUTH_ID;
               default -> 0;
             },
             MotorType.kBrushless);
@@ -109,10 +109,10 @@ public class ModuleIOSpark implements ModuleIO {
     turnCANcoder =
         new CANcoder(
             switch (module) {
-              case 0 -> frontLeftCancoderId;
-              case 1 -> frontRightCancoderId;
-              case 2 -> backLeftCancoderId;
-              case 3 -> backRightCancoderId;
+              case 0 -> FL_CANCODER_ID;
+              case 1 -> FR_CANCODER_ID;
+              case 2 -> BL_CANCODER_ID;
+              case 3 -> BR_CANCODER_ID;
               default -> 0;
             });
 
@@ -124,20 +124,20 @@ public class ModuleIOSpark implements ModuleIO {
     driveConfig
         .inverted(true)
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit((int) driveMotorCurrentLimit.in(Amps))
+        .smartCurrentLimit((int) DRIVE_CURRENT_LIMIT.in(Amps))
         .voltageCompensation(12.0);
     driveConfig
         .encoder
-        .positionConversionFactor(driveEncoderPositionFactor)
-        .velocityConversionFactor(driveEncoderVelocityFactor)
+        .positionConversionFactor(DRIVE_ENCODER_POSITION_FACTOR)
+        .velocityConversionFactor(DRIVE_ENCODER_VELOCITY_FACTOR)
         .uvwMeasurementPeriod(10)
         .uvwAverageDepth(2);
     driveConfig
         .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .pidf(
-            driveKp, 0.0,
-            driveKd, 0.0);
+            DRIVE_kP, 0.0,
+            DRIVE_kD, 0.0);
     driveConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -159,21 +159,21 @@ public class ModuleIOSpark implements ModuleIO {
     // Configure turn motor
     var turnConfig = new SparkMaxConfig();
     turnConfig
-        .inverted(turnInverted)
+        .inverted(IS_AZIMUTH_INVERTED)
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit((int) turnMotorCurrentLimit.in(Amps))
+        .smartCurrentLimit((int) AZIMUTH_CURRENT_LIMIT.in(Amps))
         .voltageCompensation(12.0);
     turnConfig
         .encoder
-        .positionConversionFactor(turnEncoderPositionFactor)
-        .velocityConversionFactor(turnEncoderVelocityFactor)
+        .positionConversionFactor(AZIMUTH_ENCODER_POSITION_FACTOR)
+        .velocityConversionFactor(AZIMUTH_ENCODER_VELOCITY_FACTOR)
         .uvwAverageDepth(2);
     turnConfig
         .closedLoop
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
         .positionWrappingEnabled(true)
-        .positionWrappingInputRange(turnPIDMinInput, turnPIDMaxInput)
-        .pidf(turnKp, 0.0, turnKd, 0.0);
+        .positionWrappingInputRange(0, 2*Math.PI)
+        .pidf(AZIMUTH_kP, 0.0, AZIMUTH_kD, 0.0);
     turnConfig
         .signals
         .primaryEncoderPositionAlwaysOn(true)
@@ -283,7 +283,7 @@ public class ModuleIOSpark implements ModuleIO {
   @Override
   public void setDriveVelocity(AngularVelocity velocity) {
     double velocityRadPerSec = velocity.in(RadiansPerSecond);
-    double ffVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
+    double ffVolts = DRIVE_kS * Math.signum(velocityRadPerSec) + DRIVE_kV * velocityRadPerSec;
     driveController.setReference(
         velocityRadPerSec, ControlType.kVelocity, ClosedLoopSlot.kSlot0, ffVolts, ArbFFUnits.kVoltage);
     }
@@ -291,7 +291,7 @@ public class ModuleIOSpark implements ModuleIO {
     @Override
     public void setTurnPosition(Rotation2d rotation) {
         double setpoint =
-            MathUtil.inputModulus(rotation.getRadians(), turnPIDMinInput, turnPIDMaxInput);
+            MathUtil.inputModulus(rotation.getRadians(), 0, 2*Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
 }
