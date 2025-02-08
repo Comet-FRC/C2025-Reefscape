@@ -226,7 +226,7 @@ public class RobotContainer {
 			this.intake.setPosition(Degrees.of(10))
 		);
 
-		this.controller.b().whileTrue(new ShootOnMove(drive, shooter, vision));
+		this.controller.b().whileTrue(new ShootOnMove(drive, shooter));
 	}
 
 	/**

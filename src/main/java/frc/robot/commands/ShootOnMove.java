@@ -1,67 +1,65 @@
 package frc.robot.commands;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import static edu.wpi.first.units.Units.*;
-
-import java.lang.reflect.Field;
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.util.BeanUtil;
-
-
 public class ShootOnMove extends Command {
-    private static final double G = 9.81; // Gravity (m/s²)
-    private static final double SHOOTER_ANGLE = Math.toRadians(35); // Fixed angle
-    private static final double MAX_RPM = 5000; // Max shooter RPM
-    private static final double MAX_SHOT_SPEED = 15.0; // Max exit velocity (m/s)
 
     private final Drive drive;
     private final Shooter shooter;
-    private final ApriltagVision vision;
+    private final double boundX;
+    private double distanceToNet;
 
-    public ShootOnMove(Drive drive, Shooter shooter, ApriltagVision vision) {
+    public ShootOnMove(Drive drive, Shooter shooter) {
         this.drive = drive;
         this.shooter = shooter;
-        this.vision = vision;
-        addRequirements(shooter, vision);
+        addRequirements(shooter);
+
+        // All Barges have the same X value
+        this.boundX = FieldConstants.Barge.startOfBlueBarge.getX();
+        distanceToNet = 0;
     }
 
-@Override
-public void execute() {
-    // Get robot movement data
-    double vx = drive.getChassisSpeeds().vxMetersPerSecond; // Fowards/backward movement
-    double vy = drive.getChassisSpeeds().vyMetersPerSecond; // Sideways movement (Left is +)
+    @Override
+    public void execute() {
+        Optional<Alliance> ally = DriverStation.getAlliance();
+        if (ally.isEmpty()) return; // Exit early if no alliance data is available
 
-    // Get target distance from vision
-    Translation2d target;
-    Optional<Alliance> ally = DriverStation.getAlliance();
-    if( ally.get() == Alliance.Blue) {
-             target = FieldConstants.Barge.middleCage;
-    } else {
-            target = FieldConstants.Barge.midOfRedBarge;
-    }
+        Translation2d bound1 = (ally.get() == Alliance.Blue) ? 
+            FieldConstants.Barge.startOfBlueBarge : FieldConstants.Barge.startOfRedBarge;
+        Translation2d bound2 = (ally.get() == Alliance.Blue) ? 
+            FieldConstants.Barge.endOfBlueBarge : FieldConstants.Barge.endOfRedBarge;
 
-    if((Drive.getInstance().getPose().getX() > FieldConstants.Barge.middleCage.getX() && vx < 0) || 
-    (Drive.getInstance().getPose().getX() < FieldConstants.Barge.middleCage.getX() && vx > 0))
-    {
-        double scalar = 0;
+        // Get robot movement data
+        double vx = drive.getChassisSpeeds().vxMetersPerSecond; // Forward/backward movement
+        double vy = drive.getChassisSpeeds().vyMetersPerSecond; // Sideways movement (Left is +)
         
+    // Get distance to the net based on robot movement        
+    if(vy > 0){
+        distanceToNet = drive.getPose().getTranslation().getDistance(bound1);
+        } else {
+        distanceToNet = drive.getPose().getTranslation().getDistance(bound2);
+    }
+    
+    boolean shootOnMove = distanceToNet/ vy < 1.5; // If the robot is within 1.5 seconds of the net, shoot
+                                                   //TODO: Replace 1.5 with a more accurate value
+
+    if(shootOnMove){
+        double scalar = -1; 
         shooter.shootFromDistance(() -> {
-            double omega = vx * scalar;
+            double omega = vx * scalar; //TODO: figure out scalar                                         
+
             return Meters.of(drive.getPose().getX() + omega);
         });
     }
 
-    
 }
 
 

@@ -39,14 +39,15 @@ public class FieldConstants {
   }
 
   public static class Barge {
-    public static final Translation2d farCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(286.779));
-    public static final Translation2d middleCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(242.855));
-    public static final Translation2d closeCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(199.947));
+    public static final Translation2d startOfRedBarge =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(10));
+    public static final Translation2d endOfRedBarge = 
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(146.50));
+    public static final Translation2d startOfBlueBarge =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(156.50));
+    public static final Translation2d endOfBlueBarge =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(293));
 
-    public static final Translation2d midOfRedBarge = new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(fieldWidth/4));
 
     // Measured from floor to bottom of cage
     public static final double deepHeight = Units.inchesToMeters(3.125);
