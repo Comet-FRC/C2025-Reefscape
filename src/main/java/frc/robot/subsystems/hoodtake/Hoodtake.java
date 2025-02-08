@@ -22,20 +22,19 @@ public class Hoodtake extends SubsystemBase {
 	}
 
 	public Command stop() {
-		return
-			Commands.run(
+		return Commands.run(
 				() -> {
 					io.stopPivot();
 					io.stopWheel();
 				},
-			this);
+				this);
 	}
 
 	public Command setPosition(Angle position) {
-		return Commands.run(() -> io.setPivotPosition(position), this);
+		return Commands.run(() -> io.setPivotPositionSetpoint(position), this);
 	}
 
 	public Command setWheelVelocity(AngularVelocity velocity) {
-		return Commands.run(() -> io.setWheelVelocity(velocity), this);
+		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity), this);
 	}
 }

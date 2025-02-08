@@ -30,20 +30,18 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	private final SparkMax pivotMotor = new SparkMax(HoodtakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
 
 	private final ArmFeedforward pivotFF = new ArmFeedforward(
-		HoodtakeConstants.PIVOT_kS,
-		HoodtakeConstants.PIVOT_kG,
-		HoodtakeConstants.PIVOT_kV,
-		HoodtakeConstants.PIVOT_kA
-	);
+			HoodtakeConstants.PIVOT_kS,
+			HoodtakeConstants.PIVOT_kG,
+			HoodtakeConstants.PIVOT_kV,
+			HoodtakeConstants.PIVOT_kA);
 
 	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
-		HoodtakeConstants.WHEEL_kS,
-		HoodtakeConstants.WHEEL_kV,
-		HoodtakeConstants.WHEEL_kA
-	);
+			HoodtakeConstants.WHEEL_kS,
+			HoodtakeConstants.WHEEL_kV,
+			HoodtakeConstants.WHEEL_kA);
 
 	public HoodtakeIOSpark() {
-		this.configureWheelMotor();	
+		this.configureWheelMotor();
 		this.configurePivotMotor();
 	}
 
@@ -51,14 +49,14 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-			.inverted(false)
-			.idleMode(IdleMode.kCoast)
-			.smartCurrentLimit(30);
+				.inverted(false)
+				.idleMode(IdleMode.kCoast)
+				.smartCurrentLimit(30);
 		config.encoder
-			.positionConversionFactor(HoodtakeConstants.WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(HoodtakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
+				.positionConversionFactor(HoodtakeConstants.WHEEL_CONVERSION_FACTOR)
+				.velocityConversionFactor(HoodtakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
-			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+				.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(HoodtakeConstants.WHEEL_kP)
 				.i(HoodtakeConstants.WHEEL_kI)
 				.d(HoodtakeConstants.WHEEL_kD);
@@ -71,13 +69,13 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-			.inverted(false)
-			.idleMode(IdleMode.kBrake);
+				.inverted(false)
+				.idleMode(IdleMode.kBrake);
 		config.encoder
-			.positionConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR)
-			.velocityConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
+				.positionConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR)
+				.velocityConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
-			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+				.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(HoodtakeConstants.PIVOT_kP)
 				.i(HoodtakeConstants.PIVOT_kI)
 				.d(HoodtakeConstants.PIVOT_kD);
@@ -104,7 +102,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		wheelMotor.setVoltage(0);
 	}
 
-	@Override	
+	@Override
 	public void stopPivot() {
 		pivotMotor.setVoltage(0);
 	}
@@ -113,32 +111,30 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	public void setWheelVoltage(Voltage voltage) {
 		wheelMotor.setVoltage(voltage);
 	}
-	
+
 	@Override
-	public void setWheelVelocity(AngularVelocity velocity) {
+	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
 		double velocityRadiansPerSecond = velocity.in(RadiansPerSecond);
 		double feedforward = wheelFF.calculate(velocityRadiansPerSecond);
 
 		wheelMotor.getClosedLoopController().setReference(
-			velocityRadiansPerSecond,
-			ControlType.kVelocity,
-			ClosedLoopSlot.kSlot0,
-			feedforward,
-			ArbFFUnits.kVoltage
-		);
+				velocityRadiansPerSecond,
+				ControlType.kVelocity,
+				ClosedLoopSlot.kSlot0,
+				feedforward,
+				ArbFFUnits.kVoltage);
 	}
 
 	@Override
-	public void setPivotPosition(Angle position) {
+	public void setPivotPositionSetpoint(Angle position) {
 		double positionRadians = position.in(Radians);
 		double feedforward = pivotFF.calculate(positionRadians, 0);
 
 		pivotMotor.getClosedLoopController().setReference(
-			positionRadians,
-			ControlType.kPosition,
-			ClosedLoopSlot.kSlot0,
-			feedforward,
-			ArbFFUnits.kVoltage
-		);
+				positionRadians,
+				ControlType.kPosition,
+				ClosedLoopSlot.kSlot0,
+				feedforward,
+				ArbFFUnits.kVoltage);
 	}
 }

@@ -24,48 +24,46 @@ public class ShootOnMove extends Command {
         addRequirements(shooter);
         Optional<Alliance> ally = DriverStation.getAlliance();
 
-        Translation2d bound1 = (ally.get() == Alliance.Blue) ? 
-            FieldConstants.Barge.startOfBlueBarge : FieldConstants.Barge.startOfRedBarge;
-        Translation2d bound2 = (ally.get() == Alliance.Blue) ? 
-            FieldConstants.Barge.endOfBlueBarge : FieldConstants.Barge.endOfRedBarge;
+        bound1 = (ally.get() == Alliance.Blue) ? FieldConstants.Barge.startOfBlueBarge
+                : FieldConstants.Barge.startOfRedBarge;
+        bound2 = (ally.get() == Alliance.Blue) ? FieldConstants.Barge.endOfBlueBarge
+                : FieldConstants.Barge.endOfRedBarge;
 
         distanceToNet = 0;
     }
 
     @Override
     public void execute() {
-        
-  
+
         ChassisSpeeds deltaVelocity = drive.getFieldOrientedChassisSpeeds();
         // Get robot movement data
         double xVelocity = deltaVelocity.vxMetersPerSecond; // Forward/backward movement
         double yVelocity = deltaVelocity.vyMetersPerSecond; // Sideways movement (Left is +)
-        
-    // Get distance to the net edge based on robot Y movement        
-    if(yVelocity > 0.0){
-        distanceToNet = drive.getPose().getTranslation().getDistance(bound1);
+
+        // Get distance to the net edge based on robot Y movement
+        if (yVelocity > 0.0) {
+            distanceToNet = drive.getPose().getTranslation().getDistance(bound1);
         } else {
-        distanceToNet = drive.getPose().getTranslation().getDistance(bound2);
+            distanceToNet = drive.getPose().getTranslation().getDistance(bound2);
+        }
+
+        double t = 1.5; // TODO: change t
+        boolean shootOnMove = distanceToNet / yVelocity < t; // If the robot is within t seconds of the net, shoot
+
+        if (shootOnMove) {
+            double scalar = -1;
+            shooter.shootFromDistance(() -> {
+                double omega = xVelocity * scalar; // TODO: figure out scalar
+
+                return Meters.of(drive.getPose().getX() + omega);
+            });
+        }
+
     }
-    
-    double t = 1.5; //TODO: change t
-    boolean shootOnMove = distanceToNet/ yVelocity < t; // If the robot is within t seconds of the net, shoot
-
-    if(shootOnMove){
-        double scalar = -1; 
-        shooter.shootFromDistance(() -> {
-            double omega = xVelocity * scalar; //TODO: figure out scalar                                         
-
-            return Meters.of(drive.getPose().getX() + omega);
-        });
-    }
-
-}
-
 
     @Override
     public boolean isFinished() {
-        return false; // Runs continuously during the match
+        return false; // Runs continuously during the match -> TODO: maybe add line checking indexer state
     }
 
     @Override
