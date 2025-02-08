@@ -393,18 +393,6 @@ public class Drive extends SubsystemBase {
 		return RadiansPerSecond.of(MAX_SPEED.in(MetersPerSecond) / DRIVE_BASE_RADIUS.in(Meters));
 	}
 
-<<<<<<<
-	public void getVelocity(){
-
-	}
-
-	public Module[] getModules() {
-		return modules;
-	}
-
-=======
-
->>>>>>>
 	public Distance getDistanceFrom(Translation2d other) {
 		return Meters.of(this.getPose().getTranslation().getDistance(other));
 	}
