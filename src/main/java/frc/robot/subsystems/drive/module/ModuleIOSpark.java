@@ -195,10 +195,8 @@ public class ModuleIOSpark implements ModuleIO {
         () ->
             turnEncoder.setPosition(
                 turnCANcoder
-                    .getPosition()
-                    .getValue()
-                    .minus(zeroRotation.getMeasure())
-                    .in(Radians)));
+                    .getPosition().getValue()
+                    .minus(zeroRotation.getMeasure()).in(Radians)));
 
     // Create odometry queues
     timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
@@ -268,6 +266,18 @@ public class ModuleIOSpark implements ModuleIO {
     timestampQueue.clear();
     drivePositionQueue.clear();
     turnPositionQueue.clear();
+
+    // TODO: Check if this works
+    if (this.turnEncoder.getVelocity() < 0.01) {
+        tryUntilOk(
+            turnSpark,
+            5,
+            () ->
+                turnEncoder.setPosition(
+                    turnCANcoder
+                        .getPosition().getValue()
+                        .minus(zeroRotation.getMeasure()).in(Radians)));
+    }
   }
 
   @Override
