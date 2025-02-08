@@ -14,12 +14,14 @@ public interface IndexerIO {
 	@AutoLog
 	public static class IndexerIOInputs {
 		public Angle leftPosition = Radians.of(0);
+		public Angle leftPositionSetpoint = Radians.of(0);
 		public AngularVelocity leftVelocity = RadiansPerSecond.of(0);
 		public Voltage leftAppliedVoltage = Volts.of(0);
 		public Current leftSupplyCurrent = Amps.of(0);
 		public Temperature leftTemperature = Celsius.of(0);
 
 		public Angle rightPosition = Radians.of(0);
+		public Angle rightPositionSetpoint = Radians.of(0);
 		public AngularVelocity rightVelocity = RadiansPerSecond.of(0);
 		public Voltage rightAppliedVoltage = Volts.of(0);
 		public Current rightSupplyCurrent = Amps.of(0);
@@ -28,26 +30,22 @@ public interface IndexerIO {
 
 	public default void updateInputs(IndexerIOInputs inputs) {}
 
+	/** Sets the desired position of the left indexer. */
+	public default void setLeftPositionSetpoint(Angle position) {}
+	/** Sets the desired velocity of the left indexer. */
+	public default void setLeftVelocitySetpoint(AngularVelocity velocity) {}
+	public default void setLeftVoltage(Voltage volts) {}
+	
+	/** Sets the desired position of the right indexer. */
+	public default void setRightPositionSetpoint(Angle position) {}
+	/** Sets the desired velocity of the right indexer. */
+	public default void setRightVelocitySetpoint(AngularVelocity velocity) {}
+	public default void setRightVoltage(Voltage volts) {}
+
+	public default void stopLeft() {}
+	public default void stopRight() {}
 	public default void stop() {
 		stopLeft();
 		stopRight();	
-	}
-	public default void stopLeft() {}
-	public default void stopRight() {}
-
-	public default void setLeftVelocity(AngularVelocity velocity) {}
-	public default void setLeftVoltage(Voltage volts) {}
-	public default void setLeftPosition(Angle position) {}
-	public default void setRightVelocity(AngularVelocity velocity) {}
-	public default void setRightVoltage(Voltage volts) {}
-	public default void setRightPosition(Angle position) {}
-
-	public default void setLeftPID(double kP, double kI, double kD) {}
-	public default void setLeftFF(double kS, double kV, double kA) {}
-	public default void setRightPID(double kP, double kI, double kD) {}
-	public default void setRightFF(double kS, double kV, double kA) {}
-	
-	public default void runCharacterizationLeft(double input) {}
-	public default void runCharacterizationRight(double input) {}
-
+	}	
 }

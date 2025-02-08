@@ -11,6 +11,8 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 import static edu.wpi.first.units.Units.*;
@@ -78,6 +80,11 @@ public class IndexerIOSim implements IndexerIO {
 			IndexerConstants.RIGHT_SIM_kA
 		);
 
+	private boolean leftVoltageMode = false;
+	private boolean rightVoltageMode = false;
+	private final MutVoltage leftAppliedVoltage = Volts.mutable(0);
+	private final MutVoltage rightAppliedVoltage = Volts.mutable(0);
+
 	@Override
 	public void updateInputs(IndexerIOInputs inputs) {
 		leftMotor.update(0.02);
@@ -86,49 +93,70 @@ public class IndexerIOSim implements IndexerIO {
 		runLoopControl();
 
 		inputs.leftPosition = Radians.of(leftMotor.getAngleRads());
+		inputs.leftPositionSetpoint = Radians.of(leftPID.getSetpoint());
 		inputs.leftVelocity = RadiansPerSecond.of(leftMotor.getVelocityRadPerSec());
+		inputs.leftAppliedVoltage = this.leftAppliedVoltage.copy();
 		inputs.leftSupplyCurrent = Amps.of(leftMotor.getCurrentDrawAmps());
 
 		inputs.rightPosition = Radians.of(rightMotor.getAngleRads());
+		inputs.rightPositionSetpoint = Radians.of(rightPID.getSetpoint());
 		inputs.rightVelocity = RadiansPerSecond.of(rightMotor.getVelocityRadPerSec());
+		inputs.rightAppliedVoltage = this.rightAppliedVoltage.copy();
 		inputs.rightSupplyCurrent = Amps.of(rightMotor.getCurrentDrawAmps());
 	}
 
 	private void runLoopControl() {
-		this.setLeftVoltage(
-			Volts.of(
+		if (!leftVoltageMode) {
+			this.leftMotor.setInputVoltage(
 				leftPID.calculate(leftMotor.getAngleRads())
 				+
 				leftFF.calculate(leftPID.getSetpoint(), 0)
-			)
-		);
-		this.setRightVoltage(
-			Volts.of(
+			);
+		}
+
+		if (!rightVoltageMode) {
+			this.rightMotor.setInputVoltage(
 				rightPID.calculate(rightMotor.getAngleRads())
 				+
 				rightFF.calculate(rightPID.getSetpoint(), 0)
-			)
-		);
+			);
+		}
 	}
 
 	@Override
-	public void setLeftPosition(Angle position) {
+	public void setLeftPositionSetpoint(Angle position) {
+		this.leftVoltageMode = false;
 		leftPID.setSetpoint(position.in(Radians));
 	}
 	@Override
-	public void setRightPosition(Angle position) {
+	public void setRightPositionSetpoint(Angle position) {
+		this.rightVoltageMode = false;
 		rightPID.setSetpoint(position.in(Radians));
+	}
+
+	@Override
+	public void setLeftVoltage(Voltage volts) {
+		this.leftVoltageMode = true;
+		this.leftMotor.setInputVoltage(volts.in(Volts));
+		this.leftAppliedVoltage.mut_replace(volts);
+	}
+
+	@Override
+	public void setRightVoltage(Voltage volts) {
+		this.rightVoltageMode = true;
+		this.rightMotor.setInputVoltage(volts.in(Volts));
+		this.rightAppliedVoltage.mut_replace(volts);
 	}
 
 	// TODO: Make sure these work
 	@Override
 	public void stopLeft() {
-		this.leftPID.setSetpoint(leftMotor.getAngleRads());
+		this.setLeftVoltage(Volts.of(0));
 	}
 
 	@Override
 	public void stopRight() {
-		this.rightPID.setSetpoint(rightMotor.getAngleRads());
+		this.setRightVoltage(Volts.of(0));
 	}
 
 }

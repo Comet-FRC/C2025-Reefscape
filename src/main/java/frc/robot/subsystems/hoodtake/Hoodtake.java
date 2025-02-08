@@ -21,7 +21,7 @@ public class Hoodtake extends SubsystemBase {
 		Logger.processInputs("Hoodtake", inputs);
 	}
 
-	private Command stop() {
+	public Command stop() {
 		return
 			Commands.run(
 				() -> {

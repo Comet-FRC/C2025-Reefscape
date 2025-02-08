@@ -19,7 +19,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-
 import static edu.wpi.first.units.Units.*;
 
 
@@ -80,6 +79,13 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_SIM_kA
 		);
 
+	/** true = controlled by voltage, false = controled by PID + FF */
+	private boolean pivotVoltageMode = false;
+	private Voltage pivotAppliedVoltage = Volts.of(0.0);
+	/** true = controlled by voltage, false = controled by PID + FF */
+	private boolean wheelVoltageMode = false;
+	private Voltage wheelAppliedVoltage = Volts.of(0.0);
+
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		wheelMotor.update(0.02);
@@ -88,60 +94,67 @@ public class IntakeIOSim implements IntakeIO {
 		runLoopControl();
 
 		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
-		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getInputVoltage());
+		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
+		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getInputVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getCurrentDrawAmps());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getAngleRads());
+		inputs.pivotDesiredPosition = Radians.of(pivotPID.getSetpoint());
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getVelocityRadPerSec());
+		inputs.pivotAppliedVoltage = this.pivotAppliedVoltage;
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getCurrentDrawAmps());
 	}
 
 	private void runLoopControl() {
-		setWheelVoltage(
-			Volts.of(
+		if (!wheelVoltageMode) {
+			wheelMotor.setInputVoltage(
 				wheelPID.calculate(wheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
 				wheelFF.calculate(wheelPID.getSetpoint())
-			)
-		);
+			);
+		}
 
-		setPivotVoltage(
-			Volts.of(
+		if (!pivotVoltageMode) {
+			pivotMotor.setInputVoltage(
 				pivotPID.calculate(pivotMotor.getAngleRads())
 				+
 				pivotFF.calculate(pivotPID.getSetpoint(), 0)
-			)
-		);
+			);
+		}
 	}
 
 	@Override
-	public void setWheelVelocity(AngularVelocity velocity) {
+	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
+		this.wheelVoltageMode = false;
 		wheelPID.setSetpoint(velocity.in(RadiansPerSecond));
 	}
 
 	@Override
 	public void setWheelVoltage(Voltage volts) {
+		this.wheelVoltageMode = true;
 		wheelMotor.setInputVoltage(volts.in(Volts));
 	}
 
 	@Override
 	public void stopWheel() {
-		wheelPID.setSetpoint(0);
 		setWheelVoltage(Volts.of(0.0));
 	}
 
 	@Override
-	public void setPivotPosition(Angle position) {
+	public void setPivotPositionSetpoint(Angle position) {
+		this.pivotVoltageMode = false;
 		pivotPID.setSetpoint(position.in(Radians));
 	}
 
 	@Override
 	public void setPivotVoltage(Voltage volts) {
+		this.pivotVoltageMode = true;
 		pivotMotor.setInputVoltage(volts.in(Volts));
+		this.pivotAppliedVoltage = volts;
 	}
-
+	
 	@Override
-	public void runCharacterizationWheel(double input) {
-		setWheelVoltage(Volts.of(input));
+	public void stopPivot() {
+		setPivotVoltage(Volts.of(0.0));
 	}
 }

@@ -21,10 +21,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.subsystems.drive.Drive;
@@ -47,7 +49,8 @@ import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
 import frc.robot.util.controller.CometController;
-import frc.robot.util.controller.CometPS4Controller;
+import frc.robot.util.controller.*;
+
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -72,7 +75,7 @@ public class RobotContainer {
 	private final Shooter shooter;
 	private final Intake intake;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -117,12 +120,15 @@ public class RobotContainer {
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
-				this.vision = new ApriltagVision(
+				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
+
+				/*this.vision = new ApriltagVision(
 						drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVisionSim(
 								"limelight-shooter",
 								robotToCamera0,
-								swerveDriveSimulation::getSimulatedDriveTrainPose));
+								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				break;
@@ -144,6 +150,8 @@ public class RobotContainer {
 		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		setupAutoRoutines();
 		setupButtonBindings();
+
+		DriverStation.silenceJoystickConnectionWarning(true);
 	}
 
 	private void setupAutoRoutines() {
@@ -172,22 +180,18 @@ public class RobotContainer {
 		 */
 	}
 
-	/**
-	 * Use this method to define your button->command mappings. Buttons can be
-	 * created by
-	 * instantiating a {@link GenericHID} or one of its subclasses ({@link
-	 * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
-	 * it to a {@link
-	 * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-	 */
 	private void setupButtonBindings() {
-		// Default command, normal field-relative drive
 		this.drive.setDefaultCommand(
-				DriveCommands.joystickDrive(
-						drive,
-						() -> -controller.getLeftY(),
-						() -> -controller.getLeftX(),
-						() -> controller.getRightX()));
+			this.drive.joystickDrive(
+				() -> -controller.getLeftY(),
+				() -> -controller.getLeftX(),
+				() ->  {
+					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+					return right-left;
+				}
+			)
+		);
 
 		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 
@@ -219,11 +223,19 @@ public class RobotContainer {
 				.ignoringDisable(true));
 
 		this.controller.x().whileTrue(
-			this.intake.setPosition(Degrees.of(10))
+			this.intake.setPosition(() -> Degrees.of(25))
 		);
 
 		this.controller.y().whileTrue(
-			this.intake.setPosition(Degrees.of(10))
+			this.intake.setPosition(() -> Degrees.of(90))
+		);
+
+		this.controller.b().whileTrue(
+			DriveCommands.feedforwardCharacterization(drive)
+		);
+
+		this.controller.left().whileTrue(
+			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 
 		this.controller.b().whileTrue(new ShootOnMove(drive, shooter));

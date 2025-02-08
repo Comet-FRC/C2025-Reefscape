@@ -32,10 +32,10 @@ public class Indexer extends SubsystemBase {
 	}
 
 	public Command setLeftPosition(Angle position) {
-		return Commands.run(() -> io.setLeftPosition(position), this);
+		return Commands.run(() -> io.setLeftPositionSetpoint(position), this);
 	}
 
 	public Command setRightPosition(Angle position) {
-		return Commands.run(() -> io.setRightPosition(position), this);
+		return Commands.run(() -> io.setRightPositionSetpoint(position), this);
 	}
 }
