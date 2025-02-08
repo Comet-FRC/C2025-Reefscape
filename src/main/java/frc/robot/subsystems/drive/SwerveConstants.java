@@ -87,8 +87,8 @@ public class SwerveConstants {
     public static final double DRIVE_kV = 0.16171;
     public static final double DRIVE_SIM_kP = 0.05;
     public static final double DRIVE_SIM_kD = 0.0;
-    public static final double DRIVE_SIM_kS = 0.12484;
-    public static final double DRIVE_SIM_kV = 0.18236;
+    public static final double DRIVE_SIM_kS = 0.02493;
+    public static final double DRIVE_SIM_kV = 0.18470;
 
     // Turn motor configuration
     public static final boolean IS_AZIMUTH_INVERTED = true;

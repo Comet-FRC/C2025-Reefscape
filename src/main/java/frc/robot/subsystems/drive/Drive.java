@@ -64,6 +64,7 @@ import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -79,13 +80,12 @@ public class Drive extends SubsystemBase {
 	}
 
 	public static final Lock odometryLock = new ReentrantLock();
+
 	private final GyroIO gyroIO;
-	private final frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged gyroInputs =
-			new GyroIOInputsAutoLogged();
+	private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 	private final Module[] modules = new Module[4]; // FL, FR, BL, BR
 	private final SysIdRoutine sysId;
-	private final Alert gyroDisconnectedAlert =
-			new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+	
 
 	private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_TRANSLATIONS);
 	private Rotation2d rawGyroRotation = new Rotation2d();
@@ -100,14 +100,24 @@ public class Drive extends SubsystemBase {
 			new SwerveDrivePoseEstimator(
 					kinematics, rawGyroRotation, lastModulePositions, new Pose2d(10, 5, new Rotation2d()));
 
+	private PIDController headingPID = new PIDController(
+		DriveConstants.HEADING_kP,
+		DriveConstants.HEADING_kI,
+		DriveConstants.HEADING_kD
+	);
+	
+
 	public Drive(
 			GyroIO gyroIO,
 			ModuleIO flModuleIO,
 			ModuleIO frModuleIO,
 			ModuleIO blModuleIO,
-			ModuleIO brModuleIO) {
+			ModuleIO brModuleIO)
+	{
 
 		instance = this;
+
+		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
 
 		this.gyroIO = gyroIO;
 		this.modules[0] = new Module(flModuleIO, 0);
@@ -115,8 +125,6 @@ public class Drive extends SubsystemBase {
 		this.modules[2] = new Module(blModuleIO, 2);
 		this.modules[3] = new Module(brModuleIO, 3);
 
-		// Usage reporting for swerve template
-		HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 		SparkOdometryThread.getInstance().start();
 
 		// Configure AutoBuilder for PathPlanner
@@ -171,8 +179,8 @@ public class Drive extends SubsystemBase {
 
 		// Log empty setpoint states when disabled
 		if (DriverStation.isDisabled()) {
-			Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
-			Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
+			Logger.recordOutput("Swerve/SwerveStates/Setpoints", new SwerveModuleState[] {});
+			Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
 		}
 
 		// Update odometry
@@ -208,7 +216,7 @@ public class Drive extends SubsystemBase {
 		}
 
 		// Update gyro alert
-		gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+		DriveConstants.ALERT_DISCONNECTED_GYRO.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 	}
 
 	/**
@@ -225,8 +233,8 @@ public class Drive extends SubsystemBase {
 		SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, MAX_SPEED);
 
 		// Log unoptimized setpoints
-		Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
-		Logger.recordOutput("SwerveChassisSpeeds/Setpoints", speeds);
+		Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+		Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", speeds);
 
 		// Send setpoints to modules
 		for (int i = 0; i < 4; i++) {
@@ -234,7 +242,7 @@ public class Drive extends SubsystemBase {
 		}
 
 		// Log optimized setpoints (runSetpoint mutates each state)
-		Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+		Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
 	}
 
 	/** Runs the drive in a straight line with the specified drive output. */
@@ -277,7 +285,7 @@ public class Drive extends SubsystemBase {
 	}
 
 	/** Returns the module states (turn angles and drive velocities) for all of the modules. */
-	@AutoLogOutput(key = "SwerveStates/Measured")
+	@AutoLogOutput(key = "Swerve/SwerveStates/Measured")
 	private SwerveModuleState[] getModuleStates() {
 		SwerveModuleState[] states = new SwerveModuleState[4];
 		for (int i = 0; i < 4; i++) {
@@ -296,7 +304,7 @@ public class Drive extends SubsystemBase {
 	}
 
 	/** Returns the measured chassis speeds of the robot. */
-	@AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
+	@AutoLogOutput(key = "Swerve/SwerveChassisSpeeds/Measured")
 	private ChassisSpeeds getChassisSpeeds() {
 		return kinematics.toChassisSpeeds(getModuleStates());
 	}
@@ -371,18 +379,14 @@ public class Drive extends SubsystemBase {
 				visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
 	}
 
-	/** Returns the maximum linear speed in meters per sec. */
+	/** Returns the maximum linear speed. */
 	public LinearVelocity getMaximumSpeed() {
 		return MAX_SPEED;
 	}
 
-	/** Returns the maximum angular speed in radians per sec. */
+	/** Returns the maximum angular speed. */
 	public AngularVelocity getMaximumAngularSpeed() {
 		return RadiansPerSecond.of(MAX_SPEED.in(MetersPerSecond) / DRIVE_BASE_RADIUS.in(Meters));
-	}
-
-	public Module[] getModules() {
-		return modules;
 	}
 
 	public Distance getDistanceFrom(Translation2d other) {
@@ -464,5 +468,21 @@ public class Drive extends SubsystemBase {
 					this.runVelocity(speeds);
 				},
 				this);
+	}
+
+	public Command turnToAngle(Supplier<Rotation2d> rotation) {
+		return Commands.run(
+			() -> {
+				Rotation2d error = rotation.get().minus(this.getRotation());
+				double output = headingPID.calculate(error.getRadians());
+				output = MathUtil.clamp(output, -1, 1);
+
+				AngularVelocity angularVelocity = this.getMaximumAngularSpeed().times(output);
+				ChassisSpeeds speeds = new ChassisSpeeds(MetersPerSecond.of(0), MetersPerSecond.of(0), angularVelocity);
+				this.runVelocity(speeds);
+			}, this
+		).until(
+			this.headingPID::atSetpoint
+		);
 	}
 }

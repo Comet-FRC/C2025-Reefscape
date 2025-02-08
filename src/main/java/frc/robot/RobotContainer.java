@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -226,7 +227,11 @@ public class RobotContainer {
 		);
 
 		this.controller.b().whileTrue(
-			this.intake.sysIdRoutinePivot()
+			DriveCommands.feedforwardCharacterization(drive)
+		);
+
+		this.controller.rightStick().whileTrue(
+			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 	}
 
