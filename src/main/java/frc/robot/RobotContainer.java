@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -118,12 +119,15 @@ public class RobotContainer {
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
-				this.vision = new ApriltagVision(
+				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
+
+				/*this.vision = new ApriltagVision(
 						drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVisionSim(
 								"limelight-shooter",
 								robotToCamera0,
-								swerveDriveSimulation::getSimulatedDriveTrainPose));
+								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				break;
@@ -175,22 +179,18 @@ public class RobotContainer {
 		 */
 	}
 
-	/**
-	 * Use this method to define your button->command mappings. Buttons can be
-	 * created by
-	 * instantiating a {@link GenericHID} or one of its subclasses ({@link
-	 * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
-	 * it to a {@link
-	 * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-	 */
 	private void setupButtonBindings() {
-		// Default command, normal field-relative drive
 		this.drive.setDefaultCommand(
-				DriveCommands.joystickDrive(
-						drive,
-						() -> -controller.getLeftY(),
-						() -> -controller.getLeftX(),
-						() -> controller.getRightX()));
+			this.drive.joystickDrive(
+				() -> -controller.getLeftY(),
+				() -> -controller.getLeftX(),
+				() ->  {
+					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+					return right-left;
+				}
+			)
+		);
 
 		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 
@@ -230,7 +230,11 @@ public class RobotContainer {
 		);
 
 		this.controller.b().whileTrue(
-			this.intake.sysIdRoutinePivot()
+			DriveCommands.feedforwardCharacterization(drive)
+		);
+
+		this.controller.left().whileTrue(
+			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 	}
 
