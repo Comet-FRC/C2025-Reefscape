@@ -5,6 +5,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+
+import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Hoodtake extends SubsystemBase {
@@ -30,11 +33,11 @@ public class Hoodtake extends SubsystemBase {
 				this);
 	}
 
-	public Command setPosition(Angle position) {
-		return Commands.run(() -> io.setPivotPositionSetpoint(position), this);
+	public Command setPosition(Supplier<Angle> position) {
+		return Commands.run(() -> io.setPivotPositionSetpoint(position.get()), this);
 	}
 
-	public Command setWheelVelocity(AngularVelocity velocity) {
-		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity), this);
+	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
+		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
 }

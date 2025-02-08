@@ -79,6 +79,7 @@ public class Intake extends SubsystemBase {
 				this)
 		);
 
+
 		Command routineCommand = new SequentialCommandGroup(
 			routine.dynamic(Direction.kForward),
 			Commands.waitSeconds(1),
@@ -88,7 +89,44 @@ public class Intake extends SubsystemBase {
 			Commands.waitSeconds(1),
 			routine.quasistatic(Direction.kReverse)
 		);
+		
 
+		return routineCommand;
+	}
+	public Command sysIdRoutineWheel() {
+		SysIdRoutine routine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				null,
+				Volts.of(8.5),
+				null,
+				(state) -> Logger.recordOutput(
+					"SysId/intake-wheel", state.toString()
+				)
+			),
+			new SysIdRoutine.Mechanism(
+				io::setWheelVoltage,
+				log -> {
+					Logger.recordOutput("SysId/intake-wheel/Voltage", inputs.wheelAppliedVoltage);
+					Logger.recordOutput("SysId/intake-wheel/Velocity", inputs.wheelVelocity);
+					Logger.recordOutput("SysId/intake-wheel/Position", inputs.wheelPosition);
+					log.motor("intake-wheel")
+						.voltage(inputs.wheelAppliedVoltage)
+						.angularPosition(inputs.wheelPosition)
+						.angularVelocity(inputs.wheelVelocity);
+				}, 
+				this)
+		);
+
+
+		Command routineCommand = new SequentialCommandGroup(
+			routine.dynamic(Direction.kForward),
+			Commands.waitSeconds(1),
+			routine.dynamic(Direction.kReverse),
+			Commands.waitSeconds(1),
+			routine.quasistatic(Direction.kForward),
+			Commands.waitSeconds(1),
+			routine.quasistatic(Direction.kReverse)
+		);
 		return routineCommand;
 	}
 }

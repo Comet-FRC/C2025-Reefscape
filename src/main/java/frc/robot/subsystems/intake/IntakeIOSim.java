@@ -11,29 +11,31 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import static edu.wpi.first.units.Units.*;
 
 
 public class IntakeIOSim implements IntakeIO {
-	private final FlywheelSim wheelMotor = configureWheelMotor();
+	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
 
-	private static FlywheelSim configureWheelMotor() {
+	private static DCMotorSim configureWheelMotor() {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
-		LinearSystem<N1, N1, N1> wheelPlant = LinearSystemId.createFlywheelSystem(
+		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
 			wheelGearbox,
-			IntakeConstants.WHEEL_CONVERSION_FACTOR,
-			IntakeConstants.WHEEL_MOI
+			IntakeConstants.WHEEL_MOI,
+			IntakeConstants.WHEEL_CONVERSION_FACTOR
 		);
-		return new FlywheelSim(wheelPlant, wheelGearbox);
+		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
 
 	private static SingleJointedArmSim configurePivotMotor() {
@@ -84,7 +86,6 @@ public class IntakeIOSim implements IntakeIO {
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
-	private Voltage wheelAppliedVoltage = Volts.of(0.0);
 
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
@@ -93,6 +94,7 @@ public class IntakeIOSim implements IntakeIO {
 
 		runLoopControl();
 
+		inputs.wheelPosition = wheelMotor.getAngularPosition();
 		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
 		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
 		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getInputVoltage());

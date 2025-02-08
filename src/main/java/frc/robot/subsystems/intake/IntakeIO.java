@@ -13,6 +13,7 @@ import static edu.wpi.first.units.Units.*;
 public interface IntakeIO {
 	@AutoLog
 	public static class IntakeIOInputs {
+		public Angle wheelPosition = Radians.of(0);
 		public AngularVelocity wheelVelocity = RadiansPerSecond.of(0);
 		public AngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0);
 		public Voltage wheelAppliedVoltage = Volts.of(0);

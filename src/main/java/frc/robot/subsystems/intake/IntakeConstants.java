@@ -30,14 +30,14 @@ public final class IntakeConstants {
 	public static final double WHEEL_kP = 0;
 	public static final double WHEEL_kI = 0;
 	public static final double WHEEL_kD = 0;
-	public static final double WHEEL_SIM_kP = 0;
+	public static final double WHEEL_SIM_kP = 3.596;
 	public static final double WHEEL_SIM_kI = 0;
 	public static final double WHEEL_SIM_kD = 0;
 	public static final double WHEEL_kS = 0;
 	public static final double WHEEL_kV = 0;
 	public static final double WHEEL_kA = 0;
-	public static final double WHEEL_SIM_kS = 0;
-	public static final double WHEEL_SIM_kV = 0;
+	public static final double WHEEL_SIM_kS = 6.6332;
+	public static final double WHEEL_SIM_kV = 1688.8;
 	public static final double WHEEL_SIM_kA = 0;
 
 	public static final Mass WHEEL_MASS = Pounds.of(0.035);

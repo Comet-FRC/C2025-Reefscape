@@ -36,6 +36,10 @@ import frc.robot.subsystems.drive.gyro.GyroIOSim;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOMapleSim;
 import frc.robot.subsystems.drive.module.ModuleIOSpark;
+import frc.robot.subsystems.hoodtake.Hoodtake;
+import frc.robot.subsystems.hoodtake.HoodtakeIOSim;
+import frc.robot.subsystems.hoodtake.HoodtakeIOSpark;
+import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
@@ -48,7 +52,6 @@ import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
-import frc.robot.util.controller.CometController;
 import frc.robot.util.controller.*;
 
 import org.ironmaple.simulation.SimulatedArena;
@@ -74,8 +77,9 @@ public class RobotContainer {
 	private final ApriltagVision vision;
 	private final Shooter shooter;
 	private final Intake intake;
+	private final Hoodtake hoodtake;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometLogitechController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -97,6 +101,7 @@ public class RobotContainer {
 						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
+				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
 				break;
 
 			case SIM:
@@ -131,6 +136,7 @@ public class RobotContainer {
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
+				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
 				break;
 
 			default: // Replayed robot, disable IO implementations
@@ -144,6 +150,7 @@ public class RobotContainer {
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
+				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
 				break;
 		}
 
@@ -193,7 +200,6 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 
 		// Lock to 0° when A button is held
 		/*
@@ -230,15 +236,21 @@ public class RobotContainer {
 			this.intake.setPosition(() -> Degrees.of(90))
 		);
 
-		this.controller.b().whileTrue(
+		/*this.controller.b().whileTrue(
 			DriveCommands.feedforwardCharacterization(drive)
 		);
+		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
+		*/
 
 		this.controller.left().whileTrue(
 			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 
-		this.controller.b().whileTrue(new ShootOnMove(drive, shooter));
+		this.controller.right().whileTrue(
+			this.intake.setWheelVelocity(() -> RPM.of(50))	
+		);
+
+		//this.controller.b().whileTrue(this.intake.sysIdRoutineWheel());
 	}
 
 	/**

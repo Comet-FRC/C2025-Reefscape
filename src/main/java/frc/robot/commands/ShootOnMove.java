@@ -47,11 +47,11 @@ public class ShootOnMove extends Command {
             distanceToNet = drive.getPose().getTranslation().getDistance(bound2);
         }
 
-        double t = 1.5; // TODO: change t
+        double t = 20000000; // TODO: change t
         boolean shootOnMove = distanceToNet / yVelocity < t; // If the robot is within t seconds of the net, shoot
 
         if (shootOnMove) {
-            double scalar = -1;
+            double scalar = 1;
             shooter.shootFromDistance(() -> {
                 double omega = xVelocity * scalar; // TODO: figure out scalar
 
