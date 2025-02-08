@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.ShootOnMove;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -93,7 +94,7 @@ public class RobotContainer {
 						new ModuleIOSpark(2),
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
-						new ApriltagVisionIOPhotonVision(Camera.LeftApriltag), new ApriltagVisionIOPhotonVision(Camera.RightApriltag));
+						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				break;
@@ -236,6 +237,8 @@ public class RobotContainer {
 		this.controller.left().whileTrue(
 			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
+
+		this.controller.b().whileTrue(new ShootOnMove(drive, shooter));
 	}
 
 	/**

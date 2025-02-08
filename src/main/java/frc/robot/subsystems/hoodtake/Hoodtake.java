@@ -3,10 +3,8 @@ package frc.robot.subsystems.hoodtake;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Hoodtake extends SubsystemBase {

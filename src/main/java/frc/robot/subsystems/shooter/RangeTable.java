@@ -1,9 +1,11 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
+import edu.wpi.first.units.measure.Distance;
 
 public class RangeTable {
 
@@ -36,5 +38,9 @@ public class RangeTable {
      */
     public ShooterSpeed get(double distance) {
         return this.RANGE_TABLE.get(distance);
+    }
+
+    public ShooterSpeed get(Distance distance) {
+        return this.get(distance.in(Meters));
     }
 }
