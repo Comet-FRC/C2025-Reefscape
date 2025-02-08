@@ -41,7 +41,7 @@ public class ShootOnMove extends Command {
         double vx = drive.getChassisSpeeds().vxMetersPerSecond; // Forward/backward movement
         double vy = drive.getChassisSpeeds().vyMetersPerSecond; // Sideways movement (Left is +)
         
-    // Get distance to the net based on robot movement        
+    // Get distance to the net based on robot Y movement        
     if(vy > 0){
         distanceToNet = drive.getPose().getTranslation().getDistance(bound1);
         } else {
