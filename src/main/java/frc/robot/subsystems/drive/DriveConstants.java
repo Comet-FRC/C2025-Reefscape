@@ -12,9 +12,9 @@ public class DriveConstants {
     public static final LinearVelocity MINUMUM_VELOCITY = MetersPerSecond.of(0.1);
     public static final AngularVelocity MINUMUM_ANGULAR_VELOCITY = RadiansPerSecond.of(0.01);
 
-    public static final double HEADING_kP = 0.1;
+    public static final double HEADING_kP = 0.4;
     public static final double HEADING_kI = 0;
-    public static final double HEADING_kD = 0.01;
+    public static final double HEADING_kD = 0.01475;
 
 
 

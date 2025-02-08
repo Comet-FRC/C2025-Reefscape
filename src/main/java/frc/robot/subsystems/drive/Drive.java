@@ -333,7 +333,7 @@ public class Drive extends SubsystemBase {
 		return poseEstimator.getEstimatedPosition();
 	}
 
-	@AutoLogOutput(key = "Gyro/Yaw")
+	@AutoLogOutput(key = "Odometry/Gyro/Yaw")
 	public Angle getRawGyroAngle() {
 		return gyroInputs.yawPosition.getMeasure();
 	}
@@ -348,6 +348,10 @@ public class Drive extends SubsystemBase {
 	/** Returns the current odometry rotation. */
 	public Rotation2d getRotation() {
 		return getPose().getRotation();
+	}
+
+	public ChassisSpeeds getFieldOrientedChassisSpeeds() {
+		return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getRotation());
 	}
 
 	/** Resets the current odometry pose. */
@@ -473,8 +477,7 @@ public class Drive extends SubsystemBase {
 	public Command turnToAngle(Supplier<Rotation2d> rotation) {
 		return Commands.run(
 			() -> {
-				Rotation2d error = rotation.get().minus(this.getRotation());
-				double output = headingPID.calculate(error.getRadians());
+				double output = headingPID.calculate(this.getRotation().getRadians(), rotation.get().getRadians());
 				output = MathUtil.clamp(output, -1, 1);
 
 				AngularVelocity angularVelocity = this.getMaximumAngularSpeed().times(output);
@@ -484,5 +487,10 @@ public class Drive extends SubsystemBase {
 		).until(
 			this.headingPID::atSetpoint
 		);
+	}
+
+	@AutoLogOutput(key = "Swerve/HeadingPIDSetpoint")
+	public Rotation2d getHeadingPIDSetpoint() {
+		return Rotation2d.fromRadians(this.headingPID.getSetpoint());
 	}
 }

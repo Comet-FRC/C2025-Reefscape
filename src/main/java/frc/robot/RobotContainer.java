@@ -119,12 +119,15 @@ public class RobotContainer {
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
 						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
-				this.vision = new ApriltagVision(
+				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
+
+				/*this.vision = new ApriltagVision(
 						drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVisionSim(
 								"limelight-shooter",
 								robotToCamera0,
-								swerveDriveSimulation::getSimulatedDriveTrainPose));
+								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				break;
@@ -230,7 +233,7 @@ public class RobotContainer {
 			DriveCommands.feedforwardCharacterization(drive)
 		);
 
-		this.controller.rightStick().whileTrue(
+		this.controller.left().whileTrue(
 			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 	}
