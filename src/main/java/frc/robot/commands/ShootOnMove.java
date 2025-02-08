@@ -38,23 +38,23 @@ public class ShootOnMove extends Command {
   
         ChassisSpeeds deltaVelocity = drive.getFieldOrientedChassisSpeeds();
         // Get robot movement data
-        double deltaFowardVelocity = deltaVelocity.vxMetersPerSecond; // Forward/backward movement
-        double deltaSidewaysVelocity = deltaVelocity.vyMetersPerSecond; // Sideways movement (Left is +)
+        double xVelocity = deltaVelocity.vxMetersPerSecond; // Forward/backward movement
+        double yVelocity = deltaVelocity.vyMetersPerSecond; // Sideways movement (Left is +)
         
-    // Get distance to the net based on robot Y movement        
-    if(deltaSidewaysVelocity > 0.0){
+    // Get distance to the net edge based on robot Y movement        
+    if(yVelocity > 0.0){
         distanceToNet = drive.getPose().getTranslation().getDistance(bound1);
         } else {
         distanceToNet = drive.getPose().getTranslation().getDistance(bound2);
     }
     
     double t = 1.5; //TODO: change t
-    boolean shootOnMove = distanceToNet/ deltaSidewaysVelocity < t; // If the robot is within t seconds of the net, shoot
+    boolean shootOnMove = distanceToNet/ yVelocity < t; // If the robot is within t seconds of the net, shoot
 
     if(shootOnMove){
         double scalar = -1; 
         shooter.shootFromDistance(() -> {
-            double omega = deltaFowardVelocity * scalar; //TODO: figure out scalar                                         
+            double omega = xVelocity * scalar; //TODO: figure out scalar                                         
 
             return Meters.of(drive.getPose().getX() + omega);
         });
