@@ -30,15 +30,15 @@ public class Shooter extends SubsystemBase {
 
 
 	public boolean readyToShoot(){
-		if (inputs.topDesiredVelocity.minus(inputs.topVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
+		if (inputs.topWheelDesiredVelocity.minus(inputs.topWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;
-		if (inputs.bottomDesiredVelocity.minus(inputs.bottomVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
+		if (inputs.bottomWheelDesiredVelocity.minus(inputs.bottomWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;
 		return true;
 	}
 
 	public Command stop() {
-		return Commands.run(() -> io.setAngularVelocity(new ShooterSpeed(RPM.of(0), RPM.of(0))));
+		return Commands.run(() -> io.setWheelVelocitySetpoint(RPM.of(0), RPM.of(0)));
 	}
 
 		//TODO: Lowk bad practice, figure out cleaner way
@@ -46,22 +46,16 @@ public class Shooter extends SubsystemBase {
 		return Commands.run(() -> {
 				AngularVelocity topSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getTopMotorSpeed();
 				AngularVelocity botSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getBotMotorSpeed();
-				io.setAngularVelocity(new ShooterSpeed(topSpeed, botSpeed));
+				io.setWheelVelocitySetpoint(topSpeed, botSpeed);
 				
 		});
 	}
 
 	public Command shoot(AngularVelocity topSpeed, AngularVelocity botSpeed) {
 		return Commands.run(() -> {
-				io.setAngularVelocity(new ShooterSpeed(topSpeed, botSpeed));
+				io.setWheelVelocitySetpoint(topSpeed, botSpeed);
 		});
 	}
 
-	public AngularVelocity getTopVelocity(){
-		return inputs.topVelocity;
-	}
-	public AngularVelocity getBottomVelocity(){
-		return inputs.bottomVelocity;
-	}
 }
 

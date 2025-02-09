@@ -251,6 +251,7 @@ public class RobotContainer {
 		);
 
 		//this.controller.b().whileTrue(this.intake.sysIdRoutineWheel());
+		this.controller.b().whileTrue(this.shooter.shoot(RPM.of(5000), RPM.of(5000)));
 	}
 
 	/**
