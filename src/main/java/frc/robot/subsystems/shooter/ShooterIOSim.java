@@ -35,32 +35,18 @@ public class ShooterIOSim implements ShooterIO {
 	}
 
 
-	private final PIDController topWheelPID =
+	private final PIDController WheelPID =
 		new PIDController(
-			ShooterConstants.topWheelSIM_kP,
-			ShooterConstants.topWheelSIM_kI,
-			ShooterConstants.topWheelSIM_kD
+			ShooterConstants.WheelSIM_kP,
+			ShooterConstants.WheelSIM_kI,
+			ShooterConstants.WheelSIM_kD
 		);
 
-	private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
-		ShooterConstants.topWheelSIM_kS,
-		ShooterConstants.topWheelSIM_kV,
-		ShooterConstants.topWheelSIM_kA
+	private final SimpleMotorFeedforward WheelFF = new SimpleMotorFeedforward(
+		ShooterConstants.WheelSIM_kS,
+		ShooterConstants.WheelSIM_kV,
+		ShooterConstants.WheelSIM_kA
 	);
-
-	private final PIDController bottomWheelPID = 
-		new PIDController(
-			ShooterConstants.bottomWheelSIM_kP,
-			ShooterConstants.bottomWheelSIM_kI,
-			ShooterConstants.bottomWheelSIM_kD
-		);
-
-	private final SimpleMotorFeedforward bottomWheelFF =
-		new SimpleMotorFeedforward(
-			ShooterConstants.bottomWheelSIM_kS,
-			ShooterConstants.bottomWheelSIM_kV,
-			ShooterConstants.bottomWheelSIM_kA
-		);
 
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
@@ -74,13 +60,13 @@ public class ShooterIOSim implements ShooterIO {
 
 		inputs.topWheelPosition = topWheelMotor.getAngularPosition();
 		inputs.topWheelVelocity = topWheelMotor.getAngularVelocity();
-		inputs.topWheelDesiredVelocity = RadiansPerSecond.of(topWheelPID.getSetpoint());
+		inputs.topWheelDesiredVelocity = RadiansPerSecond.of(WheelPID.getSetpoint());
 		inputs.topWheelAppliedVoltage = Volts.of(topWheelMotor.getInputVoltage());
 		inputs.topWheelSupplyCurrent = Amps.of(topWheelMotor.getCurrentDrawAmps());
 
 		inputs.bottomWheelPosition = topWheelMotor.getAngularPosition();
 		inputs.bottomWheelVelocity = topWheelMotor.getAngularVelocity();
-		inputs.bottomWheelDesiredVelocity = RadiansPerSecond.of(bottomWheelPID.getSetpoint());
+		inputs.bottomWheelDesiredVelocity = RadiansPerSecond.of(WheelPID.getSetpoint());
 		inputs.bottomWheelAppliedVoltage = Volts.of(topWheelMotor.getInputVoltage());
 		inputs.bottomWheelSupplyCurrent = Amps.of(topWheelMotor.getCurrentDrawAmps());
 	
@@ -89,15 +75,15 @@ public class ShooterIOSim implements ShooterIO {
 	private void runLoopControl() {
 		if (!wheelVoltageMode) {
 			topWheelMotor.setInputVoltage(
-				topWheelPID.calculate(topWheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				WheelPID.calculate(topWheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
-				topWheelFF.calculate(topWheelPID.getSetpoint())
+				WheelFF.calculate(WheelPID.getSetpoint())
 			);
 
 			bottomWheelMotor.setInputVoltage(
-				bottomWheelPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				WheelPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
-				bottomWheelFF.calculate(bottomWheelPID.getSetpoint())
+				WheelFF.calculate(WheelPID.getSetpoint())
 			);
 		}
 
@@ -107,8 +93,8 @@ public class ShooterIOSim implements ShooterIO {
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
 		this.wheelVoltageMode = false;
-		topWheelPID.setSetpoint(topVelocity.in(RadiansPerSecond));
-		bottomWheelPID.setSetpoint(bottomVelocity.in(RadiansPerSecond));
+		WheelPID.setSetpoint(topVelocity.in(RadiansPerSecond));
+		WheelPID.setSetpoint(bottomVelocity.in(RadiansPerSecond));
 	}
 
 	@Override

@@ -20,31 +20,18 @@ public class ShooterConstants {
 	public static final Mass WHEEL_MASS = Pounds.of(0.86);
 	public static final double WHEEL_MOMENT_OF_INERTIA = 0.5 * WHEEL_MASS.in(Kilograms) * Math.pow(WHEEL_RADIUS.in(Meters), 2);
 
-	public static final double topWheelkP = 0;
-	public static final double topWheelkI = 0;
-	public static final double topWheelkD = 0;
-	public static final double topWheelSIM_kP = 0;
-	public static final double topWheelSIM_kI = 0;
-	public static final double topWheelSIM_kD = 0;
- 	public static final double topWheelkS = 0;
-	public static final double topWheelkV = 0;
-	public static final double topWheelkA = 0;
-	public static final double topWheelSIM_kS = 0;
-	public static final double topWheelSIM_kV = 0;
-	public static final double topWheelSIM_kA = 0;
-
-	public static final double bottomWheelkP = 0;
-	public static final double bottomWheelkI = 0;
-	public static final double bottomWheelkD = 0;
-	public static final double bottomWheelSIM_kP = 0;
-	public static final double bottomWheelSIM_kI = 0;
-	public static final double bottomWheelSIM_kD = 0;
- 	public static final double bottomWheelkS = 0;
-	public static final double bottomWheelkV = 0;
-	public static final double bottomWheelkA = 0;
-	public static final double bottomWheelSIM_kS = 0;
-	public static final double bottomWheelSIM_kV = 0;
-	public static final double bottomWheelSIM_kA = 0;
+	public static final double WheelkP = 0;
+	public static final double WheelkI = 0;
+	public static final double WheelkD = 0;
+	public static final double WheelSIM_kP = 0;
+	public static final double WheelSIM_kI = 0;
+	public static final double WheelSIM_kD = 0;
+ 	public static final double WheelkS = 0;
+	public static final double WheelkV = 0;
+	public static final double WheelkA = 0;
+	public static final double WheelSIM_kS = 0;
+	public static final double WheelSIM_kV = 0;
+	public static final double WheelSIM_kA = 0;
 
 	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RadiansPerSecond.of(0.1);	
 }

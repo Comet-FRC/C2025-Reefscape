@@ -25,15 +25,10 @@ public class ShooterIOSpark implements ShooterIO {
 	private final SparkMax topMotor = new SparkMax(ShooterConstants.TOP_MOTOR_ID, MotorType.kBrushless);
 	private final SparkMax bottomMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
-		private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
-		ShooterConstants.topWheelkS,
-		ShooterConstants.topWheelkV,
-		ShooterConstants.topWheelkA
-	);
-	private final SimpleMotorFeedforward bottomWheelFF = new SimpleMotorFeedforward(
-		ShooterConstants.bottomWheelkS,
-		ShooterConstants.bottomWheelkV,
-		ShooterConstants.bottomWheelkA
+		private final SimpleMotorFeedforward WheelFF = new SimpleMotorFeedforward(
+		ShooterConstants.WheelkS,
+		ShooterConstants.WheelkV,
+		ShooterConstants.WheelkA
 	);
 
 	public ShooterIOSpark() {
@@ -53,9 +48,9 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.topWheelkP)
-				.i(ShooterConstants.topWheelkI)
-				.d(ShooterConstants.topWheelkD);
+				.p(ShooterConstants.WheelkP)
+				.i(ShooterConstants.WheelkI)
+				.d(ShooterConstants.WheelkD);
 
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
@@ -71,9 +66,9 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.bottomWheelkP)
-				.i(ShooterConstants.bottomWheelkP)
-				.d(ShooterConstants.bottomWheelkP);
+				.p(ShooterConstants.WheelkP)
+				.i(ShooterConstants.WheelkP)
+				.d(ShooterConstants.WheelkP);
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
@@ -97,10 +92,10 @@ public class ShooterIOSpark implements ShooterIO {
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
 		double topVelocityRadiansPerSecond = topVelocity.in(RadiansPerSecond);
-		double topFeedForward = topWheelFF.calculate(topVelocityRadiansPerSecond);
+		double topFeedForward = WheelFF.calculate(topVelocityRadiansPerSecond);
 
 		double bottomVelocityRadiansPerSecond = bottomVelocity.in(RadiansPerSecond);
-		double bottomFeedForward = bottomWheelFF.calculate(bottomVelocityRadiansPerSecond);
+		double bottomFeedForward = WheelFF.calculate(bottomVelocityRadiansPerSecond);
 
 		topMotor.getClosedLoopController().setReference(
 			topVelocityRadiansPerSecond,
