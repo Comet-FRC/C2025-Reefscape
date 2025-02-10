@@ -107,6 +107,23 @@ public class Drive extends SubsystemBase {
 			DriveConstants.HEADING_kI,
 			DriveConstants.HEADING_kD);
 
+	private PIDController xPID = new PIDController(
+			DriveConstants.TRANSLATION_kP,
+			DriveConstants.TRANSLATION_kI,
+			DriveConstants.TRANSLATION_kD);
+
+	private PIDController yPID = new PIDController(
+			DriveConstants.TRANSLATION_kP,
+			DriveConstants.TRANSLATION_kI,
+			DriveConstants.TRANSLATION_kD);
+
+	/** true if translation control is overridden */
+	boolean isTranslationPIDEnabled = false;
+	/** true if heading control is overridden */
+	boolean isHeadingPIDEnabled = false;
+
+	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
+
 	public Drive(
 			GyroIO gyroIO,
 			ModuleIO flModuleIO,
@@ -167,6 +184,37 @@ public class Drive extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		if (isTranslationPIDEnabled) {
+			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
+		
+			targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
+			targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
+		
+			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
+		}
+
+		if (isHeadingPIDEnabled) {
+			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians(), targetHeading.getRadians());
+		}
+
+		// Calculate module setpoints
+		ChassisSpeeds speeds = ChassisSpeeds.discretize(targetChassisSpeeds, 0.02);
+
+		SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
+		SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, SwerveConstants.MAX_SPEED);
+
+		// Log unoptimized setpoints
+		Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+		Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", speeds);
+
+		// Send setpoints to modules
+		for (int i = 0; i < 4; i++) {
+			modules[i].runSetpoint(setpointStates[i]);
+		}
+
+		// Log optimized setpoints (runSetpoint mutates each state)
+		Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+
 		odometryLock.lock(); // Prevents odometry updates while reading data
 		gyroIO.updateInputs(gyroInputs);
 		Logger.processInputs("Drive/Gyro", gyroInputs);
@@ -228,24 +276,7 @@ public class Drive extends SubsystemBase {
 	 * @param speeds Speeds in meters/sec
 	 */
 	public void runVelocity(ChassisSpeeds speeds) {
-
-		// Calculate module setpoints
-		speeds = ChassisSpeeds.discretize(speeds, 0.02);
-
-		SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
-		SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, MAX_SPEED);
-
-		// Log unoptimized setpoints
-		Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
-		Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", speeds);
-
-		// Send setpoints to modules
-		for (int i = 0; i < 4; i++) {
-			modules[i].runSetpoint(setpointStates[i]);
-		}
-
-		// Log optimized setpoints (runSetpoint mutates each state)
-		Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+		targetChassisSpeeds = speeds;
 	}
 
 	/** Runs the drive in a straight line with the specified drive output. */
