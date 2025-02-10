@@ -52,6 +52,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -101,6 +102,8 @@ public class Drive extends SubsystemBase {
 			};
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(10, 5, new Rotation2d()));
+
+	Pose2d closestAlgaePose = null;
 
 	private PIDController headingPID = new PIDController(
 			DriveConstants.HEADING_kP,
@@ -186,15 +189,15 @@ public class Drive extends SubsystemBase {
 	public void periodic() {
 		if (isTranslationPIDEnabled) {
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
-		
+
 			targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
 			targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
-		
+
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 		}
 
 		if (isHeadingPIDEnabled) {
-			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians(), targetHeading.getRadians());
+			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
 		}
 
 		// Calculate module setpoints
@@ -268,6 +271,8 @@ public class Drive extends SubsystemBase {
 
 		// Update gyro alert
 		DriveConstants.ALERT_DISCONNECTED_GYRO.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+
+		this.updateClosestAlgaePose();
 	}
 
 	/**
@@ -520,27 +525,12 @@ public class Drive extends SubsystemBase {
 				this);
 	}
 
-	public Command turnToAngle(Supplier<Rotation2d> rotation) {
-		return Commands.run(
-				() -> {
-					double output = headingPID.calculate(this.getRotation().getRadians(), rotation.get().getRadians());
-					output = MathUtil.clamp(output, -1, 1);
-
-					AngularVelocity angularVelocity = this.getMaximumAngularSpeed().times(output);
-					ChassisSpeeds speeds = new ChassisSpeeds(MetersPerSecond.of(0), MetersPerSecond.of(0),
-							angularVelocity);
-					this.runVelocity(speeds);
-				}, this).until(
-						this.headingPID::atSetpoint);
-	}
-
 	@AutoLogOutput(key = "Swerve/HeadingPIDSetpoint")
 	public Rotation2d getHeadingPIDSetpoint() {
 		return Rotation2d.fromRadians(this.headingPID.getSetpoint());
 	}
 
-	@AutoLogOutput(key = "Automation/ClosestAlgaePose")
-	public Pose2d getClosestAlgaePose() {
+	public void updateClosestAlgaePose() {
 		Pose2d[] algaeLocations;
 
 		if (this.getPose().getX() < FieldConstants.fieldLength / 2.0) {
@@ -561,7 +551,12 @@ public class Drive extends SubsystemBase {
 			}
 		}
 
-		return closestPose;
+		this.closestAlgaePose = closestPose;
+	}
+
+	@AutoLogOutput(key = "Automation/ClosestAlgaePose")
+	public Pose2d getClosestAlgaePose() {
+		return closestAlgaePose;
 	}
 
 	public Command driveToClosestAlgae() {
@@ -572,7 +567,51 @@ public class Drive extends SubsystemBase {
 								this.getMaximumSpeed(),
 								MetersPerSecondPerSecond.of(4),
 								this.getMaximumAngularSpeed(),
-								DegreesPerSecondPerSecond.of(720))),
+								DegreesPerSecondPerSecond.of(720)))
+						.andThen(moveToPosePID(this::getClosestAlgaePose)),
 				Set.of(this));
+	}
+
+	public Command turnToAngle(Supplier<Rotation2d> rotation) {
+		return Commands.run(
+				() -> {
+					this.headingPID.setSetpoint(rotation.get().getRadians());
+				}, this).until(
+						this.headingPID::atSetpoint);
+	}
+
+	public Command moveToPositionPID(Supplier<Translation2d> pose) {
+		return Commands.run(
+				() -> {
+					this.xPID.setSetpoint(pose.get().getX());
+					this.yPID.setSetpoint(pose.get().getY());
+				}, this).until(
+						() -> this.xPID.atSetpoint() && this.yPID.atSetpoint());
+	}
+
+	public Command moveToPosePID(Supplier<Pose2d> pose) {
+		return
+			Commands.sequence(
+				Commands.runOnce(
+					() -> {
+						this.isHeadingPIDEnabled = true;
+						this.isTranslationPIDEnabled = true;
+					}
+				),
+				Commands.run(
+					() -> {
+						this.xPID.setSetpoint(pose.get().getX());
+						this.yPID.setSetpoint(pose.get().getY());
+						this.headingPID.setSetpoint(pose.get().getRotation().getRadians());
+					}, this
+				)
+			)
+			.finallyDo(() -> {
+				this.isHeadingPIDEnabled = false;
+				this.isTranslationPIDEnabled = false;
+			})
+			.until(
+				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint() && this.headingPID.atSetpoint()
+			);
 	}
 }
