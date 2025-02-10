@@ -13,6 +13,9 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+
+import static edu.wpi.first.units.Units.Degrees;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -75,6 +78,9 @@ public class FieldConstants {
 
     public static final Pose2d[] centerFaces =
         new Pose2d[6]; // Starting facing the driver station in clockwise order
+    public static final Pose2d[] reefAlgaeTargetPoses = new Pose2d[6]; 
+    public static final Pose2d[] reefAlgaeTargetPosesOpposingSide = new Pose2d[6]; 
+    
     public static final List<Map<ReefHeight, Pose3d>> branchPositions =
         new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
 
@@ -110,6 +116,25 @@ public class FieldConstants {
               Units.inchesToMeters(160.375),
               Units.inchesToMeters(130.144),
               Rotation2d.fromDegrees(-120));
+
+      for (int i=0; i<6; ++i) {
+
+        Translation2d relativeTranslation = centerFaces[i].getTranslation().minus(center);
+
+        System.out.println("Relative Translation: " + relativeTranslation);
+
+        reefAlgaeTargetPoses[i] = new Pose2d(
+          centerFaces[i].getX() + relativeTranslation.getX(),
+          centerFaces[i].getY() + relativeTranslation.getY(),
+          centerFaces[i].getRotation()
+        );
+        
+        reefAlgaeTargetPosesOpposingSide[i] = new Pose2d(
+          FieldConstants.fieldLength - reefAlgaeTargetPoses[i].getX(),
+          reefAlgaeTargetPoses[i].getY(),
+          reefAlgaeTargetPoses[i].getRotation().times(-1).plus(Rotation2d.fromDegrees(180))
+        );
+      }
 
       // Initialize branch positions
       for (int face = 0; face < 6; face++) {

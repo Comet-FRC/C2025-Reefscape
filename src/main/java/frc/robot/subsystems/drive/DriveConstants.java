@@ -16,7 +16,9 @@ public class DriveConstants {
     public static final double HEADING_kI = 0;
     public static final double HEADING_kD = 0.01475;
 
-
+    public static final double TRANSLATION_kP = 10;
+    public static final double TRANSLATION_kI = 0;
+    public static final double TRANSLATION_kD = 0;
 
     public static final Alert ALERT_DISCONNECTED_GYRO = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 }
