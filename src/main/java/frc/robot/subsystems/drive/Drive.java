@@ -52,6 +52,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -65,6 +66,7 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.SparkOdometryThread;
 import frc.robot.util.LocalADStarAK;
 
+import java.lang.annotation.Target;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -103,8 +105,6 @@ public class Drive extends SubsystemBase {
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(10, 5, new Rotation2d()));
 
-	Pose2d closestAlgaePose = null;
-
 	private PIDController headingPID = new PIDController(
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
@@ -126,6 +126,8 @@ public class Drive extends SubsystemBase {
 	boolean isHeadingPIDEnabled = false;
 
 	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
+
+	TargetAlgae targetAlgae = null;
 
 	public Drive(
 			GyroIO gyroIO,
@@ -272,7 +274,7 @@ public class Drive extends SubsystemBase {
 		// Update gyro alert
 		DriveConstants.ALERT_DISCONNECTED_GYRO.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
-		this.updateClosestAlgaePose();
+		this.updateTargetAlgae();
 	}
 
 	/**
@@ -478,6 +480,10 @@ public class Drive extends SubsystemBase {
 		field.setRobotPose(pose);
 	}
 
+	public boolean isOnOpposingSide() {
+		return this.getPose().getX() > FieldConstants.fieldLength / 2.0;
+	}
+
 	/**
 	 * Field relative drive command using two joysticks (controlling linear and
 	 * angular velocities).
@@ -530,88 +536,112 @@ public class Drive extends SubsystemBase {
 		return Rotation2d.fromRadians(this.headingPID.getSetpoint());
 	}
 
-	public void updateClosestAlgaePose() {
+	public void updateTargetAlgae() {
 		Pose2d[] algaeLocations;
 
-		if (this.getPose().getX() < FieldConstants.fieldLength / 2.0) {
+		boolean isOpposingReef = this.isOnOpposingSide();
+		if (!isOpposingReef) {
 			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPoses;
 		} else {
 			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPosesOpposingSide;
 		}
 
 		Pose2d closestPose = null;
+		int closestAlgaeIndex = -1;
 
-		for (Pose2d algaePose : algaeLocations) {
+		for (int i = 0; i < 6; ++i) {
+			Pose2d algaePose = algaeLocations[i];
 			if (closestPose == null) {
 				closestPose = algaePose;
+				closestAlgaeIndex = i;
 			} else {
 				if (this.getDistanceFrom(algaePose).lt(this.getDistanceFrom(closestPose))) {
 					closestPose = algaePose;
+					closestAlgaeIndex = i;
 				}
 			}
 		}
 
-		this.closestAlgaePose = closestPose;
+		this.targetAlgae = new TargetAlgae(closestPose, closestAlgaeIndex, isOpposingReef);
 	}
 
-	@AutoLogOutput(key = "Automation/ClosestAlgaePose")
-	public Pose2d getClosestAlgaePose() {
-		return closestAlgaePose;
+	@AutoLogOutput(key = "Automation/TargetAlgae")
+	public TargetAlgae getTargetAlgae() {
+		return targetAlgae;
 	}
 
 	public Command driveToClosestAlgae() {
-		return Commands.defer(
+		return
+
+		Commands.defer(
 				() -> AutoBuilder.pathfindToPose(
-						this.getClosestAlgaePose(),
+						this.getTargetAlgae().pose(),
 						new PathConstraints(
 								this.getMaximumSpeed(),
 								MetersPerSecondPerSecond.of(4),
 								this.getMaximumAngularSpeed(),
-								DegreesPerSecondPerSecond.of(720)))
-						.andThen(moveToPosePID(this::getClosestAlgaePose)),
+								DegreesPerSecondPerSecond.of(720)),
+								1)
+						.andThen(
+								this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
+										this.getTargetAlgae(),
+										Meters.of(0.6)))),
 				Set.of(this));
 	}
 
+	/**
+	 * Turns the robot to a specified angle using PID control.
+	 * To specify both translation and rotation, use
+	 * {@link #moveToPosePID(Supplier)}.
+	 */
 	public Command turnToAngle(Supplier<Rotation2d> rotation) {
-		return Commands.run(
-				() -> {
-					this.headingPID.setSetpoint(rotation.get().getRadians());
-				}, this).until(
-						this.headingPID::atSetpoint);
+		return new FunctionalCommand(
+				() -> this.isHeadingPIDEnabled = true,
+				() -> this.headingPID.setSetpoint(rotation.get().getRadians()),
+				(interrupted) -> this.isHeadingPIDEnabled = false,
+				this.headingPID::atSetpoint,
+				this);
 	}
 
-	public Command moveToPositionPID(Supplier<Translation2d> pose) {
-		return Commands.run(
+	/**
+	 * Moves the robot to a specified translation using PID control.
+	 * To specify both translation and rotation, use
+	 * {@link #moveToPosePID(Supplier)}.
+	 */
+	public Command moveToTranslationPID(Supplier<Translation2d> pose) {
+		return new FunctionalCommand(
+				() -> this.isTranslationPIDEnabled = true,
 				() -> {
 					this.xPID.setSetpoint(pose.get().getX());
 					this.yPID.setSetpoint(pose.get().getY());
-				}, this).until(
-						() -> this.xPID.atSetpoint() && this.yPID.atSetpoint());
+				},
+				(interrupted) -> this.isTranslationPIDEnabled = false,
+				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				this);
 	}
 
+	/**
+	 * Moves the robot to a specified pose using PID control.
+	 * 
+	 * @param pose the target pose
+	 * @return the command
+	 */
 	public Command moveToPosePID(Supplier<Pose2d> pose) {
-		return
-			Commands.sequence(
-				Commands.runOnce(
-					() -> {
-						this.isHeadingPIDEnabled = true;
-						this.isTranslationPIDEnabled = true;
-					}
-				),
-				Commands.run(
-					() -> {
-						this.xPID.setSetpoint(pose.get().getX());
-						this.yPID.setSetpoint(pose.get().getY());
-						this.headingPID.setSetpoint(pose.get().getRotation().getRadians());
-					}, this
-				)
-			)
-			.finallyDo(() -> {
-				this.isHeadingPIDEnabled = false;
-				this.isTranslationPIDEnabled = false;
-			})
-			.until(
-				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint() && this.headingPID.atSetpoint()
-			);
+		return new FunctionalCommand(
+				() -> {
+					this.isHeadingPIDEnabled = true;
+					this.isTranslationPIDEnabled = true;
+				},
+				() -> {
+					this.headingPID.setSetpoint(pose.get().getRotation().getRadians());
+					this.xPID.setSetpoint(pose.get().getX());
+					this.yPID.setSetpoint(pose.get().getY());
+				},
+				(interrupted) -> {
+					this.isHeadingPIDEnabled = false;
+					this.isTranslationPIDEnabled = false;
+				},
+				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				this);
 	}
 }
