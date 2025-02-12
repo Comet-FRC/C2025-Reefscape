@@ -27,6 +27,8 @@ public class IntakeIOSim implements IntakeIO {
 	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
 
+	
+
 	private static DCMotorSim configureWheelMotor() {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
 		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
@@ -43,8 +45,8 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IntakeConstants.LENGTH.in(Meters), IntakeConstants.MASS.in(Kilograms)),
 			IntakeConstants.LENGTH.in(Meters),
-			0.0,
-			Math.PI,
+			-Double.MAX_VALUE,
+			Double.MAX_VALUE,
 			true,
 			0,
 			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
@@ -85,7 +87,10 @@ public class IntakeIOSim implements IntakeIO {
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
-
+	
+	public IntakeIOSim(){
+		pivotPID.enableContinuousInput(-Math.PI, Math.PI);
+	}
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		wheelMotor.update(0.02);
