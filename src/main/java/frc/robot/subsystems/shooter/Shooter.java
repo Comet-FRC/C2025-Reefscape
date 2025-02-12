@@ -10,7 +10,10 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 public class Shooter extends SubsystemBase {
 	public final ShooterIO io;
@@ -30,15 +33,15 @@ public class Shooter extends SubsystemBase {
 
 
 	public boolean readyToShoot(){
-		if (inputs.topDesiredVelocity.minus(inputs.topVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
+		if (inputs.topWheelDesiredVelocity.minus(inputs.topWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;
-		if (inputs.bottomDesiredVelocity.minus(inputs.bottomVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
+		if (inputs.bottomWheelDesiredVelocity.minus(inputs.bottomWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;
 		return true;
 	}
 
 	public Command stop() {
-		return Commands.run(() -> io.setAngularVelocity(new ShooterSpeed(RPM.of(0), RPM.of(0))));
+		return Commands.run(() -> io.setWheelVelocitySetpoint(RPM.of(0), RPM.of(0)));
 	}
 
 		//TODO: Lowk bad practice, figure out cleaner way
@@ -46,22 +49,52 @@ public class Shooter extends SubsystemBase {
 		return Commands.run(() -> {
 				AngularVelocity topSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getTopMotorSpeed();
 				AngularVelocity botSpeed = RANGE_TABLE.get(distance.get().in(Meters)).getBotMotorSpeed();
-				io.setAngularVelocity(new ShooterSpeed(topSpeed, botSpeed));
+				io.setWheelVelocitySetpoint(topSpeed, botSpeed);
 				
 		});
 	}
 
 	public Command shoot(AngularVelocity topSpeed, AngularVelocity botSpeed) {
 		return Commands.run(() -> {
-				io.setAngularVelocity(new ShooterSpeed(topSpeed, botSpeed));
+				io.setWheelVelocitySetpoint(topSpeed, botSpeed);
 		});
 	}
 
-	public AngularVelocity getTopVelocity(){
-		return inputs.topVelocity;
-	}
-	public AngularVelocity getBottomVelocity(){
-		return inputs.bottomVelocity;
+	public Command sysIdRoutineWheel() {
+		SysIdRoutine routine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				null,
+				Volts.of(8.5),
+				null,
+				(state) -> Logger.recordOutput(
+					"SysId/shooter-wheel", state.toString()
+				)
+			),
+			new SysIdRoutine.Mechanism(
+				io::setWheelVoltage,
+				log -> {
+					Logger.recordOutput("SysId/shooter-wheel/Voltage", inputs.topWheelAppliedVoltage);
+					Logger.recordOutput("SysId/shooter-wheel/Velocity", inputs.topWheelVelocity);
+					Logger.recordOutput("SysId/shooter-wheel/Position", inputs.topWheelPosition);
+					log.motor("shooter-wheel")
+						.voltage(inputs.topWheelAppliedVoltage)
+						.angularPosition(inputs.topWheelPosition)
+						.angularVelocity(inputs.topWheelVelocity);
+				}, 
+				this)
+		);
+
+
+		Command routineCommand = new SequentialCommandGroup(
+			routine.dynamic(Direction.kForward),
+			Commands.waitSeconds(1),
+			routine.dynamic(Direction.kReverse),
+			Commands.waitSeconds(1),
+			routine.quasistatic(Direction.kForward),
+			Commands.waitSeconds(1),
+			routine.quasistatic(Direction.kReverse)
+		);
+		return routineCommand;
 	}
 }
 

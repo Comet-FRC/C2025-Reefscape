@@ -4,13 +4,18 @@
 
 package frc.robot.subsystems.shooter;
 
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 
 import com.revrobotics.spark.SparkMax;
 
@@ -18,9 +23,18 @@ import static edu.wpi.first.units.Units.*;
 
 public class ShooterIOSpark implements ShooterIO {
 	private final SparkMax topMotor = new SparkMax(ShooterConstants.TOP_MOTOR_ID, MotorType.kBrushless);
-	private final SparkMax botMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
+	private final SparkMax bottomMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
-	private ShooterSpeed desiredShooterSpeed = new ShooterSpeed(RPM.of(0),RPM.of(0));
+		private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
+		ShooterConstants.topWheelkS,
+		ShooterConstants.topWheelkV,
+		ShooterConstants.topWheelkA
+	);
+	private final SimpleMotorFeedforward bottomWheelFF = new SimpleMotorFeedforward(
+		ShooterConstants.bottomWheelkS,
+		ShooterConstants.bottomWheelkV,
+		ShooterConstants.bottomWheelkA
+	);
 
 	public ShooterIOSpark() {
 		this.configureTopMotor();
@@ -39,9 +53,9 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.kP)
-				.i(ShooterConstants.kI)
-				.d(ShooterConstants.kD);
+				.p(ShooterConstants.topWheelkP)
+				.i(ShooterConstants.topWheelkI)
+				.d(ShooterConstants.topWheelkD);
 
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
@@ -57,38 +71,60 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.kP)
-				.i(ShooterConstants.kI)
-				.d(ShooterConstants.kD);
+				.p(ShooterConstants.bottomWheelkP)
+				.i(ShooterConstants.bottomWheelkP)
+				.d(ShooterConstants.bottomWheelkP);
 
-		botMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
-	
+	MutAngularVelocity topWheelDesiredVelocity = RadiansPerSecond.mutable(0);
+	MutAngularVelocity bottomWheelDesiredVelocity = RadiansPerSecond.mutable(0);
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
-		inputs.topVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
-		inputs.topAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
-		inputs.topSupplyCurrent = Amps.of(topMotor.getOutputCurrent());
+		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
+		inputs.topWheelAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
+		inputs.topWheelSupplyCurrent = Amps.of(topMotor.getOutputCurrent());
 		inputs.topTemperature = Celsius.of(topMotor.getMotorTemperature());
-		inputs.topDesiredVelocity = desiredShooterSpeed.topMotorSpeed;
+		inputs.topWheelDesiredVelocity = topWheelDesiredVelocity.copy();
 		
-		inputs.bottomVelocity = RadiansPerSecond.of(botMotor.getEncoder().getVelocity());
-		inputs.bottomAppliedVoltage = Volts.of(botMotor.getAppliedOutput() * botMotor.getBusVoltage());
-		inputs.bottomSupplyCurrent = Amps.of(botMotor.getOutputCurrent());
-		inputs.bottomTemperature= Celsius.of(botMotor.getMotorTemperature());
-		inputs.bottomDesiredVelocity = desiredShooterSpeed.botMotorSpeed;
+		inputs.bottomWheelVelocity = RadiansPerSecond.of(bottomMotor.getEncoder().getVelocity());
+		inputs.bottomWheelAppliedVoltage = Volts.of(bottomMotor.getAppliedOutput() * bottomMotor.getBusVoltage());
+		inputs.bottomWheelSupplyCurrent = Amps.of(bottomMotor.getOutputCurrent());
+		inputs.bottomWheelTemperature= Celsius.of(bottomMotor.getMotorTemperature());
+		inputs.bottomWheelDesiredVelocity = this.bottomWheelDesiredVelocity.copy();
 	}
 
 	@Override
-	public void setAngularVelocity(ShooterSpeed shooterSpeed) {
-		topMotor.getClosedLoopController().setReference(shooterSpeed.topMotorSpeed.in(RadiansPerSecond), ControlType.kVelocity);
-		botMotor.getClosedLoopController().setReference(shooterSpeed.botMotorSpeed.in(RadiansPerSecond), ControlType.kVelocity);
+	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
+		double topVelocityRadiansPerSecond = topVelocity.in(RadiansPerSecond);
+		double topFeedForward = topWheelFF.calculate(topVelocityRadiansPerSecond);
+
+		double bottomVelocityRadiansPerSecond = bottomVelocity.in(RadiansPerSecond);
+		double bottomFeedForward = bottomWheelFF.calculate(bottomVelocityRadiansPerSecond);
+
+		topMotor.getClosedLoopController().setReference(
+			topVelocityRadiansPerSecond,
+			ControlType.kVelocity,
+			ClosedLoopSlot.kSlot0,
+			topFeedForward,
+			ArbFFUnits.kVoltage
+		);
+
+		bottomMotor.getClosedLoopController().setReference(
+			bottomVelocityRadiansPerSecond,
+			ControlType.kVelocity,
+			ClosedLoopSlot.kSlot0,
+			bottomFeedForward,
+			ArbFFUnits.kVoltage
+		);
+
+		this.topWheelDesiredVelocity.mut_replace(topVelocity);
+		this.bottomWheelDesiredVelocity.mut_replace(bottomVelocity);	
 	}
 
 	@Override
 	public void stop() {
-		this.setAngularVelocity(new ShooterSpeed(RadiansPerSecond.of(0), RadiansPerSecond.of(0)));
+		this.setWheelVelocitySetpoint(RadiansPerSecond.of(0), RadiansPerSecond.of(0));
 	}
-
 
 }

@@ -98,10 +98,10 @@ public class IntakeIOSpark implements IntakeIO {
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(wheelMotor.getEncoder().getPosition());
-		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
-		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
-		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
+		inputs.pivotVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
+		inputs.pivotAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
+		inputs.pivotSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
+		inputs.pivotTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 	}
 
 	@Override
