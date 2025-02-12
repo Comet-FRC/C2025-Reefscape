@@ -39,6 +39,10 @@ import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.hoodtake.Hoodtake;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSim;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSpark;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIO;
+import frc.robot.subsystems.indexer.IndexerIOSim;
+import frc.robot.subsystems.indexer.IndexerIOSpark;
 import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
@@ -78,8 +82,9 @@ public class RobotContainer {
 	private final Shooter shooter;
 	private final Intake intake;
 	private final Hoodtake hoodtake;
+	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -102,6 +107,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
+				this.indexer = new Indexer(new IndexerIOSpark());
 				break;
 
 			case SIM:
@@ -114,7 +120,7 @@ public class RobotContainer {
 
 				this.swerveDriveSimulation = new SwerveDriveSimulation(
 						driveTrainSimulationConfig, // Specify Configuration
-						new Pose2d(3, 3, new Rotation2d()) // Specify starting pose
+						new Pose2d(3, 5, new Rotation2d()) // Specify starting pose
 				);
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
@@ -137,6 +143,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
+				this.indexer = new Indexer(new IndexerIOSim());
 				break;
 
 			default: // Replayed robot, disable IO implementations
@@ -151,6 +158,7 @@ public class RobotContainer {
 				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
+				this.indexer = new Indexer(new IndexerIO() {});
 				break;
 		}
 
@@ -234,9 +242,10 @@ public class RobotContainer {
 		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 		*/
 
-		this.controller.b().whileTrue(
+		/*this.controller.b().whileTrue(
 			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
+		*/
 
 		this.controller.down().whileTrue(
 			this.drive.driveToClosestAlgae()
@@ -250,6 +259,9 @@ public class RobotContainer {
 		);
 
 		//this.controller.b().whileTrue(this.intake.sysIdRoutineWheel());
+		this.controller.y().whileTrue(this.intake.setPosition(() -> Degrees.of(-90)));
+		this.controller.x().whileTrue(this.intake.setPosition(() -> Degrees.of(0)));
+		this.controller.b().whileTrue(this.intake.setPivotVoltage(() -> Volts.of(-12)));
 	}
 
 	/**
