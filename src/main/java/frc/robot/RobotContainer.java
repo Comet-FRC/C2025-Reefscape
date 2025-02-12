@@ -79,7 +79,7 @@ public class RobotContainer {
 	private final Intake intake;
 	private final Hoodtake hoodtake;
 
-	private final CometController controller = new CometLogitechController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -228,26 +228,25 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-		this.controller.x().whileTrue(
-			this.intake.setPosition(() -> Degrees.of(25))
-		);
-
-		this.controller.y().whileTrue(
-			this.intake.setPosition(() -> Degrees.of(90))
-		);
-
 		/*this.controller.b().whileTrue(
 			DriveCommands.feedforwardCharacterization(drive)
 		);
 		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
 		*/
 
-		this.controller.left().whileTrue(
+		this.controller.b().whileTrue(
 			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
 		);
 
-		this.controller.right().whileTrue(
-			this.intake.setWheelVelocity(() -> RPM.of(50))	
+		this.controller.down().whileTrue(
+			this.drive.driveToClosestAlgae()
+		);
+
+		this.controller.left().onTrue(
+			Commands.runOnce(
+				() -> swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose()),
+				this.drive
+			)
 		);
 
 		//this.controller.b().whileTrue(this.intake.sysIdRoutineWheel());
