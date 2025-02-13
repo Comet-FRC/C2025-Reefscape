@@ -120,7 +120,7 @@ public class RobotContainer {
 
 				this.swerveDriveSimulation = new SwerveDriveSimulation(
 						driveTrainSimulationConfig, // Specify Configuration
-						new Pose2d(3, 5, new Rotation2d()) // Specify starting pose
+						new Pose2d(0, 0, new Rotation2d()) // Specify starting pose
 				);
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
@@ -236,17 +236,6 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-		/*this.controller.b().whileTrue(
-			DriveCommands.feedforwardCharacterization(drive)
-		);
-		this.controller.b().whileTrue(DriveCommands.feedforwardCharacterization(drive));
-		*/
-
-		/*this.controller.b().whileTrue(
-			this.drive.turnToAngle(() -> new Rotation2d(Degrees.of(90)))
-		);
-		*/
-
 		this.controller.down().whileTrue(
 			this.drive.driveToClosestAlgae()
 		);
@@ -258,10 +247,13 @@ public class RobotContainer {
 			)
 		);
 
-		//this.controller.b().whileTrue(this.intake.sysIdRoutineWheel());
-		this.controller.y().whileTrue(this.intake.setPosition(() -> Degrees.of(-90)));
-		this.controller.x().whileTrue(this.intake.setPosition(() -> Degrees.of(0)));
-		this.controller.b().whileTrue(this.intake.setPivotVoltage(() -> Volts.of(-12)));
+		this.controller.y().whileTrue(
+			this.indexer.sysIdRoutineLeft()
+		);
+
+		this.controller.x().whileTrue(
+			this.indexer.setLeftPosition(() -> Degrees.of(90))
+		);
 	}
 
 	/**

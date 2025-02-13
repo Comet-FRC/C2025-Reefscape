@@ -22,10 +22,10 @@ public final class HoodtakeConstants {
 	public static final double PIVOT_kG = 0;
 	public static final double PIVOT_kV = 0;
 	public static final double PIVOT_kA = 0;
-	public static final double PIVOT_SIM_kS = 1.024;
-	public static final double PIVOT_SIM_kG = 6.8432;
-	public static final double PIVOT_SIM_kV = 0.048426;
-	public static final double PIVOT_SIM_kA = 0.21527;
+	public static final double PIVOT_SIM_kS = 0.95367;
+	public static final double PIVOT_SIM_kG = 6.8784;
+	public static final double PIVOT_SIM_kV = 0.064168;
+	public static final double PIVOT_SIM_kA = 0.21321;
 
 	public static final double WHEEL_kP = 0;
 	public static final double WHEEL_kI = 0;

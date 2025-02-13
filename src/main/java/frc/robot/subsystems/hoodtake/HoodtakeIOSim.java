@@ -37,7 +37,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
 
-	private static SingleJointedArmSim configurePivotMotor() {
+	private static SingleJointedArmSim configurePivotMotor() {		
 		return new SingleJointedArmSim(
 				DCMotor.getNEO(1),
 				HoodtakeConstants.PIVOT_CONVERSION_FACTOR,
@@ -45,7 +45,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 						HoodtakeConstants.MASS.in(Kilograms)),
 				HoodtakeConstants.LENGTH.in(Meters),
 				0.0,
-				Math.PI,
+				2.776958379,
 				true,
 				0,
 				HoodtakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
@@ -78,6 +78,10 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
+
+	public HoodtakeIOSim() {
+		//this.setPivotPositionSetpoint(Radians.of(2.776958379));
+	}
 
 	@Override
 	public void updateInputs(HoodtakeIOInputs inputs) {

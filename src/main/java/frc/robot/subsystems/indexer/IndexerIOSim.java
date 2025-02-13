@@ -29,7 +29,7 @@ public class IndexerIOSim implements IndexerIO {
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,
-			Math.PI,
+			Math.PI/2,
 			true,
 			0,
 			IndexerConstants.ENCODER_DISTANCE_PER_PULSE,
