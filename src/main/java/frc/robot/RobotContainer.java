@@ -120,7 +120,7 @@ public class RobotContainer {
 
 				this.swerveDriveSimulation = new SwerveDriveSimulation(
 						driveTrainSimulationConfig, // Specify Configuration
-						new Pose2d(0, 0, new Rotation2d()) // Specify starting pose
+						new Pose2d(3, 3, new Rotation2d()) // Specify starting pose
 				);
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
@@ -247,12 +247,22 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.y().whileTrue(
-			this.indexer.sysIdRoutineLeft()
+		this.controller.x().onTrue(
+			this.hoodtake.setPosition(() -> Radians.of(0))
+		).onFalse(
+			this.hoodtake.setPosition(() -> Radians.of(2.776958379))
 		);
 
-		this.controller.x().whileTrue(
-			this.indexer.setLeftPosition(() -> Degrees.of(90))
+		this.controller.b().onTrue(
+			this.intake.setPosition(() -> Degrees.of(-90))
+		).onFalse(
+			this.intake.setPosition(() -> Degrees.of(0))
+		);
+
+		this.controller.y().onTrue(
+			this.indexer.popUp()
+		).onFalse(
+			this.indexer.sit()
 		);
 	}
 

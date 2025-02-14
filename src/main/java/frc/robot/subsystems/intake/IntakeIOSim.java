@@ -48,7 +48,7 @@ public class IntakeIOSim implements IntakeIO {
 			-Double.MAX_VALUE,
 			Double.MAX_VALUE,
 			true,
-			0,
+			90,
 			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 			0
 		);

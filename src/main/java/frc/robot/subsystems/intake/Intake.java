@@ -29,6 +29,7 @@ public class Intake extends SubsystemBase {
 		this.io = io;
 		this.inputs = new IntakeIOInputsAutoLogged();
 		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.378-0.044,0.184), Rotation2d.fromDegrees(0));
+		// this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0,0), Rotation2d.fromDegrees(0));
 	}
 
 	@Override
