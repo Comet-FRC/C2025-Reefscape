@@ -52,6 +52,8 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -64,6 +66,7 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.SparkOdometryThread;
 import frc.robot.util.LocalADStarAK;
 
+import java.lang.annotation.Target;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -106,6 +109,25 @@ public class Drive extends SubsystemBase {
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
 			DriveConstants.HEADING_kD);
+
+	private PIDController xPID = new PIDController(
+			DriveConstants.TRANSLATION_kP,
+			DriveConstants.TRANSLATION_kI,
+			DriveConstants.TRANSLATION_kD);
+
+	private PIDController yPID = new PIDController(
+			DriveConstants.TRANSLATION_kP,
+			DriveConstants.TRANSLATION_kI,
+			DriveConstants.TRANSLATION_kD);
+
+	/** true if translation control is overridden */
+	boolean isTranslationPIDEnabled = false;
+	/** true if heading control is overridden */
+	boolean isHeadingPIDEnabled = false;
+
+	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
+
+	TargetAlgae targetAlgae = null;
 
 	public Drive(
 			GyroIO gyroIO,
@@ -167,6 +189,37 @@ public class Drive extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		if (isTranslationPIDEnabled) {
+			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
+
+			targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
+			targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
+
+			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
+		}
+
+		if (isHeadingPIDEnabled) {
+			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
+		}
+
+		// Calculate module setpoints
+		ChassisSpeeds speeds = ChassisSpeeds.discretize(targetChassisSpeeds, 0.02);
+
+		SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
+		SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, SwerveConstants.MAX_SPEED);
+
+		// Log unoptimized setpoints
+		Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+		Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", speeds);
+
+		// Send setpoints to modules
+		for (int i = 0; i < 4; i++) {
+			modules[i].runSetpoint(setpointStates[i]);
+		}
+
+		// Log optimized setpoints (runSetpoint mutates each state)
+		Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+
 		odometryLock.lock(); // Prevents odometry updates while reading data
 		gyroIO.updateInputs(gyroInputs);
 		Logger.processInputs("Drive/Gyro", gyroInputs);
@@ -220,6 +273,8 @@ public class Drive extends SubsystemBase {
 
 		// Update gyro alert
 		DriveConstants.ALERT_DISCONNECTED_GYRO.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+
+		this.updateTargetAlgae();
 	}
 
 	/**
@@ -228,24 +283,7 @@ public class Drive extends SubsystemBase {
 	 * @param speeds Speeds in meters/sec
 	 */
 	public void runVelocity(ChassisSpeeds speeds) {
-
-		// Calculate module setpoints
-		speeds = ChassisSpeeds.discretize(speeds, 0.02);
-
-		SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(speeds);
-		SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, MAX_SPEED);
-
-		// Log unoptimized setpoints
-		Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
-		Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", speeds);
-
-		// Send setpoints to modules
-		for (int i = 0; i < 4; i++) {
-			modules[i].runSetpoint(setpointStates[i]);
-		}
-
-		// Log optimized setpoints (runSetpoint mutates each state)
-		Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+		targetChassisSpeeds = speeds;
 	}
 
 	/** Runs the drive in a straight line with the specified drive output. */
@@ -442,6 +480,10 @@ public class Drive extends SubsystemBase {
 		field.setRobotPose(pose);
 	}
 
+	public boolean isOnOpposingSide() {
+		return this.getPose().getX() > FieldConstants.fieldLength / 2.0;
+	}
+
 	/**
 	 * Field relative drive command using two joysticks (controlling linear and
 	 * angular velocities).
@@ -489,59 +531,117 @@ public class Drive extends SubsystemBase {
 				this);
 	}
 
-	public Command turnToAngle(Supplier<Rotation2d> rotation) {
-		return Commands.run(
-				() -> {
-					double output = headingPID.calculate(this.getRotation().getRadians(), rotation.get().getRadians());
-					output = MathUtil.clamp(output, -1, 1);
-
-					AngularVelocity angularVelocity = this.getMaximumAngularSpeed().times(output);
-					ChassisSpeeds speeds = new ChassisSpeeds(MetersPerSecond.of(0), MetersPerSecond.of(0),
-							angularVelocity);
-					this.runVelocity(speeds);
-				}, this).until(
-						this.headingPID::atSetpoint);
-	}
-
 	@AutoLogOutput(key = "Swerve/HeadingPIDSetpoint")
 	public Rotation2d getHeadingPIDSetpoint() {
 		return Rotation2d.fromRadians(this.headingPID.getSetpoint());
 	}
 
-	@AutoLogOutput(key = "Automation/ClosestAlgaePose")
-	public Pose2d getClosestAlgaePose() {
+	public void updateTargetAlgae() {
 		Pose2d[] algaeLocations;
 
-		if (this.getPose().getX() < FieldConstants.fieldLength / 2.0) {
+		boolean isOpposingReef = this.isOnOpposingSide();
+		if (!isOpposingReef) {
 			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPoses;
 		} else {
 			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPosesOpposingSide;
 		}
 
 		Pose2d closestPose = null;
+		int closestAlgaeIndex = -1;
 
-		for (Pose2d algaePose : algaeLocations) {
+		for (int i = 0; i < 6; ++i) {
+			Pose2d algaePose = algaeLocations[i];
 			if (closestPose == null) {
 				closestPose = algaePose;
+				closestAlgaeIndex = i;
 			} else {
 				if (this.getDistanceFrom(algaePose).lt(this.getDistanceFrom(closestPose))) {
 					closestPose = algaePose;
+					closestAlgaeIndex = i;
 				}
 			}
 		}
 
-		return closestPose;
+		this.targetAlgae = new TargetAlgae(closestPose, closestAlgaeIndex, isOpposingReef);
+	}
+
+	@AutoLogOutput(key = "Automation/TargetAlgae")
+	public TargetAlgae getTargetAlgae() {
+		return targetAlgae;
 	}
 
 	public Command driveToClosestAlgae() {
-		return Commands.defer(
+		return
+
+		Commands.defer(
 				() -> AutoBuilder.pathfindToPose(
-						this.getClosestAlgaePose(),
+						this.getTargetAlgae().pose(),
 						new PathConstraints(
 								this.getMaximumSpeed(),
 								MetersPerSecondPerSecond.of(4),
 								this.getMaximumAngularSpeed(),
-								DegreesPerSecondPerSecond.of(720))),
+								DegreesPerSecondPerSecond.of(720)),
+								1)
+						.andThen(
+								this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
+										this.getTargetAlgae(),
+										Meters.of(0.6)))),
 				Set.of(this));
+	}
+
+	/**
+	 * Turns the robot to a specified angle using PID control.
+	 * To specify both translation and rotation, use
+	 * {@link #moveToPosePID(Supplier)}.
+	 */
+	public Command turnToAngle(Supplier<Rotation2d> rotation) {
+		return new FunctionalCommand(
+				() -> this.isHeadingPIDEnabled = true,
+				() -> this.headingPID.setSetpoint(rotation.get().getRadians()),
+				(interrupted) -> this.isHeadingPIDEnabled = false,
+				this.headingPID::atSetpoint,
+				this);
+	}
+
+	/**
+	 * Moves the robot to a specified translation using PID control.
+	 * To specify both translation and rotation, use
+	 * {@link #moveToPosePID(Supplier)}.
+	 */
+	public Command moveToTranslationPID(Supplier<Translation2d> pose) {
+		return new FunctionalCommand(
+				() -> this.isTranslationPIDEnabled = true,
+				() -> {
+					this.xPID.setSetpoint(pose.get().getX());
+					this.yPID.setSetpoint(pose.get().getY());
+				},
+				(interrupted) -> this.isTranslationPIDEnabled = false,
+				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				this);
+	}
+
+	/**
+	 * Moves the robot to a specified pose using PID control.
+	 * 
+	 * @param pose the target pose
+	 * @return the command
+	 */
+	public Command moveToPosePID(Supplier<Pose2d> pose) {
+		return new FunctionalCommand(
+				() -> {
+					this.isHeadingPIDEnabled = true;
+					this.isTranslationPIDEnabled = true;
+				},
+				() -> {
+					this.headingPID.setSetpoint(pose.get().getRotation().getRadians());
+					this.xPID.setSetpoint(pose.get().getX());
+					this.yPID.setSetpoint(pose.get().getY());
+				},
+				(interrupted) -> {
+					this.isHeadingPIDEnabled = false;
+					this.isTranslationPIDEnabled = false;
+				},
+				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				this);
 	}
 }
