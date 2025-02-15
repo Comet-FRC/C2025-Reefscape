@@ -7,87 +7,106 @@
 
 package frc.robot.subsystems.shooter;
 
-
-import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import static edu.wpi.first.units.Units.*;
+
 
 public class ShooterIOSim implements ShooterIO {
+	private final DCMotorSim topWheelMotor = configureWheelMotor();
+	private final DCMotorSim bottomWheelMotor = configureWheelMotor();
 
-	
-
-	
-
-	private final FlywheelSim bottomMotorSim = setupBottomMotor();
-	private final FlywheelSim topMotorSim = setupTopMotor();
-
-	private static FlywheelSim setupBottomMotor() {
-		DCMotor gearbox = DCMotor.getNEO(1);
-		LinearSystem<N1, N1, N1> plant =
-		LinearSystemId.createFlywheelSystem(gearbox, ShooterConstants.WHEEL_MOMENT_OF_INERTIA, ShooterConstants.WHEEL_CONVERSION_FACTOR);
-		return new FlywheelSim(plant, gearbox);
+	private static DCMotorSim configureWheelMotor() {
+		DCMotor wheelGearbox = DCMotor.getNEO(1);
+		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
+			wheelGearbox,
+			ShooterConstants.WHEEL_MOMENT_OF_INERTIA,
+			ShooterConstants.WHEEL_CONVERSION_FACTOR
+		);
+		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
 
-	private static FlywheelSim setupTopMotor() {
-		DCMotor gearbox = DCMotor.getNEO(1);
-		LinearSystem<N1, N1, N1> plant =
-		LinearSystemId.createFlywheelSystem(gearbox, ShooterConstants.WHEEL_MOMENT_OF_INERTIA, ShooterConstants.WHEEL_CONVERSION_FACTOR);
-		return new FlywheelSim(plant, gearbox);
-	}
 
-	private final PIDController bottomPID = new PIDController(ShooterConstants.SIM_kP, ShooterConstants.SIM_kI, ShooterConstants.SIM_kD);
-	private final PIDController topPID = new PIDController(ShooterConstants.SIM_kP, ShooterConstants.SIM_kI, ShooterConstants.SIM_kD);
-	private final SimpleMotorFeedforward bottomFF = new SimpleMotorFeedforward(ShooterConstants.SIM_kS, ShooterConstants.SIM_kV, ShooterConstants.SIM_kA);
-	private final SimpleMotorFeedforward topFF = new SimpleMotorFeedforward(ShooterConstants.SIM_kS, ShooterConstants.SIM_kV, ShooterConstants.SIM_kA);
+	private final PIDController WheelPID =
+		new PIDController(
+			ShooterConstants.WheelSIM_kP,
+			ShooterConstants.WheelSIM_kI,
+			ShooterConstants.WheelSIM_kD
+		);
+
+	private final SimpleMotorFeedforward WheelFF = new SimpleMotorFeedforward(
+		ShooterConstants.WheelSIM_kS,
+		ShooterConstants.WheelSIM_kV,
+		ShooterConstants.WheelSIM_kA
+	);
+
+	/** true = controlled by voltage, false = controled by PID + FF */
+	private boolean wheelVoltageMode = false;
 
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
-		bottomMotorSim.update(0.02);
-		topMotorSim.update(0.02);
-		// control to setpoint
+		topWheelMotor.update(0.02);
+		bottomWheelMotor.update(0.02);
 
-		this.setVoltage(
-			Volts.of(bottomPID.calculate(bottomMotorSim.getAngularVelocity().in(RadiansPerSecond)) + bottomFF.calculate(bottomPID.getSetpoint())),
-			Volts.of(topPID.calculate(bottomMotorSim.getAngularVelocity().in(RadiansPerSecond)) + topFF.calculate(topPID.getSetpoint()))
-		);
+		runLoopControl();
 
-		inputs.bottomVelocity = bottomMotorSim.getAngularVelocity();
-		inputs.bottomDesiredVelocity = RadiansPerSecond.of(bottomPID.getSetpoint());
-		inputs.bottomAppliedVoltage = Volts.of(bottomMotorSim.getInputVoltage());
-		inputs.bottomSupplyCurrent = Amps.of(bottomMotorSim.getCurrentDrawAmps());
-		
-		inputs.topVelocity = topMotorSim.getAngularVelocity();
-		inputs.topDesiredVelocity = RadiansPerSecond.of(topPID.getSetpoint());
-		inputs.topAppliedVoltage = Volts.of(topMotorSim.getInputVoltage());
-		inputs.topSupplyCurrent = Amps.of(topMotorSim.getCurrentDrawAmps());
+		inputs.topWheelPosition = topWheelMotor.getAngularPosition();
+		inputs.topWheelVelocity = topWheelMotor.getAngularVelocity();
+		inputs.topWheelDesiredVelocity = RadiansPerSecond.of(WheelPID.getSetpoint());
+		inputs.topWheelAppliedVoltage = Volts.of(topWheelMotor.getInputVoltage());
+		inputs.topWheelSupplyCurrent = Amps.of(topWheelMotor.getCurrentDrawAmps());
+
+		inputs.bottomWheelPosition = topWheelMotor.getAngularPosition();
+		inputs.bottomWheelVelocity = topWheelMotor.getAngularVelocity();
+		inputs.bottomWheelDesiredVelocity = RadiansPerSecond.of(WheelPID.getSetpoint());
+		inputs.bottomWheelAppliedVoltage = Volts.of(topWheelMotor.getInputVoltage());
+		inputs.bottomWheelSupplyCurrent = Amps.of(topWheelMotor.getCurrentDrawAmps());
+	
+	}
+
+	private void runLoopControl() {
+		if (!wheelVoltageMode) {
+			topWheelMotor.setInputVoltage(
+				WheelPID.calculate(topWheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				+
+				WheelFF.calculate(WheelPID.getSetpoint())
+			);
+
+			bottomWheelMotor.setInputVoltage(
+				WheelPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				+
+				WheelFF.calculate(WheelPID.getSetpoint())
+			);
+		}
+
+
 	}
 
 	@Override
-	public void setVoltage(Voltage topVoltage, Voltage bottomVoltage) {
-		topMotorSim.setInputVoltage(topVoltage.in(Volts));
-		bottomMotorSim.setInputVoltage(bottomVoltage.in(Volts));
+	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
+		this.wheelVoltageMode = false;
+		WheelPID.setSetpoint(topVelocity.in(RadiansPerSecond));
+		WheelPID.setSetpoint(bottomVelocity.in(RadiansPerSecond));
 	}
 
 	@Override
-	public void setAngularVelocity(ShooterSpeed shooterSpeed) {
-		this.topPID.setSetpoint(shooterSpeed.topMotorSpeed.in(RadiansPerSecond));
-		this.bottomPID.setSetpoint(shooterSpeed.botMotorSpeed.in(RadiansPerSecond));
-	}
-
-	@Override
-	public void setPID(double kP, double kI, double kD) {
-		bottomPID.setPID(kP, kI, kD);
-		topPID.setPID(kP, kI, kD);
+	public void setWheelVoltage(Voltage volts) {
+		this.wheelVoltageMode = true;
+		topWheelMotor.setInputVoltage(volts.in(Volts));
+		bottomWheelMotor.setInputVoltage(volts.in(Volts));
 	}
 
 	@Override
 	public void stop() {
-		this.setAngularVelocity(new ShooterSpeed());
+		setWheelVoltage(Volts.of(0.0));
 	}
+
 }

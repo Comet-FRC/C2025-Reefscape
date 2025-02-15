@@ -11,32 +11,33 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
 
 import static edu.wpi.first.units.Units.*;
 
 public class HoodtakeIOSim implements HoodtakeIO {
-	private final FlywheelSim wheelMotor = configureWheelMotor();
+	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
 
-	private static FlywheelSim configureWheelMotor() {
+	private static DCMotorSim configureWheelMotor() {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
-		LinearSystem<N1, N1, N1> wheelPlant = LinearSystemId.createFlywheelSystem(
+		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
 				wheelGearbox,
-				HoodtakeConstants.WHEEL_CONVERSION_FACTOR,
-				HoodtakeConstants.WHEEL_MOI);
-		return new FlywheelSim(wheelPlant, wheelGearbox);
+				HoodtakeConstants.WHEEL_MOI,
+				HoodtakeConstants.WHEEL_CONVERSION_FACTOR
+				);
+		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
 
-	private static SingleJointedArmSim configurePivotMotor() {
+	private static SingleJointedArmSim configurePivotMotor() {		
 		return new SingleJointedArmSim(
 				DCMotor.getNEO(1),
 				HoodtakeConstants.PIVOT_CONVERSION_FACTOR,
@@ -44,7 +45,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 						HoodtakeConstants.MASS.in(Kilograms)),
 				HoodtakeConstants.LENGTH.in(Meters),
 				0.0,
-				Math.PI,
+				2.776958379,
 				true,
 				0,
 				HoodtakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
@@ -77,7 +78,10 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
-	private Voltage wheelAppliedVoltage = Volts.of(0.0);
+
+	public HoodtakeIOSim() {
+		//this.setPivotPositionSetpoint(Radians.of(2.776958379));
+	}
 
 	@Override
 	public void updateInputs(HoodtakeIOInputs inputs) {
@@ -87,6 +91,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 		runLoopControl();
 
 		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
+		inputs.wheelPosition = wheelMotor.getAngularPosition();
 		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
 		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getInputVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getCurrentDrawAmps());

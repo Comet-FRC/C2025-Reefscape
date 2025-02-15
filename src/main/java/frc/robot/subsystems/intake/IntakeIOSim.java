@@ -19,7 +19,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import static edu.wpi.first.units.Units.*;
 
@@ -27,6 +26,8 @@ import static edu.wpi.first.units.Units.*;
 public class IntakeIOSim implements IntakeIO {
 	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
+
+	
 
 	private static DCMotorSim configureWheelMotor() {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
@@ -44,10 +45,10 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IntakeConstants.LENGTH.in(Meters), IntakeConstants.MASS.in(Kilograms)),
 			IntakeConstants.LENGTH.in(Meters),
-			0.0,
-			Math.PI,
+			-Double.MAX_VALUE,
+			Double.MAX_VALUE,
 			true,
-			0,
+			90,
 			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 			0
 		);
@@ -86,7 +87,10 @@ public class IntakeIOSim implements IntakeIO {
 	private Voltage pivotAppliedVoltage = Volts.of(0.0);
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
-
+	
+	public IntakeIOSim(){
+		pivotPID.enableContinuousInput(-Math.PI, Math.PI);
+	}
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		wheelMotor.update(0.02);

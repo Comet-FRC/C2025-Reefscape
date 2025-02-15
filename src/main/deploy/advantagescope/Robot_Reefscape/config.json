@@ -1,0 +1,105 @@
+{
+  "name": "WaterDuct",
+  "rotations": [
+    {
+      "axis": "x",
+      "degrees": 180
+    },
+    {
+      "axis": "z",
+      "degrees": 0
+    }
+  ],
+  "position": [
+    0.381,
+    0.378,
+    0
+  ],
+  "cameras": [],
+  "components": [
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 0
+        },
+        {
+          "axis": "z",
+          "degrees": -90
+        },
+        {
+          "axis": "y",
+          "degrees": -90
+        }
+      ],
+      "zeroedPosition": [
+        0.0444444444,
+        -0.711209,
+        -0.742915
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 180
+        },
+        {
+          "axis": "z",
+          "degrees": 0
+        },
+        {
+          "axis": "y",
+          "degrees": 0
+        }
+      ],
+      "zeroedPosition": [
+        0.381,
+        0.044,
+        -0.184
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 180
+        },
+        {
+          "axis": "z",
+          "degrees": 180
+        },
+        {
+          "axis": "y",
+          "degrees": 0
+        }
+      ],
+      "zeroedPosition": [
+        -0.381000,
+        -0.425450,
+        -0.159
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 180
+        },
+        {
+          "axis": "z",
+          "degrees": 0
+        },
+        {
+          "axis": "y",
+          "degrees": 0
+        }
+      ],
+      "zeroedPosition": [
+        0.381,
+        0.330200,
+        -0.159
+      ]
+    }
+  ]
+}

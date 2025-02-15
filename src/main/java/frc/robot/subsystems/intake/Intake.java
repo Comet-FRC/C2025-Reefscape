@@ -7,8 +7,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.util.ArmVisualizer;
+import frc.robot.util.ArmVisualizer3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -19,12 +23,13 @@ import org.littletonrobotics.junction.Logger;
 public class Intake extends SubsystemBase {
 	private final IntakeIO io;
 	private final IntakeIOInputsAutoLogged inputs;
-	private final ArmVisualizer armVisualizer;
+	private final ArmVisualizer3d armVisualizer;
 
 	public Intake(IntakeIO io) {
 		this.io = io;
 		this.inputs = new IntakeIOInputsAutoLogged();
-		this.armVisualizer = new ArmVisualizer(getName(), IntakeConstants.LENGTH);
+		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.378-0.044,0.184), Rotation2d.fromDegrees(0));
+		// this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0,0), Rotation2d.fromDegrees(0));
 	}
 
 	@Override
@@ -54,6 +59,9 @@ public class Intake extends SubsystemBase {
 		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
 
+	public Command setPivotVoltage(Supplier<Voltage> volts) {
+		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
+	}
 
 	public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
@@ -129,4 +137,6 @@ public class Intake extends SubsystemBase {
 		);
 		return routineCommand;
 	}
+
+
 }

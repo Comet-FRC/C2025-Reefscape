@@ -29,7 +29,7 @@ public class IndexerIOSim implements IndexerIO {
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,
-			Math.PI,
+			Math.PI/2,
 			true,
 			0,
 			IndexerConstants.ENCODER_DISTANCE_PER_PULSE,
@@ -43,7 +43,7 @@ public class IndexerIOSim implements IndexerIO {
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,
-			Math.PI,
+			Math.PI/2,
 			true,
 			0,
 			IndexerConstants.ENCODER_DISTANCE_PER_PULSE,
@@ -107,11 +107,11 @@ public class IndexerIOSim implements IndexerIO {
 
 	private void runLoopControl() {
 		if (!leftVoltageMode) {
-			this.leftMotor.setInputVoltage(
-				leftPID.calculate(leftMotor.getAngleRads())
-				+
-				leftFF.calculate(leftPID.getSetpoint(), 0)
-			);
+			double pidOutput = leftPID.calculate(leftMotor.getAngleRads());
+			double ffOutput = leftFF.calculate(leftPID.getSetpoint(), 0);
+			double totalOutput = pidOutput + ffOutput;
+			this.leftAppliedVoltage.mut_replace(totalOutput, Volts);
+			this.leftMotor.setInputVoltage(totalOutput);
 		}
 
 		if (!rightVoltageMode) {
