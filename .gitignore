@@ -186,5 +186,6 @@ compile_commands.json
 # Eclipse generated file for annotation processors
 .factorypath
 
-BuildConstants.java
+**/BuildConstants.java
 src/main/java/frc/robot/BuildConstants.java
+simgui-ds.json

@@ -13,6 +13,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
@@ -48,13 +49,20 @@ public class Hoodtake extends SubsystemBase {
 				this);
 	}
 
+	public boolean atPosition() {
+		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 1;
+	}
+
 	public Command setPosition(Supplier<Angle> position) {
-		return Commands.run(() -> io.setPivotPositionSetpoint(position.get()), this);
+		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this)
+			.andThen(Commands.waitUntil(this::atPosition));
 	}
 
 	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
 		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
+
+
 
 public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(

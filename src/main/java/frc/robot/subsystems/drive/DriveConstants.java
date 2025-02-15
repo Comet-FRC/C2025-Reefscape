@@ -17,7 +17,7 @@ public class DriveConstants {
     public static final double HEADING_kI = 0;
     public static final double HEADING_kD = 0.18657275;
 
-    public static final double TRANSLATION_kP = 10;
+    public static final double TRANSLATION_kP = 2.5;
     public static final double TRANSLATION_kI = 0;
     public static final double TRANSLATION_kD = 0;
 

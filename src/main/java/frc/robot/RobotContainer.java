@@ -17,17 +17,23 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeFromL2;
+import frc.robot.commands.IntakeFromReef;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -84,7 +90,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -120,17 +126,20 @@ public class RobotContainer {
 
 				this.swerveDriveSimulation = new SwerveDriveSimulation(
 						driveTrainSimulationConfig, // Specify Configuration
-						new Pose2d(3, 3, new Rotation2d()) // Specify starting pose
+						new Pose2d(0, 0, new Rotation2d(0)) // Specify starting pose
 				);
-				// Register the drivetrain simulation to the default simulation world
-				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
 
 				this.drive = new Drive(
-						new GyroIOSim(this.swerveDriveSimulation.getGyroSimulation()),
-						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[0]),
-						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
-						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
-						new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
+					new GyroIOSim(this.swerveDriveSimulation.getGyroSimulation()),
+					new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[0]),
+					new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[1]),
+					new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[2]),
+					new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[3]));
+
+				this.swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose());
+
+				// Register the drivetrain simulation to the default simulation world
+				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
 				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
 
 				/*this.vision = new ApriltagVision(
@@ -164,6 +173,7 @@ public class RobotContainer {
 
 		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		setupAutoRoutines();
+		setupDefualtCommands();
 		setupButtonBindings();
 
 		DriverStation.silenceJoystickConnectionWarning(true);
@@ -195,7 +205,7 @@ public class RobotContainer {
 		 */
 	}
 
-	private void setupButtonBindings() {
+	private void setupDefualtCommands() {
 		this.drive.setDefaultCommand(
 			this.drive.joystickDrive(
 				() -> -controller.getLeftY(),
@@ -208,7 +218,12 @@ public class RobotContainer {
 			)
 		);
 
+		this.hoodtake.setDefaultCommand(
+			this.hoodtake.setPosition(() -> Radians.of(2.776958379))
+		);
+	}
 
+	private void setupButtonBindings() {
 		// Lock to 0° when A button is held
 		/*
 		 * controller
@@ -236,10 +251,6 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-		this.controller.down().whileTrue(
-			this.drive.driveToClosestAlgae()
-		);
-
 		this.controller.left().onTrue(
 			Commands.runOnce(
 				() -> swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose()),
@@ -247,10 +258,8 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.x().onTrue(
-			this.hoodtake.setPosition(() -> Radians.of(0))
-		).onFalse(
-			this.hoodtake.setPosition(() -> Radians.of(2.776958379))
+		this.controller.x().whileTrue(
+			new IntakeFromReef(drive, hoodtake)
 		);
 
 		this.controller.b().onTrue(
@@ -273,6 +282,14 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		return autoChooser.get();
+	}
+
+	public void updateSimDrivePosition() {
+		this.drive.addVisionMeasurement(
+			this.swerveDriveSimulation.getSimulatedDriveTrainPose(),
+		 	Timer.getFPGATimestamp(),
+			VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(1))
+		);
 	}
 
 	public void displaySimFieldToAdvantageScope() {

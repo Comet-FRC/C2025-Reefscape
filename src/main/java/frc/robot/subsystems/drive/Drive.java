@@ -39,6 +39,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -103,7 +104,7 @@ public class Drive extends SubsystemBase {
 					new SwerveModulePosition()
 			};
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
-			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(10, 5, new Rotation2d()));
+			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(15, 5, new Rotation2d()));
 
 	private PIDController headingPID = new PIDController(
 			DriveConstants.HEADING_kP,
@@ -137,8 +138,6 @@ public class Drive extends SubsystemBase {
 			ModuleIO brModuleIO) {
 
 		instance = this;
-
-		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
 
 		this.gyroIO = gyroIO;
 		this.modules[0] = new Module(flModuleIO, 0);
@@ -185,10 +184,23 @@ public class Drive extends SubsystemBase {
 						null,
 						(state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
 				new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage), null, this));
+	
+		this.setupLoopControllers();			
+	}
+
+	public void setupLoopControllers() {
+		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
+		this.xPID.setTolerance(0.005);
+		this.yPID.setTolerance(0.005);
+		this.headingPID.setTolerance(Units.degreesToRadians(1));
 	}
 
 	@Override
 	public void periodic() {
+		Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
+		Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+		Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+
 		if (isTranslationPIDEnabled) {
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
@@ -570,22 +582,26 @@ public class Drive extends SubsystemBase {
 		return targetAlgae;
 	}
 
-	public Command driveToClosestAlgae() {
-		return
+	public Command pathfindToPose(Supplier<Pose2d> pose) {
+		return Commands.defer(
+			() -> AutoBuilder.pathfindToPose(
+					pose.get(),
+					new PathConstraints(
+							this.getMaximumSpeed(),
+							MetersPerSecondPerSecond.of(4),
+							this.getMaximumAngularSpeed(),
+							DegreesPerSecondPerSecond.of(720)),
+							1),
+			Set.of(this))
+			.andThen(() -> this.stop());
+	}
 
-		Commands.defer(
-				() -> AutoBuilder.pathfindToPose(
-						this.getTargetAlgae().pose(),
-						new PathConstraints(
-								this.getMaximumSpeed(),
-								MetersPerSecondPerSecond.of(4),
-								this.getMaximumAngularSpeed(),
-								DegreesPerSecondPerSecond.of(720)),
-								1)
-						.andThen(
-								this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
-										this.getTargetAlgae(),
-										Meters.of(0.6)))),
+	public Command driveToClosestAlgaePID(Supplier<Distance> distance) {
+		return
+			Commands.defer(
+				() -> this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
+					this.getTargetAlgae(),
+					distance.get())),
 				Set.of(this));
 	}
 
@@ -640,6 +656,7 @@ public class Drive extends SubsystemBase {
 				(interrupted) -> {
 					this.isHeadingPIDEnabled = false;
 					this.isTranslationPIDEnabled = false;
+					this.stop();
 				},
 				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),
 				this);
