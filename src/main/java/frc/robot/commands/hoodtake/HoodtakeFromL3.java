@@ -1,4 +1,4 @@
-package frc.robot.commands;
+package frc.robot.commands.hoodtake;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
@@ -11,9 +11,9 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
 
-public class IntakeFromL3 extends SequentialCommandGroup {
+public class HoodtakeFromL3 extends SequentialCommandGroup {
     
-    public IntakeFromL3(Drive drive, Hoodtake hoodtake) {
+    public HoodtakeFromL3(Drive drive, Hoodtake hoodtake) {
         super(
             Commands.deadline(
                 drive.pathfindToPose(drive.getTargetAlgae()::pose),

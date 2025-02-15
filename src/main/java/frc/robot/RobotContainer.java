@@ -32,9 +32,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.IntakeFromL2;
-import frc.robot.commands.IntakeFromReef;
 import frc.robot.commands.ShootOnMove;
+import frc.robot.commands.hoodtake.HoodtakeFromL2;
+import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
@@ -259,7 +259,7 @@ public class RobotContainer {
 		);
 
 		this.controller.x().whileTrue(
-			new IntakeFromReef(drive, hoodtake)
+			new HoodtakeFromReef(drive, hoodtake)
 		);
 
 		this.controller.b().onTrue(
