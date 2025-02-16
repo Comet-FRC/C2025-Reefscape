@@ -273,6 +273,10 @@ public class RobotContainer {
 		).onFalse(
 			this.indexer.sit()
 		);
+
+		this.controller.rightTrigger().whileTrue(
+			new ShootOnMove(drive, shooter)
+		);
 	}
 
 	/**
