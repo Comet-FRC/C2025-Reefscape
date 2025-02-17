@@ -22,6 +22,11 @@ public class ShooterSpeed implements Interpolatable<ShooterSpeed> {
         this.botMotorSpeed = bottomMotorSpeed;
     }
 
+    public ShooterSpeed(double topMotorSpeed, double bottomMotorSpeed) {
+        this.topMotorSpeed = RadiansPerSecond.of(topMotorSpeed);
+        this.botMotorSpeed = RadiansPerSecond.of(bottomMotorSpeed);
+;    }
+
     private ShooterSpeed diff (ShooterSpeed o) {
         return new ShooterSpeed(
             this.topMotorSpeed.minus(o.topMotorSpeed),

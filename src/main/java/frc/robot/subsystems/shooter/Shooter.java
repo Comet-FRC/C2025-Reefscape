@@ -44,18 +44,20 @@ public class Shooter extends SubsystemBase {
 		return Commands.run(() -> io.setWheelVelocitySetpoint(RPM.of(0), RPM.of(0)));
 	}
 
-	public Command shootFromDistance(Supplier<Distance> distance) {
-		return Commands.runOnce(() -> {
-			ShooterSpeed speeds =  RANGE_TABLE.get(distance.get().in(Meters));
-			AngularVelocity topSpeed = speeds.topMotorSpeed;
-			AngularVelocity botSpeed = speeds.botMotorSpeed;
-			io.setWheelVelocitySetpoint(topSpeed, botSpeed);
-		});
+	public Command setFlywheelVelocitiesFromDistance(Supplier<Distance> distance) {
+		return setFlywheelVelocities(RANGE_TABLE.get(distance::get));
 	}
 
-	public Command shoot(AngularVelocity topSpeed, AngularVelocity botSpeed) {
+	public Command setFlywheelVelocities(Supplier<ShooterSpeed> shooterSpeeds) {
+		return this.setFlywheelVelocities(
+			() -> shooterSpeeds.get().topMotorSpeed,
+			() -> shooterSpeeds.get().botMotorSpeed
+		);
+	}
+
+	public Command setFlywheelVelocities(Supplier<AngularVelocity> topSpeed, Supplier<AngularVelocity> botSpeed) {
 		return Commands.runOnce(() -> {
-				io.setWheelVelocitySetpoint(topSpeed, botSpeed);
+				io.setWheelVelocitySetpoint(topSpeed.get(), botSpeed.get());
 		});
 	}
 

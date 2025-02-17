@@ -26,14 +26,14 @@ public class ShooterIOSpark implements ShooterIO {
 	private final SparkMax bottomMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
 		private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
-		ShooterConstants.topWheelkS,
-		ShooterConstants.topWheelkV,
-		ShooterConstants.topWheelkA
+		ShooterConstants.TOP_WHEEL_kS,
+		ShooterConstants.TOP_WHEEL_kV,
+		ShooterConstants.TOP_WHEEL_kA
 	);
 	private final SimpleMotorFeedforward bottomWheelFF = new SimpleMotorFeedforward(
-		ShooterConstants.bottomWheelkS,
-		ShooterConstants.bottomWheelkV,
-		ShooterConstants.bottomWheelkA
+		ShooterConstants.BOT_WHEEL_kS,
+		ShooterConstants.BOT_WHEEL_kV,
+		ShooterConstants.BOT_WHEEL_kA
 	);
 
 	public ShooterIOSpark() {
@@ -53,9 +53,9 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.topWheelkP)
-				.i(ShooterConstants.topWheelkI)
-				.d(ShooterConstants.topWheelkD);
+				.p(ShooterConstants.TOP_WHEEL_kP)
+				.i(ShooterConstants.TOP_WHEEL_kI)
+				.d(ShooterConstants.TOP_WHEEL_kD);
 
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
@@ -71,9 +71,9 @@ public class ShooterIOSpark implements ShooterIO {
 			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.bottomWheelkP)
-				.i(ShooterConstants.bottomWheelkP)
-				.d(ShooterConstants.bottomWheelkP);
+				.p(ShooterConstants.BOT_WHEEL_kP)
+				.i(ShooterConstants.BOT_WHEEL_kP)
+				.d(ShooterConstants.BOT_WHEEL_kP);
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}

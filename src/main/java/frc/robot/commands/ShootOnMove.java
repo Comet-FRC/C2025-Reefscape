@@ -1,12 +1,10 @@
 package frc.robot.commands;
 
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.drive.Drive;
@@ -23,12 +21,12 @@ public class ShootOnMove extends Command {
     private final Shooter shooter;
     Translation2d minBound, maxBound;
 
-    private final Time maxTime = Seconds.of(20000000); // TODO: change t
+    private final double SCALING_FACTOR = 0.5;
+    private final double QUADRATIC_FACTOR = 0;
 
     public ShootOnMove(Drive drive, Shooter shooter) {
         this.drive = drive;
         this.shooter = shooter;
-        addRequirements(shooter);
 
         if (AllianceColor.isRed()) {
             this.minBound = FieldConstants.Barge.startOfRedBarge;
@@ -44,6 +42,8 @@ public class ShootOnMove extends Command {
 
         ChassisSpeeds chassisSpeeds = drive.getFieldOrientedChassisSpeeds();
         Angle robotDirection = drive.getPose().getRotation().getMeasure();
+        
+        LinearVelocity xVelocity = MetersPerSecond.of(chassisSpeeds.vxMetersPerSecond);
         LinearVelocity yVelocity = MetersPerSecond.of(chassisSpeeds.vyMetersPerSecond); // Sideways movement (Left is +)
 
         Distance xFromNet = this.minBound.getMeasureX().minus(drive.getPose().getMeasureX());
@@ -53,37 +53,31 @@ public class ShootOnMove extends Command {
         TODO: if distanceFacingNet is negative, then the robot is facing away from the net
         We need to make sure that this isn't a problem...
         */
-        
-        Distance yDeltaRobotProjection = distanceFacingNet.times(Math.sin(drive.getPose().getRotation().getRadians()));
-        Distance yRobotProjection = drive.getPose().getMeasureY().plus(yDeltaRobotProjection);
 
-        Distance yFromMaxBound = maxBound.getMeasureY().minus(yRobotProjection);
+         // Get velocity in facing direction
+        LinearVelocity forwardVelocity = xVelocity.times(Math.cos(robotDirection.in(Radians)))
+            .plus(yVelocity.times(Math.sin(robotDirection.in(Radians))));
 
-        Logger.recordOutput("ShootOnMove/1yFromNet", xFromNet);
-        Logger.recordOutput("ShootOnMove/2distanceFacingNet", distanceFacingNet);
-        Logger.recordOutput("ShootOnMove/3yDeltaRobotProjection", yDeltaRobotProjection);
-        Logger.recordOutput("ShootOnMove/4yRobotProjection", yRobotProjection);
-        Logger.recordOutput("ShootOnMove/5yFromMaxBound", yFromMaxBound);
+        // Apply an arbitrary scaling function to adjust distance
+        Distance distanceAdjustment = arbitrateShooterDistance(forwardVelocity);
+        Distance adjustedDistance = distanceFacingNet.minus(distanceAdjustment);
 
-        Time projectileYAirTime = yFromMaxBound.div(yVelocity); // Time for projectile to travel parallel to the net edge
-        boolean acceptable = projectileYAirTime.lt(maxTime); // If the robot is within t seconds of the net, shoot
+        Logger.recordOutput("ShootOnMove/distance adjustment", distanceAdjustment);
+        Logger.recordOutput("ShootOnMove/adjusted distance", adjustedDistance);
 
-        shooter.shootFromDistance(
-            () -> arbitrateShooterDistance(chassisSpeeds, distanceFacingNet, robotDirection)
-        );
-        Logger.recordOutput("ShootOnMove/6 Y Time", projectileYAirTime);
-        Logger.recordOutput("ShootOnMove/7 acceptable Y Time", acceptable);
+        shooter.setFlywheelVelocitiesFromDistance(
+            () -> adjustedDistance
+        ).schedule();
     }
 
-    private Distance arbitrateShooterDistance(ChassisSpeeds speeds, Distance distanceFacingNet, Angle robotDirection) {
-        double scalar = -2;
-        double arbitratedAddendX, arbitratedAddendY;
-        arbitratedAddendX = distanceFacingNet.times(Math.cos(robotDirection.in(Radians))).in(Meters);
-        arbitratedAddendX = arbitratedAddendX + speeds.vxMetersPerSecond * scalar;
-        arbitratedAddendY = distanceFacingNet.times(Math.sin(robotDirection.in(Radians))).in(Meters);
-        arbitratedAddendY = arbitratedAddendY + speeds.vyMetersPerSecond * scalar;
-        double arbitratedAddend = Math.hypot(arbitratedAddendX, arbitratedAddendY);
-        return Meters.of(arbitratedAddend); // TODO: figure out scalar
+    private Distance arbitrateShooterDistance(LinearVelocity forwardVelocity) {
+        double forwardSpeed = forwardVelocity.in(MetersPerSecond);
+
+        double scalerAdjustment = forwardSpeed * SCALING_FACTOR;
+        double quadraticAdjustment = Math.pow(forwardSpeed, 2) * QUADRATIC_FACTOR;
+
+        Distance distanceAdjustment = Meters.of(scalerAdjustment + quadraticAdjustment);
+        return distanceAdjustment;
     }
 
     @Override

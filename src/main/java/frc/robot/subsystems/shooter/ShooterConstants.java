@@ -20,24 +20,26 @@ public class ShooterConstants {
 	public static final Mass WHEEL_MASS = Pounds.of(0.86);
 	public static final double WHEEL_MOMENT_OF_INERTIA = 0.5 * WHEEL_MASS.in(Kilograms) * Math.pow(WHEEL_RADIUS.in(Meters), 2);
 
-	public static final double topWheelkP = 0;
-	public static final double topWheelkI = 0;
-	public static final double topWheelkD = 0;
-	public static final double bottomWheelkP = 0;
-	public static final double bottomWheelkI = 0;
-	public static final double bottomWheelkD = 0;
-	public static final double topWheelkS = 0;
-	public static final double topWheelkV = 0;
-	public static final double topWheelkA = 0;
-	public static final double bottomWheelkS = 0;
-	public static final double bottomWheelkV = 0;
-	public static final double bottomWheelkA = 0;
-	public static final double WheelSIM_kP = 0.013657;
-	public static final double WheelSIM_kI = 0;
-	public static final double WheelSIM_kD = 0;
-	public static final double WheelSIM_kS = -0.0041375;
-	public static final double WheelSIM_kV = 0.083116;
-	public static final double WheelSIM_kA = 0.00094517;
+	public static final double TOP_WHEEL_kP = 0;
+	public static final double TOP_WHEEL_kI = 0;
+	public static final double TOP_WHEEL_kD = 0;
+	public static final double BOT_WHEEL_kP = 0;
+	public static final double BOT_WHEEL_kI = 0;
+	public static final double BOT_WHEEK_kD = 0;
+
+	public static final double TOP_WHEEL_kS = 0;
+	public static final double TOP_WHEEL_kV = 0;
+	public static final double TOP_WHEEL_kA = 0;
+	public static final double BOT_WHEEL_kS = 0;
+	public static final double BOT_WHEEL_kV = 0;
+	public static final double BOT_WHEEL_kA = 0;
+
+	public static final double WHEEL_SIM_kP = 0.013657;
+	public static final double WHEEL_SIM_kI = 0;
+	public static final double WHEEL_SIM_kD = 0;
+	public static final double WHEEL_SIM_kS = -0.0041375;
+	public static final double WHEEL_SIM_kV = 0.083116;
+	public static final double WHEEL_SIM_kA = 0.00094517;
 
 	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RadiansPerSecond.of(0.1);	
 }
