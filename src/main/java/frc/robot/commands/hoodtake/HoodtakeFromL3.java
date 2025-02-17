@@ -3,12 +3,9 @@ package frc.robot.commands.hoodtake;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
-import java.util.function.Supplier;
-
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
 
 public class HoodtakeFromL3 extends SequentialCommandGroup {

@@ -13,8 +13,16 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
+
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -25,15 +33,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.DriveCommands;
 import frc.robot.commands.ShootOnMove;
-import frc.robot.commands.hoodtake.HoodtakeFromL2;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -43,13 +46,13 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOMapleSim;
 import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.hoodtake.Hoodtake;
+import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSim;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSpark;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOSpark;
-import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
@@ -61,16 +64,9 @@ import frc.robot.subsystems.shooter.ShooterIOSpark;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
-import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVisionSim;
-import frc.robot.util.controller.*;
-
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.COTS;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
+import frc.robot.util.controller.CometController;
+import frc.robot.util.controller.CometPS4Controller;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
