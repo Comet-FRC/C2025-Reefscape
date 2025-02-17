@@ -201,9 +201,9 @@ public class Drive extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
-		Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
-		Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+		//Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
+		//Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+		//Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 
 		if (isTranslationPIDEnabled) {
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
@@ -553,28 +553,24 @@ public class Drive extends SubsystemBase {
 	}
 
 	public void updateTargetAlgae() {
-		Pose2d[] algaeLocations;
-
 		boolean isOpposingReef = this.isOnOpposingSide();
-		if (!isOpposingReef) {
-			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPoses;
-		} else {
-			algaeLocations = FieldConstants.Reef.reefAlgaeTargetPosesOpposingSide;
-		}
+		Pose2d[] algaeLocations = isOpposingReef 
+			? FieldConstants.Reef.reefAlgaeTargetPosesOpposingSide 
+			: FieldConstants.Reef.reefAlgaeTargetPoses;
 
-		Pose2d closestPose = null;
-		int closestAlgaeIndex = -1;
+		Pose2d closestPose = algaeLocations[0];
+		int closestAlgaeIndex = 0;
+		Distance closestDistance = this.getDistanceFrom(closestPose);
 
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 1; i < 6; ++i) {
 			Pose2d algaePose = algaeLocations[i];
-			if (closestPose == null) {
+
+			Distance algaeDistance = this.getDistanceFrom(algaePose);
+
+			if (algaeDistance.lt(closestDistance)) {
 				closestPose = algaePose;
 				closestAlgaeIndex = i;
-			} else {
-				if (this.getDistanceFrom(algaePose).lt(this.getDistanceFrom(closestPose))) {
-					closestPose = algaePose;
-					closestAlgaeIndex = i;
-				}
+				closestDistance = algaeDistance;
 			}
 		}
 
