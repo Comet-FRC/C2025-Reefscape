@@ -288,6 +288,13 @@ public class RobotContainer {
 		return autoChooser.get();
 	}
 
+	/**
+	 * Basically since I disabled vision sim the pose estimator never receives any vision data,
+	 * and so the robot's actual position and its estimated pose kinda just drift apart
+	 * more and more. This is a temporary fix which is run every loop during sim.
+	 * 
+	 * This should only be used when vision sim is disabled
+	 */
 	public void updateSimDrivePosition() {
 		this.drive.addVisionMeasurement(
 			this.swerveDriveSimulation.getSimulatedDriveTrainPose(),
