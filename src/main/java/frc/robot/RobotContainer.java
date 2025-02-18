@@ -68,6 +68,7 @@ import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
 import frc.robot.util.controller.CometController;
 import frc.robot.util.controller.CometPS4Controller;
+import frc.robot.util.controller.CometXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -87,7 +88,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -168,8 +169,8 @@ public class RobotContainer {
 				break;
 		}
 
-		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		setupAutoCommands();
+		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		setupDefaultCommands();
 		setupButtonBindings();
 
@@ -177,8 +178,6 @@ public class RobotContainer {
 	}
 
 	private void setupAutoCommands() {
-		// Set up auto routines
-
 		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake));
 	}
 
