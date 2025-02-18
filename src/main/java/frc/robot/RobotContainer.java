@@ -187,11 +187,12 @@ public class RobotContainer {
 			this.drive.joystickDrive(
 				() -> -controller.getLeftY(),
 				() -> -controller.getLeftX(),
-				() ->  {
+				/*() ->  {
 					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
 					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
 					return right-left;
-				}
+				}*/
+				() -> controller.getRightX()
 			)
 		);
 
