@@ -21,14 +21,21 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+
 import static edu.wpi.first.units.Units.*;
+
+import org.ironmaple.simulation.IntakeSimulation;
+import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 
 
 public class IntakeIOSim implements IntakeIO {
 	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
+	private final IntakeSimulation intakeSimulation;
+	private AbstractDriveTrainSimulation swerve;
 
-	
 
 	private static DCMotorSim configureWheelMotor() {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
@@ -89,15 +96,33 @@ public class IntakeIOSim implements IntakeIO {
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
 	
-	public IntakeIOSim(){
+	public IntakeIOSim(AbstractDriveTrainSimulation driveTrain){
 		pivotPID.enableContinuousInput(-Math.PI, Math.PI);
+		swerve = driveTrain;
+		this.intakeSimulation = IntakeSimulation.InTheFrameIntake(
+			// Specify the type of game pieces that the intake can collect
+			"Algae",
+			// Specify the drivetrain to which this intake is attached
+			driveTrain,
+			// Specify width of the intake
+			Meters.of(0.7),
+			// The intake is mounted on the back side of the chassis
+			IntakeSimulation.IntakeSide.LEFT,
+			// The intake can hold up to 1 note
+			30);
+			setRunning(true);
 	}
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
+		
 		wheelMotor.update(0.02);
 		pivotMotor.update(0.02);
 
 		runLoopControl();
+		
+		if(isNoteInsideIntake()){
+			launchAlgae();
+		}
 
 		inputs.wheelPosition = wheelMotor.getAngularPosition();
 		inputs.wheelVelocity = wheelMotor.getAngularVelocity();
@@ -164,4 +189,22 @@ public class IntakeIOSim implements IntakeIO {
 	public void stopPivot() {
 		setPivotVoltage(Volts.of(0.0));
 	}
+	@Override // Defined by IntakeIO
+    public void setRunning(boolean runIntake) {
+        if (runIntake)
+            intakeSimulation.startIntake(); // Extends the intake out from the chassis frame and starts detecting contacts with game pieces
+        else
+            intakeSimulation.stopIntake(); // Retracts the intake into the chassis frame, disabling game piece collection
+    }
+
+    @Override // Defined by IntakeIO
+    public boolean isNoteInsideIntake() {
+        return intakeSimulation.getGamePiecesAmount() != 0; // True if there is a game piece in the intake
+    }
+
+    @Override // Defined by IntakeIO
+    public void launchAlgae(SwerveDriveSimulation swerve) {
+        if (intakeSimulation.obtainGamePieceFromIntake())
+            ShooterIOSim.getInstance().launchAlgae(swerve);// notify the simulated flywheels to launch a note
+    }
 }

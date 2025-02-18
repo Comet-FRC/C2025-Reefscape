@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.units.measure.Angle;
@@ -42,4 +43,12 @@ public interface IntakeIO {
 
 	public default void setPivotPositionSetpoint(Angle position) {}
 	public default void setPivotVoltage(Voltage volts) {}
+	public default void setRunning(boolean runIntake) {
+    }
+
+    public default boolean isNoteInsideIntake() {
+		return false;
+	}
+
+    public default void launchAlgae(SwerveDriveSimulation swerve) {}
 }

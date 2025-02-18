@@ -22,6 +22,8 @@ import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -144,6 +146,24 @@ public class RobotContainer {
 				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
 				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
 				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
+
+
 
 
 				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
@@ -156,9 +176,11 @@ public class RobotContainer {
 								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
-				this.intake = new Intake(new IntakeIOSim());
+				this.intake = new Intake(new IntakeIOSim(swerveDriveSimulation));
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
 				this.indexer = new Indexer(new IndexerIOSim());
+				
+
 				break;
 
 			default: // Replayed robot, disable IO implementations
@@ -263,6 +285,10 @@ public class RobotContainer {
 
 		this.controller.rightTrigger().whileTrue(
 			new ShootOnMove(drive, shooter)
+		);
+
+		this.controller.leftTrigger().whileTrue(
+			this.intake.launchAlgae(swerveDriveSimulation)
 		);
 	}
 
