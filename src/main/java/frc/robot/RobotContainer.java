@@ -25,6 +25,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -168,40 +169,20 @@ public class RobotContainer {
 		}
 
 		this.autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-		setupAutoRoutines();
-		setupDefualtCommands();
+		setupAutoCommands();
+		setupDefaultCommands();
 		setupButtonBindings();
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 	}
 
-	private void setupAutoRoutines() {
+	private void setupAutoCommands() {
 		// Set up auto routines
 
-		// Set up SysId routines
-		/*
-		 * autoChooser.addOption(
-		 * "Drive Wheel Radius Characterization",
-		 * DriveCommands.wheelRadiusCharacterization(drive));
-		 * autoChooser.addOption(
-		 * "Drive Simple FF Characterization",
-		 * DriveCommands.feedforwardCharacterization(drive));
-		 * autoChooser.addOption(
-		 * "Drive SysId (Quasistatic Forward)",
-		 * drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-		 * autoChooser.addOption(
-		 * "Drive SysId (Quasistatic Reverse)",
-		 * drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-		 * autoChooser.addOption(
-		 * "Drive SysId (Dynamic Forward)",
-		 * drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-		 * autoChooser.addOption(
-		 * "Drive SysId (Dynamic Reverse)",
-		 * drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-		 */
+		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake));
 	}
 
-	private void setupDefualtCommands() {
+	private void setupDefaultCommands() {
 		this.drive.setDefaultCommand(
 			this.drive.joystickDrive(
 				() -> -controller.getLeftY(),

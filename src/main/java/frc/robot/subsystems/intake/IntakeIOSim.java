@@ -15,6 +15,7 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -48,7 +49,7 @@ public class IntakeIOSim implements IntakeIO {
 			-Double.MAX_VALUE,
 			Double.MAX_VALUE,
 			true,
-			90,
+			Units.degreesToRadians(90),
 			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 			0
 		);
