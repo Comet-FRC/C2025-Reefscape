@@ -160,7 +160,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {
       SimulatedArena.getInstance().simulationPeriodic();
-      robotContainer.displaySimFieldToAdvantageScope();
+      robotContainer.updateSimulation();
       this.robotContainer.updateSimDrivePosition();
   }
 }

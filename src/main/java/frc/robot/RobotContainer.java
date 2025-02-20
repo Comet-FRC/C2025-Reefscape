@@ -21,6 +21,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -31,6 +32,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -136,6 +138,13 @@ public class RobotContainer {
 
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
+				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
+
+
 				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
 
 				/*this.vision = new ApriltagVision(
@@ -278,14 +287,13 @@ public class RobotContainer {
 		);
 	}
 
-	public void displaySimFieldToAdvantageScope() {
-		if (Constants.currentMode != Constants.Mode.SIM)
-			return;
+    public void updateSimulation() {
+        if (Constants.currentMode != Constants.Mode.SIM) return;
 
-		Logger.recordOutput(
-				"FieldSimulation/RobotPosition", swerveDriveSimulation.getSimulatedDriveTrainPose());
-		Logger.recordOutput(
-				"FieldSimulation/Notes",
-				SimulatedArena.getInstance().getGamePiecesByType("Note").toArray(new Pose3d[0]));
-	}
+        Logger.recordOutput("FieldSimulation/RobotPosition", swerveDriveSimulation.getSimulatedDriveTrainPose());
+        Logger.recordOutput(
+                "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+        Logger.recordOutput(
+                "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+    }
 }
