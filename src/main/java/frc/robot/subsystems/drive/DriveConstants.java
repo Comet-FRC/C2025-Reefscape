@@ -21,5 +21,11 @@ public class DriveConstants {
     public static final double TRANSLATION_kI = 0;
     public static final double TRANSLATION_kD = 0;
 
+    public static final double angularVelocityCoefficient = 0.0;
+    public static final boolean angularVelocityCorrection = true;
+
+    public static final boolean headingCorrection = true;
+    public static final double HEADING_CORRECTION_DEADBAND = 0.01;
+
     public static final Alert ALERT_DISCONNECTED_GYRO = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 }

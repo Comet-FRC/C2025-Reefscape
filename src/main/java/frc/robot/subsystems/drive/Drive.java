@@ -12,7 +12,6 @@
 // GNU General Public License for more details.
 
 package frc.robot.subsystems.drive;
-
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Meters;
@@ -133,6 +132,7 @@ public class Drive extends SubsystemBase {
 	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
 
 	TargetAlgae targetAlgae = null;
+	Angle lastHeadingRadians = Angle.ofBaseUnits(0, Radians);
 
 	public Drive(
 			GyroIO gyroIO,
@@ -218,6 +218,30 @@ public class Drive extends SubsystemBase {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
 		}
 
+		// HEADING CORRECION
+		if (DriveConstants.headingCorrection) {
+			if (Math.abs(targetChassisSpeeds.omegaRadiansPerSecond) < DriveConstants.HEADING_CORRECTION_DEADBAND
+					&& (Math.abs(targetChassisSpeeds.vxMetersPerSecond) > DriveConstants.HEADING_CORRECTION_DEADBAND
+							|| Math.abs(
+									targetChassisSpeeds.vyMetersPerSecond) > DriveConstants.HEADING_CORRECTION_DEADBAND)) {
+				targetChassisSpeeds.omegaRadiansPerSecond = headingPID
+						.calculate(this.getPose().getRotation().getRadians(), lastHeadingRadians.in(Radians));
+			} else {
+				lastHeadingRadians = Radians.of(this.getPose().getRotation().getRadians());
+			}
+		}
+
+		// ANGULAR VELOCITY CORRECTION
+		if (DriveConstants.angularVelocityCorrection) {
+			Rotation2d angularVelocity = new Rotation2d(gyroInputs.yawVelocity.in(RadiansPerSecond))
+					.times(DriveConstants.angularVelocityCoefficient);
+			if (angularVelocity.getRadians() != 0.0) {
+				ChassisSpeeds fieldRelativeVelocity = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds,
+						this.getPose().getRotation());
+				targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeVelocity,
+						this.getPose().getRotation().plus(angularVelocity));
+			}
+		}
 		// Calculate module setpoints
 		ChassisSpeeds speeds = ChassisSpeeds.discretize(targetChassisSpeeds, 0.02);
 
