@@ -13,7 +13,7 @@ public class HoodtakeFromL3 extends SequentialCommandGroup {
     public HoodtakeFromL3(Drive drive, Hoodtake hoodtake) {
         super(
             Commands.deadline(
-                drive.pathfindToPose(drive.getTargetAlgae()::pose),
+                drive.pathfindToPose(drive.getTargetAlgae()::pose, 1),
                 hoodtake.setPosition(() -> Degrees.of(63))
             ),
             drive.driveToClosestAlgaePID(() -> Meters.of(0.44)),

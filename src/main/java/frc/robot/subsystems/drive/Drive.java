@@ -108,7 +108,7 @@ public class Drive extends SubsystemBase {
 					new SwerveModulePosition()
 			};
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
-			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(15, 5, new Rotation2d()));
+			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(7.589, 4.055, new Rotation2d()));
 
 	private PIDController headingPID = new PIDController(
 			DriveConstants.HEADING_kP,
@@ -432,10 +432,14 @@ public class Drive extends SubsystemBase {
 	}
 
 	public void setPose(Pose2d pose) {
+		if (pose == null) {
+			return;
+		}
 		poseEstimator.resetPosition(
 				rawGyroRotation.plus(pose.getRotation()),
 				getModulePositions(),
-				new Pose2d(pose.getTranslation(), this.getPose().getRotation()));
+				pose
+		);
 	}
 
 	/** Adds a new timestamped vision measurement. */
@@ -582,7 +586,7 @@ public class Drive extends SubsystemBase {
 		return targetAlgae;
 	}
 
-	public Command pathfindToPose(Supplier<Pose2d> pose) {
+	public Command pathfindToPose(Supplier<Pose2d> pose, double goalEndVelocity) {
 		return Commands.defer(
 			() -> AutoBuilder.pathfindToPose(
 					pose.get(),
@@ -591,7 +595,7 @@ public class Drive extends SubsystemBase {
 							MetersPerSecondPerSecond.of(4),
 							this.getMaximumAngularSpeed(),
 							DegreesPerSecondPerSecond.of(720)),
-							1),
+							goalEndVelocity),
 			Set.of(this))
 			.andThen(() -> this.stop());
 	}

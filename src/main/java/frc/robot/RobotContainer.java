@@ -66,9 +66,7 @@ import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
-import frc.robot.util.controller.CometController;
-import frc.robot.util.controller.CometPS4Controller;
-import frc.robot.util.controller.CometXboxController;
+import frc.robot.util.controller.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -88,7 +86,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
