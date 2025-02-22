@@ -14,7 +14,7 @@ public class HoodtakeFromL2 extends SequentialCommandGroup {
         super(
             Commands.deadline(
                 drive.pathfindToPose(drive.getTargetAlgae()::pose),
-                hoodtake.setPosition(() -> Degrees.of(50))
+                hoodtake.setPosition(() -> Degrees.of(80))
             ),
             drive.driveToClosestAlgaePID(() -> Meters.of(0.50)),
             drive.driveToClosestAlgaePID(() -> Meters.of(0.6))

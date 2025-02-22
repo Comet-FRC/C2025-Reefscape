@@ -14,14 +14,19 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
+import org.dyn4j.geometry.Circle;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
+import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation.GamePieceInfo;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
@@ -93,6 +98,8 @@ public class RobotContainer {
 	private final Intake intake;
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
+	private final GamePieceInfo Algae = new GamePieceInfo("Algae", new Circle(0.176), Inches.of(70), Kilograms.of(0.4), 1.8, 5, 0.8);
+	private final GamePieceInfo TopAlgae = new GamePieceInfo("Algae", new Circle(0.176), Inches.of(102), Kilograms.of(0.4), 1.8, 5, 0.8);
 
 	private final CometController controller = new CometXboxController(0);
 
@@ -100,6 +107,7 @@ public class RobotContainer {
 
 	private SwerveDriveSimulation swerveDriveSimulation;
 	private IntakeSimulation intakeSimulation;
+	private IntakeSimulation hoodtakeSimulation;
 
 
 	/**
@@ -148,6 +156,19 @@ public class RobotContainer {
 				1);
 				intakeSimulation.startIntake();
 
+				this.hoodtakeSimulation = IntakeSimulation.InTheFrameIntake(
+				// Specify the type of game pieces that the intake can collect
+				"Algae",
+				// Specify the drivetrain to which this intake is attached
+				swerveDriveSimulation,
+				// Specify width of the intake
+				Meters.of(0.7),
+				// The intake is mounted on the back side of the chassis
+				IntakeSimulation.IntakeSide.BACK,
+				// The intake can hold up to 1 note
+				1);
+				hoodtakeSimulation.startIntake();
+
 				this.drive = new Drive(
 					new GyroIOSim(this.swerveDriveSimulation.getGyroSimulation()),
 					new ModuleIOMapleSim(this.swerveDriveSimulation.getModules()[0]),
@@ -159,31 +180,8 @@ public class RobotContainer {
 
 				// Register the drivetrain simulation to the default simulation world
 				SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.1,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.2,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeAlgaeOnField(new Translation2d(2.4,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3,2)));
-				SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(3.5,2)));
-
-
-
-
+				fieldSimulationSetup();
+				
 				// APRILTAG VISION SIM IS TOO COMPUTATIONALLY INTENSIVE
 
 				/*this.vision = new ApriltagVision(
@@ -305,11 +303,12 @@ public class RobotContainer {
 			new ShootOnMove(drive, shooter)
 		);
 
-		new Trigger(() -> controller.leftTrigger().getAsBoolean() && intakeSimulation.getGamePiecesAmount() != 0)
+		new Trigger(() -> controller.leftTrigger().getAsBoolean() && ( intakeSimulation.getGamePiecesAmount() == 1 || hoodtakeSimulation.getGamePiecesAmount() == 1))
 		.whileTrue(
 			Commands.sequence(
 				this.shooter.launchAlgae(swerveDriveSimulation),
-				Commands.runOnce(() -> intakeSimulation.obtainGamePieceFromIntake())
+				Commands.runOnce(() -> intakeSimulation.obtainGamePieceFromIntake()),
+				Commands.runOnce(() -> hoodtakeSimulation.obtainGamePieceFromIntake())
 			)
 		);
 	}
@@ -339,6 +338,14 @@ public class RobotContainer {
 	}
 
     public void updateSimulation() {
+		if(intakeSimulation.getGamePiecesAmount() == 1 || hoodtakeSimulation.getGamePiecesAmount() == 1)
+		{
+			hoodtakeSimulation.stopIntake();
+			intakeSimulation.stopIntake();
+		} else {
+			hoodtakeSimulation.startIntake();
+			intakeSimulation.startIntake();
+		}
         if (Constants.currentMode != Constants.Mode.SIM) return;
 
         Logger.recordOutput("FieldSimulation/RobotPosition", swerveDriveSimulation.getSimulatedDriveTrainPose());
@@ -347,4 +354,27 @@ public class RobotContainer {
         Logger.recordOutput(
                 "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
     }
+
+	public void fieldSimulationSetup(){
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(1.215,2.200)));
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(1.215,4.055)));
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(1.215,5.860)));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(3.66, 4.018, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(4.828, 4.607, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(4.156, 3.428, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(4.820, 3.428, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(5.164, 4.018, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(4.149, 4.607, new Rotation2d())));
+
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(16.327,2.200)));
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(16.327,4.055)));
+		SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralAlgaeStack(new Translation2d(16.327,5.860)));
+
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(12.386, 4.018, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(12.730, 4.607, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(12.715, 3.428, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(13.386, 3.428, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(13.730, 4.018, new Rotation2d())));
+		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(13.401, 4.607, new Rotation2d())));
+	}
 }
