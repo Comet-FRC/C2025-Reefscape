@@ -43,12 +43,6 @@ public interface IntakeIO {
 
 	public default void setPivotPositionSetpoint(Angle position) {}
 	public default void setPivotVoltage(Voltage volts) {}
-	public default void setRunning(boolean runIntake) {
-    }
-
-    public default boolean isNoteInsideIntake() {
-		return false;
-	}
 
     public default void launchAlgae(SwerveDriveSimulation swerve) {}
 }

@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -58,6 +59,13 @@ public class Shooter extends SubsystemBase {
 	public Command setFlywheelVelocities(Supplier<AngularVelocity> topSpeed, Supplier<AngularVelocity> botSpeed) {
 		return Commands.runOnce(() -> {
 				io.setWheelVelocitySetpoint(topSpeed.get(), botSpeed.get());
+		});
+	}
+
+	public Command launchAlgae(SwerveDriveSimulation swerve) {
+		return Commands.runOnce(() -> {
+				io.launchAlgae(swerve);
+				System.out.println("Works");
 		});
 	}
 

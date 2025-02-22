@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
 
+import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -41,6 +42,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
@@ -72,6 +74,7 @@ import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
 import frc.robot.util.controller.CometController;
 import frc.robot.util.controller.CometPS4Controller;
+import frc.robot.util.controller.CometXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -91,11 +94,13 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
 	private SwerveDriveSimulation swerveDriveSimulation;
+	private IntakeSimulation intakeSimulation;
+
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -129,6 +134,19 @@ public class RobotContainer {
 						driveTrainSimulationConfig, // Specify Configuration
 						new Pose2d(0, 0, new Rotation2d(0)) // Specify starting pose
 				);
+
+				this.intakeSimulation = IntakeSimulation.InTheFrameIntake(
+				// Specify the type of game pieces that the intake can collect
+				"Algae",
+				// Specify the drivetrain to which this intake is attached
+				swerveDriveSimulation,
+				// Specify width of the intake
+				Meters.of(0.7),
+				// The intake is mounted on the back side of the chassis
+				IntakeSimulation.IntakeSide.LEFT,
+				// The intake can hold up to 1 note
+				1);
+				intakeSimulation.startIntake();
 
 				this.drive = new Drive(
 					new GyroIOSim(this.swerveDriveSimulation.getGyroSimulation()),
@@ -176,7 +194,7 @@ public class RobotContainer {
 								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIOSim());
-				this.intake = new Intake(new IntakeIOSim(swerveDriveSimulation));
+				this.intake = new Intake(new IntakeIOSim());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
 				this.indexer = new Indexer(new IndexerIOSim());
 				
@@ -287,8 +305,12 @@ public class RobotContainer {
 			new ShootOnMove(drive, shooter)
 		);
 
-		this.controller.leftTrigger().whileTrue(
-			this.intake.launchAlgae(swerveDriveSimulation)
+		new Trigger(() -> controller.leftTrigger().getAsBoolean() && intakeSimulation.getGamePiecesAmount() != 0)
+		.whileTrue(
+			Commands.sequence(
+				this.shooter.launchAlgae(swerveDriveSimulation),
+				Commands.runOnce(() -> intakeSimulation.obtainGamePieceFromIntake())
+			)
 		);
 	}
 

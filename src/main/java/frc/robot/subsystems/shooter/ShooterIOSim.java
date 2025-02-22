@@ -9,9 +9,9 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
@@ -25,14 +25,14 @@ import static edu.wpi.first.units.Units.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
+import org.ironmaple.utils.FieldMirroringUtils;
+import org.littletonrobotics.junction.Logger;
 
 
 public class ShooterIOSim implements ShooterIO {
 	private final DCMotorSim topWheelMotor = configureWheelMotor();
 	private final DCMotorSim bottomWheelMotor = configureWheelMotor();
 	private static ShooterIOSim instance;
-	private SwerveDriveSimulation swerve;
 	
     public static ShooterIOSim getInstance() {
         if (instance == null) {
@@ -131,18 +131,30 @@ public class ShooterIOSim implements ShooterIO {
 	public void stop() {
 		setWheelVoltage(Volts.of(0.0));
 	}
-	public void launchAlgae() {
-        Pose2d robotPose = swerve.getSimulatedDriveTrainPose();
-        ReefscapeAlgaeOnFly AlgaeOnFly = new ReefscapeAlgaeOnFly(
-                robotPose.getTranslation(),
-        		new Translation2d(0.2, 0),
-                swerve.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                robotPose.getRotation(),
-				Meters.of(0.45),
-				// The launch speed is proportional to the RPM; assumed to be 16 meters/second at 6000 RPM
-				MetersPerSecond.of(5000 / 6000 * 20),
-				// The angle at which the note is launched
-				Degrees.of(55));
-        SimulatedArena.getInstance().addGamePieceProjectile(AlgaeOnFly);
+	public void launchAlgae(SwerveDriveSimulation swerve) {
+		Runnable hitNetCallBack = () -> System.out.println("HIT NET! +4 POINTS");
+        ReefscapeAlgaeOnFly algae = 
+			new ReefscapeAlgaeOnFly(
+        swerve.getSimulatedDriveTrainPose().getTranslation(),
+        new Translation2d(),
+        swerve.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+        swerve.getSimulatedDriveTrainPose().getRotation(),
+        Meters.of(1.2), // initial height of the ball, in meters
+    	MetersPerSecond.of(9), // initial velocity, in m/s
+        Degrees.of(75)) // shooter angle
+        ;
+		algae.withProjectileTrajectoryDisplayCallBack(
+            (poses) -> Logger.recordOutput("successfulShotsTrajectory", poses.toArray(Pose3d[]::new)),
+            (poses) -> Logger.recordOutput("missedShotsTrajectory", poses.toArray(Pose3d[]::new)));
+		algae.withTargetPosition(
+                        () -> FieldMirroringUtils.toCurrentAllianceTranslation(new Translation3d(8.350, 4.509, 2.1)))
+                .withTargetTolerance(new Translation3d(9.250-8.350, 7.918-4.509, 0.1))
+                .withHitTargetCallBack(hitNetCallBack);
+		SimulatedArena.getInstance()
+				.addGamePieceProjectile(algae);
+
+		//8.350, 4.509
+
+		
     }
 }

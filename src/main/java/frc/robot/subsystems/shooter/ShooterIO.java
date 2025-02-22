@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
 
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.units.measure.*;
 
@@ -27,4 +28,5 @@ public interface ShooterIO {
 	public default void stop() {}
 	public default void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {}
 	public default void setWheelVoltage(Voltage volts) {}
+	public default void launchAlgae(SwerveDriveSimulation swerve){}
 }
