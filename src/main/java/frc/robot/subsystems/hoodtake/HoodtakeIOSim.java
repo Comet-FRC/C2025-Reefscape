@@ -45,9 +45,9 @@ public class HoodtakeIOSim implements HoodtakeIO {
 						HoodtakeConstants.MASS.in(Kilograms)),
 				HoodtakeConstants.LENGTH.in(Meters),
 				0.0,
-				2.776958379,
+				HoodtakeConstants.STARTING_ANGLE.in(Radians),
 				true,
-				0,
+				HoodtakeConstants.STARTING_ANGLE.in(Radians),
 				HoodtakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 				0);
 	}
@@ -80,7 +80,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	private boolean wheelVoltageMode = false;
 
 	public HoodtakeIOSim() {
-		//this.setPivotPositionSetpoint(Radians.of(2.776958379));
+		this.setPivotPositionSetpoint(HoodtakeConstants.STARTING_ANGLE);
 	}
 
 	@Override

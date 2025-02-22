@@ -3,29 +3,32 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
 public final class IntakeConstants {
-	public static final int HOODTAKE_MOTOR_ID = 17;
-	public static final int PIVOT_MOTOR_ID = 18;
+	public static final int INTAKE_MOTOR_ID = 15;
+	public static final int PIVOT_MOTOR_ID = 16;
+
+	public static final Angle STARTING_ANGLE = Degrees.of(96);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
-	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 0.5; // 1:2 PULLEY RATIO
+	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 2/3; // 1:2 PULLEY RATIO
 
 	public static final double PIVOT_kP = 0;
 	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
-	public static final double PIVOT_SIM_kP = 9;
+	public static final double PIVOT_SIM_kP = 88.636;
 	public static final double PIVOT_SIM_kI = 0;
-	public static final double PIVOT_SIM_kD = 1.6;
+	public static final double PIVOT_SIM_kD = 6.458;
 	public static final double PIVOT_kS = 0;
 	public static final double PIVOT_kG = 0;
 	public static final double PIVOT_kV = 0;
 	public static final double PIVOT_kA = 0;
 	public static final double PIVOT_SIM_kS = 1.024;
-	public static final double PIVOT_SIM_kG = 6.8432;
-	public static final double PIVOT_SIM_kV = 0.048426;
-	public static final double PIVOT_SIM_kA = 0.21527;
+	public static final double PIVOT_SIM_kG = 7.7827;
+	public static final double PIVOT_SIM_kV = 0.069055;
+	public static final double PIVOT_SIM_kA = 0.24078;
 
 	public static final double WHEEL_kP = 0;
 	public static final double WHEEL_kI = 0;

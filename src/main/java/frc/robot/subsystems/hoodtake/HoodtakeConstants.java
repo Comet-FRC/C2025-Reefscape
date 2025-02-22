@@ -3,11 +3,14 @@ package frc.robot.subsystems.hoodtake;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
 public final class HoodtakeConstants {
 	public static final int WHEEL_MOTOR_ID = 17;
 	public static final int PIVOT_MOTOR_ID = 18;
+
+	public static final Angle STARTING_ANGLE = Radians.of(2.776958379);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
 	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 0.5; // 1:2 PULLEY RATIO

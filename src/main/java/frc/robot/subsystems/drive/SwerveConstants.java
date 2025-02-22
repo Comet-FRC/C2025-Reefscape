@@ -45,13 +45,13 @@ public class SwerveConstants {
             new Translation2d(TRACK_WIDTH.div(-2.0), WHEELBASE.div(-2.0))
     };
 
-    public static final Rotation2d frontLeftZeroRotation = new Rotation2d(60.45132695667231 / (2 * Math.PI));
-    public static final Rotation2d frontRightZeroRotation = new Rotation2d(48.32636373736527 / (2 * Math.PI));
-    public static final Rotation2d backLeftZeroRotation = new Rotation2d(56.48999159646946 / (2 * Math.PI));
-    public static final Rotation2d backRightZeroRotation = new Rotation2d(110.95594322787176 / (2 * Math.PI));
+    public static final Rotation2d frontLeftZeroRotation = new Rotation2d(Radians.of(-4.517573356628418));
+    public static final Rotation2d frontRightZeroRotation = new Rotation2d(Radians.of(0.2070874124765396));
+    public static final Rotation2d backLeftZeroRotation = new Rotation2d(Radians.of(3.4591267108917236));
+    public static final Rotation2d backRightZeroRotation = new Rotation2d(Radians.of(-7.534914016723633));
 
-    public static final boolean IS_HEADING_CORRECTION_ENABLED = true;
-    public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
+    public static final boolean IS_HEADING_CORRECTION_ENABLED = false;
+    public static final boolean IS_COSINE_COMPENSATION_ENABLED = false;
 
     // Device CAN IDs
     public static final int pigeonCanId = 21;
@@ -100,7 +100,7 @@ public class SwerveConstants {
     public static final double AZIMUTH_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / 60.0 / AZIMUTH_REDUCTION; // RPM -> Rad/Sec
 
     // Turn PID configuration
-    public static final double AZIMUTH_kP = 1;
+    public static final double AZIMUTH_kP = 0.5;
     public static final double AZIMUTH_kD = 0.0;
     public static final double AZIMUTH_SIM_kP = 8.0;
     public static final double AZIMUTH_SIM_kD = 0.0;

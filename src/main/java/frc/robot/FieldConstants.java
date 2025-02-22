@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.drive.TargetAlgae;
+import frc.robot.util.AllianceColor;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -152,6 +153,10 @@ public class FieldConstants {
 				branchPositions.add(fillRight);
 				branchPositions.add(fillLeft);
 			}
+		}
+
+		public static Pose2d[] getTeamAlgaePoses(boolean isOnOpposingAllianceField) {
+			return isOnOpposingAllianceField ? reefAlgaeTargetPosesOpposingSide : reefAlgaeTargetPoses;
 		}
 
 		/**

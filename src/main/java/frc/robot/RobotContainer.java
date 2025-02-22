@@ -16,6 +16,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
@@ -39,6 +40,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
@@ -49,6 +51,7 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOMapleSim;
 import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.hoodtake.Hoodtake;
+import frc.robot.subsystems.hoodtake.HoodtakeConstants;
 import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSim;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSpark;
@@ -57,6 +60,7 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOSpark;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSpark;
@@ -88,7 +92,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -203,7 +207,15 @@ public class RobotContainer {
 		);
 
 		this.hoodtake.setDefaultCommand(
-			this.hoodtake.setPosition(() -> Radians.of(2.776958379))
+			this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE)
+		);
+
+		this.indexer.setDefaultCommand(
+			this.indexer.sit()
+		);
+
+		this.intake.setDefaultCommand(
+			this.intake.setPosition(() -> IntakeConstants.STARTING_ANGLE)
 		);
 	}
 
@@ -235,32 +247,44 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-		this.controller.left().onTrue(
-			Commands.runOnce(
-				() -> swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose()),
-				this.drive
-			)
+
+		this.controller.y().whileTrue(
+			this.shooter.topSysId()
 		);
 
-		this.controller.x().whileTrue(
-			new HoodtakeFromReef(drive, hoodtake)
-		);
+		// this.controller.left().onTrue(
+		// 	Commands.runOnce(
+		// 		() -> swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose()),
+		// 		this.drive
+		// 	)
+		// );
 
-		this.controller.b().onTrue(
-			this.intake.setPosition(() -> Degrees.of(-90))
-		).onFalse(
-			this.intake.setPosition(() -> Degrees.of(0))
-		);
+		// this.controller.leftBumper().whileTrue(
+		// 	indexer.setRightPosition(() -> Degrees.of(90))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
 
-		this.controller.y().onTrue(
-			this.indexer.popUp()
-		).onFalse(
-			this.indexer.sit()
-		);
+		// this.controller.x().whileTrue(
+		// 	new HoodtakeFromReef(drive, hoodtake)
+		// );
 
-		this.controller.rightTrigger().whileTrue(
-			new ShootOnMove(drive, shooter)
-		);
+		// this.controller.b().whileTrue(
+		// 	this.intake.setPosition(() -> Degrees.of(0))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.y().onTrue(
+		// 	this.indexer.popUp()
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.rightTrigger().whileTrue(
+		// 	new ShootOnMove(drive, shooter)
+		// );
+
+		// this.controller.rightBumper().whileTrue(
+		// 	intake.sysIdRoutinePivot()
+		// );
 	}
 
 	/**

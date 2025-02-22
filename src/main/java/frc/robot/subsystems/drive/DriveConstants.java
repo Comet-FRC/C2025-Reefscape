@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class DriveConstants {
-    public static final LinearVelocity MINUMUM_VELOCITY = MetersPerSecond.of(0.1);
+    public static final LinearVelocity MINUMUM_VELOCITY = MetersPerSecond.of(0.15);
     public static final AngularVelocity MINUMUM_ANGULAR_VELOCITY = RadiansPerSecond.of(0.01);
 
     // These values are also used for pathplanner

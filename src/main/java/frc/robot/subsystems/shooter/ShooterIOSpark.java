@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 import com.revrobotics.spark.SparkMax;
 
@@ -46,7 +47,7 @@ public class ShooterIOSpark implements ShooterIO {
 	 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast)
+			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR)
@@ -64,7 +65,7 @@ public class ShooterIOSpark implements ShooterIO {
 	 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast)
+			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR)
@@ -81,12 +82,14 @@ public class ShooterIOSpark implements ShooterIO {
 	MutAngularVelocity bottomWheelDesiredVelocity = RadiansPerSecond.mutable(0);
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
+		inputs.topWheelPosition = Radians.of(topMotor.getEncoder().getPosition());
 		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
 		inputs.topWheelAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
 		inputs.topWheelSupplyCurrent = Amps.of(topMotor.getOutputCurrent());
 		inputs.topTemperature = Celsius.of(topMotor.getMotorTemperature());
 		inputs.topWheelDesiredVelocity = topWheelDesiredVelocity.copy();
 		
+		inputs.bottomWheelPosition = Radians.of(bottomMotor.getEncoder().getPosition());
 		inputs.bottomWheelVelocity = RadiansPerSecond.of(bottomMotor.getEncoder().getVelocity());
 		inputs.bottomWheelAppliedVoltage = Volts.of(bottomMotor.getAppliedOutput() * bottomMotor.getBusVoltage());
 		inputs.bottomWheelSupplyCurrent = Amps.of(bottomMotor.getOutputCurrent());
@@ -125,6 +128,11 @@ public class ShooterIOSpark implements ShooterIO {
 	@Override
 	public void stop() {
 		this.setWheelVelocitySetpoint(RadiansPerSecond.of(0), RadiansPerSecond.of(0));
+	}
+
+	@Override
+	public void setTopVoltage(Voltage volts) {
+		this.topMotor.setVoltage(volts);
 	}
 
 }

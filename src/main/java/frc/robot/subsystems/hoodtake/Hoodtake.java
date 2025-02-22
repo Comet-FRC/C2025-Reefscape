@@ -28,7 +28,6 @@ public class Hoodtake extends SubsystemBase {
 	public Hoodtake(HoodtakeIO io) {
 		this.io = io;
 		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(Units.inchesToMeters(-13), Units.inchesToMeters(13), 0.755615), Rotation2d.fromDegrees(90));
-
 	}
 
 	@Override

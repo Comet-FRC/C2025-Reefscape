@@ -105,7 +105,7 @@ public class ShooterIOSim implements ShooterIO {
 	}
 
 	@Override
-	public void setWheelVoltage(Voltage volts) {
+	public void setTopVoltage(Voltage volts) {
 		this.wheelVoltageMode = true;
 		topWheelMotor.setInputVoltage(volts.in(Volts));
 		bottomWheelMotor.setInputVoltage(volts.in(Volts));
@@ -113,7 +113,7 @@ public class ShooterIOSim implements ShooterIO {
 
 	@Override
 	public void stop() {
-		setWheelVoltage(Volts.of(0.0));
+		setTopVoltage(Volts.of(0.0));
 	}
 
 }

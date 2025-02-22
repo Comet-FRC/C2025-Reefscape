@@ -61,18 +61,18 @@ public class Shooter extends SubsystemBase {
 		});
 	}
 
-	public Command sysIdRoutineWheel() {
+	public Command topSysId() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
 				null,
-				Volts.of(8.5),
+				Volts.of(4),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/shooter-wheel", state.toString()
 				)
 			),
 			new SysIdRoutine.Mechanism(
-				io::setWheelVoltage,
+				io::setTopVoltage,
 				log -> {
 					Logger.recordOutput("SysId/shooter-wheel/Voltage", inputs.topWheelAppliedVoltage);
 					Logger.recordOutput("SysId/shooter-wheel/Velocity", inputs.topWheelVelocity);
@@ -88,11 +88,11 @@ public class Shooter extends SubsystemBase {
 
 		Command routineCommand = new SequentialCommandGroup(
 			routine.dynamic(Direction.kForward),
-			Commands.waitSeconds(1),
+			Commands.waitSeconds(3),
 			routine.dynamic(Direction.kReverse),
-			Commands.waitSeconds(1),
+			Commands.waitSeconds(3),
 			routine.quasistatic(Direction.kForward),
-			Commands.waitSeconds(1),
+			Commands.waitSeconds(3),
 			routine.quasistatic(Direction.kReverse)
 		);
 		return routineCommand;

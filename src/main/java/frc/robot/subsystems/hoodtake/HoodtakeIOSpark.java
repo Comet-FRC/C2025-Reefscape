@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.hoodtake;
 
-import static edu.wpi.first.units.Units.Celsius;
-
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -22,6 +20,8 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.util.SparkUtil;
+
 import static edu.wpi.first.units.Units.*;
 
 public class HoodtakeIOSpark implements HoodtakeIO {
@@ -81,6 +81,14 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 				.d(HoodtakeConstants.PIVOT_kD);
 
 		pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+		SparkUtil.tryUntilOk(
+			pivotMotor,
+			5,
+			() -> pivotMotor.getEncoder().setPosition(
+				HoodtakeConstants.STARTING_ANGLE.in(Radians)
+			)
+		);
 	}
 
 	@Override

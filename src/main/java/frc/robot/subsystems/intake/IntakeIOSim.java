@@ -21,6 +21,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.subsystems.hoodtake.HoodtakeConstants;
+
 import static edu.wpi.first.units.Units.*;
 
 
@@ -46,10 +48,10 @@ public class IntakeIOSim implements IntakeIO {
 			IntakeConstants.PIVOT_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IntakeConstants.LENGTH.in(Meters), IntakeConstants.MASS.in(Kilograms)),
 			IntakeConstants.LENGTH.in(Meters),
-			-Double.MAX_VALUE,
-			Double.MAX_VALUE,
+			-0.5,
+			IntakeConstants.STARTING_ANGLE.in(Radians)+0.5,
 			true,
-			Units.degreesToRadians(90),
+			IntakeConstants.STARTING_ANGLE.in(Radians),
 			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 			0
 		);
@@ -90,8 +92,9 @@ public class IntakeIOSim implements IntakeIO {
 	private boolean wheelVoltageMode = false;
 	
 	public IntakeIOSim(){
-		pivotPID.enableContinuousInput(-Math.PI, Math.PI);
+		this.setPivotPositionSetpoint(HoodtakeConstants.STARTING_ANGLE);
 	}
+
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		wheelMotor.update(0.02);

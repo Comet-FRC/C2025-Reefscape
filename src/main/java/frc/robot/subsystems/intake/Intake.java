@@ -13,6 +13,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
@@ -27,8 +29,8 @@ public class Intake extends SubsystemBase {
 	public Intake(IntakeIO io) {
 		this.io = io;
 		this.inputs = new IntakeIOInputsAutoLogged();
-		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.378-0.044,0.184), Rotation2d.fromDegrees(0));
-		// this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0,0), Rotation2d.fromDegrees(0));
+		//this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.378-0.044,0.184), Rotation2d.fromDegrees(0));
+		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.333375,0.196815), Rotation2d.fromDegrees(0));
 	}
 
 	@Override
@@ -59,14 +61,14 @@ public class Intake extends SubsystemBase {
 	}
 
 	public Command setPivotVoltage(Supplier<Voltage> volts) {
-		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
+		return Commands.run(() -> io.setPivotVoltage(volts.get()), this);
 	}
 
 	public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				null,
-				Volts.of(8.5),
+				Volts.per(Second).of(2),
+				Volts.of(9),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/intake-pivot", state.toString()
@@ -88,13 +90,13 @@ public class Intake extends SubsystemBase {
 
 
 		Command routineCommand = new SequentialCommandGroup(
-			routine.dynamic(Direction.kForward),
+			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(15))),
 			Commands.waitSeconds(1),
-			routine.dynamic(Direction.kReverse),
+			routine.dynamic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(75))),
 			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kForward),
+			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(15))),
 			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kReverse)
+			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(75)))
 		);
 		
 
@@ -126,13 +128,13 @@ public class Intake extends SubsystemBase {
 
 
 		Command routineCommand = new SequentialCommandGroup(
-			routine.dynamic(Direction.kForward),
-			Commands.waitSeconds(1),
 			routine.dynamic(Direction.kReverse),
 			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kForward),
+			routine.dynamic(Direction.kForward),
 			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kReverse)
+			routine.quasistatic(Direction.kReverse),
+			Commands.waitSeconds(1),
+			routine.quasistatic(Direction.kForward)
 		);
 		return routineCommand;
 	}

@@ -22,12 +22,14 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.subsystems.indexer.IndexerConstants;
+import frc.robot.util.SparkUtil;
 
 import static edu.wpi.first.units.Units.*;
 
 public class IntakeIOSpark implements IntakeIO {
 
-	private final SparkMax wheelMotor = new SparkMax(IntakeConstants.HOODTAKE_MOTOR_ID, MotorType.kBrushless);
+	private final SparkMax wheelMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 	private final SparkMax pivotMotor = new SparkMax(IntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
 
 	private final ArmFeedforward pivotFF = new ArmFeedforward(
@@ -72,8 +74,8 @@ public class IntakeIOSpark implements IntakeIO {
 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast)
-			.smartCurrentLimit(25); // TODO: Check if this is enough current
+			.idleMode(IdleMode.kBrake)
+			.smartCurrentLimit(80); // TODO: Check if this is enough current
 		config.encoder
 			.positionConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR)
 			.velocityConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
@@ -84,8 +86,18 @@ public class IntakeIOSpark implements IntakeIO {
 				.d(IntakeConstants.PIVOT_kD);
 
 		pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+		SparkUtil.tryUntilOk(
+			pivotMotor,
+			5,
+			() -> pivotMotor.getEncoder().setPosition(
+				IntakeConstants.STARTING_ANGLE.in(Radians)
+			)
+		);
 	}
 
+
+	
 	MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.mutable(0);
 	MutAngle pivotDesiredPosition = Radians.mutable(0);
 
@@ -97,11 +109,11 @@ public class IntakeIOSpark implements IntakeIO {
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
-		inputs.pivotPosition = Radians.of(wheelMotor.getEncoder().getPosition());
-		inputs.pivotVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.pivotAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
-		inputs.pivotSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
-		inputs.pivotTemperature = Celsius.of(wheelMotor.getMotorTemperature());
+		inputs.pivotPosition = Radians.of(pivotMotor.getEncoder().getPosition());
+		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getEncoder().getVelocity());
+		inputs.pivotAppliedVoltage = Volts.of(pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage());
+		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getOutputCurrent());
+		inputs.pivotTemperature = Celsius.of(pivotMotor.getMotorTemperature());
 	}
 
 	@Override
@@ -151,5 +163,10 @@ public class IntakeIOSpark implements IntakeIO {
 		);
 
 		this.pivotDesiredPosition.mut_replace(position);
+	}
+
+	@Override
+	public void setPivotVoltage(Voltage volts) {
+		this.pivotMotor.setVoltage(volts);
 	}
 }

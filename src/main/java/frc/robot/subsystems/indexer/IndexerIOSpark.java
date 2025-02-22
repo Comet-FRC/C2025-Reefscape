@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.indexer;
 
-import static edu.wpi.first.units.Units.Celsius;
-
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -20,6 +18,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.subsystems.hoodtake.HoodtakeConstants;
+import frc.robot.util.SparkUtil;
+
 import static edu.wpi.first.units.Units.*;
 
 public class IndexerIOSpark implements IndexerIO {
