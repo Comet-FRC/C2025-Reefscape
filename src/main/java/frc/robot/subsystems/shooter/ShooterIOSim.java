@@ -131,30 +131,4 @@ public class ShooterIOSim implements ShooterIO {
 	public void stop() {
 		setWheelVoltage(Volts.of(0.0));
 	}
-	public void launchAlgae(SwerveDriveSimulation swerve) {
-		Runnable hitNetCallBack = () -> System.out.println("HIT NET! +4 POINTS");
-        ReefscapeAlgaeOnFly algae = 
-			new ReefscapeAlgaeOnFly(
-        swerve.getSimulatedDriveTrainPose().getTranslation(),
-        new Translation2d(),
-        swerve.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-        swerve.getSimulatedDriveTrainPose().getRotation(),
-        Meters.of(1.2), // initial height of the ball, in meters
-    	MetersPerSecond.of(9), // initial velocity, in m/s
-        Degrees.of(75)) // shooter angle
-        ;
-		algae.withProjectileTrajectoryDisplayCallBack(
-            (poses) -> Logger.recordOutput("successfulShotsTrajectory", poses.toArray(Pose3d[]::new)),
-            (poses) -> Logger.recordOutput("missedShotsTrajectory", poses.toArray(Pose3d[]::new)));
-		algae.withTargetPosition(
-                        () -> FieldMirroringUtils.toCurrentAllianceTranslation(new Translation3d(8.350, 4.509, 2.1)))
-                .withTargetTolerance(new Translation3d(9.250-8.350, 7.918-4.509, 0.1))
-                .withHitTargetCallBack(hitNetCallBack);
-		SimulatedArena.getInstance()
-				.addGamePieceProjectile(algae);
-
-		//8.350, 4.509
-
-		
-    }
 }

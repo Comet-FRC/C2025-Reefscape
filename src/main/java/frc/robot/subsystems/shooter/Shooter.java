@@ -62,12 +62,6 @@ public class Shooter extends SubsystemBase {
 		});
 	}
 
-	public Command launchAlgae(SwerveDriveSimulation swerve) {
-		return Commands.runOnce(() -> {
-				io.launchAlgae(swerve);
-				System.out.println("Works");
-		});
-	}
 
 	public Command sysIdRoutineWheel() {
 		SysIdRoutine routine = new SysIdRoutine(

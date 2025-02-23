@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 
 import org.dyn4j.geometry.Circle;
@@ -30,6 +31,7 @@ import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation.GamePieceI
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralAlgaeStack;
+import org.ironmaple.utils.FieldMirroringUtils;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -41,6 +43,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -306,7 +309,7 @@ public class RobotContainer {
 		new Trigger(() -> controller.leftTrigger().getAsBoolean() && ( intakeSimulation.getGamePiecesAmount() == 1 || hoodtakeSimulation.getGamePiecesAmount() == 1))
 		.whileTrue(
 			Commands.sequence(
-				this.shooter.launchAlgae(swerveDriveSimulation),
+				Commands.runOnce(() -> launchAlgae(swerveDriveSimulation)),
 				Commands.runOnce(() -> intakeSimulation.obtainGamePieceFromIntake()),
 				Commands.runOnce(() -> hoodtakeSimulation.obtainGamePieceFromIntake())
 			)
@@ -377,4 +380,26 @@ public class RobotContainer {
 		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(TopAlgae, new Pose2d(13.730, 4.018, new Rotation2d())));
 		SimulatedArena.getInstance().addGamePiece(new GamePieceOnFieldSimulation(Algae, new Pose2d(13.401, 4.607, new Rotation2d())));
 	}
+	public void launchAlgae(SwerveDriveSimulation swerve) {
+		Runnable hitNetCallBack = () -> System.out.println("HIT NET! +4 POINTS");
+        ReefscapeAlgaeOnFly algae = 
+			new ReefscapeAlgaeOnFly(
+        swerve.getSimulatedDriveTrainPose().getTranslation(),
+        new Translation2d(),
+        swerve.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+        swerve.getSimulatedDriveTrainPose().getRotation(),
+        Meters.of(1.2), // initial height of the ball, in meters
+    	MetersPerSecond.of(9), // initial velocity, in m/s
+        Degrees.of(75)) // shooter angle
+        ;
+		algae.withProjectileTrajectoryDisplayCallBack(
+            (poses) -> Logger.recordOutput("successfulShotsTrajectory", poses.toArray(Pose3d[]::new)),
+            (poses) -> Logger.recordOutput("missedShotsTrajectory", poses.toArray(Pose3d[]::new)));
+		algae.withTargetPosition(
+                        () -> FieldMirroringUtils.toCurrentAllianceTranslation(new Translation3d(8.350, 4.509, 2.1)))
+                .withTargetTolerance(new Translation3d(9.250-8.350, 7.918-4.509, 0.1))
+                .withHitTargetCallBack(hitNetCallBack);
+		SimulatedArena.getInstance()
+				.addGamePieceProjectile(algae);
+    }
 }
