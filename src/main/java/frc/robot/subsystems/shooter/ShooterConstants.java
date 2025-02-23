@@ -23,17 +23,17 @@ public class ShooterConstants {
 	public static final double TOP_WHEEL_kP = 0.26136;
 	public static final double TOP_WHEEL_kI = 0;
 	public static final double TOP_WHEEL_kD = 0;
-	public static final double BOT_WHEEL_kP = 0;
-	public static final double BOT_WHEEL_kI = 0;
-	public static final double BOT_WHEEK_kD = 0;
-
 	public static final double TOP_WHEEL_kS = 0.040598;
 	public static final double TOP_WHEEL_kV = 0.2604;
 	public static final double TOP_WHEEL_kA = 1.1668;
-	public static final double BOT_WHEEL_kS = 0;
-	public static final double BOT_WHEEL_kV = 0;
-	public static final double BOT_WHEEL_kA = 0;
-
+	
+	public static final double BOT_WHEEL_kP = 0.26136;
+	public static final double BOT_WHEEL_kI = 0;
+	public static final double BOT_WHEEK_kD = 0;
+	public static final double BOT_WHEEL_kS = 0.040598;
+	public static final double BOT_WHEEL_kV = 0.2604;
+	public static final double BOT_WHEEL_kA = 1.1668;
+	
 	public static final double WHEEL_SIM_kP = 0.013657;
 	public static final double WHEEL_SIM_kI = 0;
 	public static final double WHEEL_SIM_kD = 0;
