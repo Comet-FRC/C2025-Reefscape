@@ -13,7 +13,7 @@ public final class IntakeConstants {
 	public static final Angle STARTING_ANGLE = Degrees.of(96);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
-	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 2/3; // 1:2 PULLEY RATIO
+	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 1/16 * 18/12; // 16:1 gear ratio, 18/12 sprocket ratio
 
 	public static final double PIVOT_kP = 0;
 	public static final double PIVOT_kI = 0;
