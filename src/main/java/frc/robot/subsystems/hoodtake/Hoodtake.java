@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Volts;
@@ -60,14 +61,21 @@ public class Hoodtake extends SubsystemBase {
 	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
 		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
+	public Command setWheelVoltage(Supplier<Voltage> volts) {
+		return Commands.run(() -> io.setWheelVoltage(volts.get()), this);
+	};
 
+
+	public Command setPivotVoltage(Supplier<Voltage> volts) {
+		return Commands.run(() -> io.setPivotVoltage(volts.get()), this);
+	};
 
 
 public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
 				null,
-				Volts.of(8.5),
+				Volts.of(0.5),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/hoodtake-pivot", state.toString()

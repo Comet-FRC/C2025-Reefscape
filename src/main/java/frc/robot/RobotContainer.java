@@ -206,8 +206,13 @@ public class RobotContainer {
 			)
 		);
 
+		this.shooter.setDefaultCommand(
+			this.shooter.setWheelVoltages(() -> Volts.of(0))
+		);
+
 		this.hoodtake.setDefaultCommand(
-			this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE)
+			this.hoodtake.setWheelVoltage(() -> Volts.of(0))
+			.andThen(this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE))
 		);
 
 		this.indexer.setDefaultCommand(
@@ -247,10 +252,33 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-
-		this.controller.y().whileTrue(
-			this.shooter.topSysId()
+		this.controller.x().whileTrue(
+			shooter.setBottomVoltage(() -> Volts.of(6))
 		);
+
+		this.controller.b().whileTrue(
+			shooter.setTopVoltage(() -> Volts.of(-5))
+		);
+
+		this.controller.up().whileTrue(
+			shooter.topSysId()
+		);
+
+		this.controller.down().whileTrue(
+			shooter.bottomSysId()
+		);
+
+		// this.controller.x().whileTrue(
+		// 	hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
+		// );
+
+		// this.controller.y().whileTrue(
+		// 	hoodtake.setWheelVoltage(() -> Volts.of(4))
+		// );
+
+		// this.controller.b().whileTrue(
+		// 	hoodtake.setWheelVoltage(() -> Volts.of(-4))
+		// );
 
 		// this.controller.left().onTrue(
 		// 	Commands.runOnce(

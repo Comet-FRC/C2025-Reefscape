@@ -27,4 +27,5 @@ public interface ShooterIO {
 	public default void stop() {}
 	public default void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {}
 	public default void setTopVoltage(Voltage volts) {}
+	public default void setBottomVoltage(Voltage volts) {}
 }

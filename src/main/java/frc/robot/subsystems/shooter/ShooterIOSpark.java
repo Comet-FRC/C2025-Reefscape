@@ -135,4 +135,8 @@ public class ShooterIOSpark implements ShooterIO {
 		this.topMotor.setVoltage(volts);
 	}
 
+	@Override
+	public void setBottomVoltage(Voltage volts) {
+		this.bottomMotor.setVoltage(volts);
+	}
 }

@@ -145,4 +145,9 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 				feedforward,
 				ArbFFUnits.kVoltage);
 	}
+
+	@Override
+	public void setPivotVoltage(Voltage volts) {
+		this.pivotMotor.setVoltage(volts);
+	}
 }

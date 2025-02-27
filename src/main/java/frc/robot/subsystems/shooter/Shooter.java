@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -97,5 +98,58 @@ public class Shooter extends SubsystemBase {
 		);
 		return routineCommand;
 	}
-}
 
+	public Command bottomSysId() {
+		SysIdRoutine routine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				null,
+				Volts.of(4),
+				null,
+				(state) -> Logger.recordOutput(
+					"SysId/bottom-shooter-wheel", state.toString()
+				)
+			),
+			new SysIdRoutine.Mechanism(
+				io::setBottomVoltage,
+				log -> {
+					Logger.recordOutput("SysId/bottom-shooter-wheel/Voltage", inputs.bottomWheelAppliedVoltage);
+					Logger.recordOutput("SysId/bottom-shooter-wheel/Velocity", inputs.bottomWheelVelocity);
+					Logger.recordOutput("SysId/bottom-shooter-wheel/Position", inputs.bottomWheelPosition);
+					log.motor("bottom-shooter-wheel")
+						.voltage(inputs.bottomWheelAppliedVoltage)
+						.angularPosition(inputs.bottomWheelPosition)
+						.angularVelocity(inputs.bottomWheelVelocity);
+				}, 
+				this)
+		);
+
+
+		Command routineCommand = new SequentialCommandGroup(
+			routine.dynamic(Direction.kForward),
+			Commands.waitSeconds(3),
+			routine.dynamic(Direction.kReverse),
+			Commands.waitSeconds(3),
+			routine.quasistatic(Direction.kForward),
+			Commands.waitSeconds(3),
+			routine.quasistatic(Direction.kReverse)
+		);
+		return routineCommand;
+	}
+
+	public Command setWheelVoltages(Supplier<Voltage> volts) {
+		return Commands.run(
+			() -> {
+				io.setTopVoltage(volts.get());
+				io.setBottomVoltage(volts.get());
+			}
+		, this);
+	}
+
+	public Command setTopVoltage(Supplier<Voltage> volts) {
+		return Commands.run(() -> io.setTopVoltage(volts.get()), this);
+	}
+
+	public Command setBottomVoltage(Supplier<Voltage> volts) {
+		return Commands.run(() -> io.setBottomVoltage(volts.get()), this);
+	}
+}
