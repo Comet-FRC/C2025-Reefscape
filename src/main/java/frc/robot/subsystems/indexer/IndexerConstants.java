@@ -6,8 +6,8 @@ import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.Distance;
 
 public final class IndexerConstants {
-	public static final int LEFT_MOTOR_ID = 19;
-	public static final int RIGHT_MOTOR_ID = 20;
+	public static final int LEFT_MOTOR_ID = 20;
+	public static final int RIGHT_MOTOR_ID = 19;
 
 	public static final double PULLEY_CONVERSION_FACTOR = 2 * Math.PI;
 

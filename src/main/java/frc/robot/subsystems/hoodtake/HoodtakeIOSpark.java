@@ -19,6 +19,8 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.SparkUtil;
 
@@ -90,10 +92,14 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 			)
 		);
 	}
+	
+	private MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0).mutableCopy();
 
 	@Override
 	public void updateInputs(HoodtakeIOInputs inputs) {
+		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
+		inputs.wheelDesiredVelocity = this.wheelDesiredVelocity.copy();
 		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
@@ -122,6 +128,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
+		this.wheelDesiredVelocity.mut_replace(velocity);
 		double velocityRadiansPerSecond = velocity.in(RadiansPerSecond);
 		double feedforward = wheelFF.calculate(velocityRadiansPerSecond);
 

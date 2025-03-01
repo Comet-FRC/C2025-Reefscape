@@ -17,6 +17,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.hoodtake.HoodtakeConstants;
 import frc.robot.util.SparkUtil;
@@ -82,8 +83,19 @@ public class IndexerIOSpark implements IndexerIO {
 		leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
 
+	private MutVoltage leftVoltage = Volts.mutable(0);
+	private MutVoltage rightVoltage = Volts.mutable(0);
+	private boolean leftVoltageMode = false;
+	private boolean rightVoltageMode = false;
+
 	@Override
 	public void updateInputs(IndexerIOInputs inputs) {
+		if (leftVoltageMode)
+			leftMotor.setVoltage(this.leftVoltage.in(Volts));
+		
+		if (rightVoltageMode)
+			rightMotor.setVoltage(this.rightVoltage.in(Volts));
+
 		inputs.leftVelocity = RadiansPerSecond.of(leftMotor.getEncoder().getVelocity());
 		inputs.leftAppliedVoltage = Volts.of(leftMotor.getAppliedOutput() * leftMotor.getBusVoltage());
 		inputs.leftSupplyCurrent = Amps.of(leftMotor.getOutputCurrent());
@@ -98,26 +110,29 @@ public class IndexerIOSpark implements IndexerIO {
 
 	@Override
 	public void stopLeft() {
-		leftMotor.setVoltage(0);
+		this.setLeftVoltage(Volts.of(0));
 	}
 
 	@Override	
 	public void stopRight() {
-		rightMotor.setVoltage(0);
+		this.setRightVoltage(Volts.of(0));
 	}
 
 	@Override
 	public void setLeftVoltage(Voltage voltage) {
-		leftMotor.setVoltage(voltage);
+		this.leftVoltage.mut_replace(voltage);
+		this.leftVoltageMode = true;
 	}
 
 	@Override
 	public void setRightVoltage(Voltage voltage) {
-		rightMotor.setVoltage(voltage);
+		this.rightVoltage.mut_replace(voltage);
+		this.rightVoltageMode = true;
 	}
 
 	@Override
 	public void setLeftPositionSetpoint(Angle position) {
+		this.leftVoltageMode = false;
 		double positionRadians = position.in(Radians);
 		double feedforward = leftFF.calculate(positionRadians, 0);
 
@@ -132,6 +147,7 @@ public class IndexerIOSpark implements IndexerIO {
 
 	@Override
 	public void setRightPositionSetpoint(Angle position) {
+		this.rightVoltageMode = false;
 		double positionRadians = position.in(Radians);
 		double feedforward = rightFF.calculate(positionRadians, 0);
 

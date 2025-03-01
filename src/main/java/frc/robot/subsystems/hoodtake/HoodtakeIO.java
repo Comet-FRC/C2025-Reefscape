@@ -13,9 +13,9 @@ import static edu.wpi.first.units.Units.*;
 public interface HoodtakeIO {
 	@AutoLog
 	public static class HoodtakeIOInputs {
+		public Angle wheelPosition = Radians.of(0);
 		public AngularVelocity wheelVelocity = RadiansPerSecond.of(0);
 		public AngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0);
-		public Angle wheelPosition = Radians.of(0);
 		public Voltage wheelAppliedVolts = Volts.of(0);
 		public Current wheelSupplyCurrent = Amps.of(0);
 		public Temperature wheelMotorTemperature = Celsius.of(0);

@@ -92,7 +92,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -216,12 +216,16 @@ public class RobotContainer {
 		);
 
 		this.indexer.setDefaultCommand(
-			this.indexer.sit()
+			Commands.sequence(
+				this.indexer.setLeftVoltage(() -> Volts.of(0)),
+				this.indexer.setRightVoltage(() -> Volts.of(0))
+				//this.indexer.sit()
+			)
 		);
 
-		this.intake.setDefaultCommand(
-			this.intake.setPosition(() -> IntakeConstants.STARTING_ANGLE)
-		);
+		// this.intake.setDefaultCommand(
+		// 	this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE)
+		// );
 	}
 
 	private void setupButtonBindings() {
@@ -253,20 +257,27 @@ public class RobotContainer {
 				.ignoringDisable(true));
 
 		this.controller.x().whileTrue(
-			shooter.setBottomVoltage(() -> Volts.of(6))
+			this.indexer.setRightVoltage(() -> Volts.of(-6))
+			.andThen(this.indexer.setLeftVoltage(() -> Volts.of(6)))
+			.andThen(Commands.waitUntil(() -> false))
 		);
 
-		this.controller.b().whileTrue(
-			shooter.setTopVoltage(() -> Volts.of(-5))
-		);
+		// this.controller.left().whileTrue(
+		// 	this.intake.sysIdRoutinePivot()
+		// );
 
-		this.controller.up().whileTrue(
-			shooter.topSysId()
-		);
+		// this.controller.up().whileTrue(
+		// 	this.intake.setPivotVoltage(() -> Volts.of(1.75))
+		// );
 
-		this.controller.down().whileTrue(
-			shooter.bottomSysId()
-		);
+		// this.controller.down().whileTrue(
+		// 	this.intake.setPivotVoltage(() -> Volts.of(-1.75))
+		// );
+
+		// this.controller.right().whileTrue(
+		// 	this.intake.setPivotPosition(() -> Degrees.of(45))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
 
 		// this.controller.x().whileTrue(
 		// 	hoodtake.setPivotVoltage(() -> Volts.of(-0.5))

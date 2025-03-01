@@ -84,6 +84,14 @@ public class IntakeIOSpark implements IntakeIO {
 				.p(IntakeConstants.PIVOT_kP)
 				.i(IntakeConstants.PIVOT_kI)
 				.d(IntakeConstants.PIVOT_kD);
+		config.signals
+			.primaryEncoderPositionAlwaysOn(true)
+			.primaryEncoderPositionPeriodMs(20)
+			.primaryEncoderVelocityAlwaysOn(true)
+			.primaryEncoderVelocityPeriodMs(10)
+			.appliedOutputPeriodMs(20)
+			.busVoltagePeriodMs(20)
+			.outputCurrentPeriodMs(20);
 
 		pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -99,10 +107,11 @@ public class IntakeIOSpark implements IntakeIO {
 
 	
 	MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.mutable(0);
-	MutAngle pivotDesiredPosition = Radians.mutable(0);
+	MutAngle pivotDesiredPosition = IntakeConstants.STARTING_ANGLE.mutableCopy();
 
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
+		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
 		inputs.wheelDesiredVelocity = this.wheelDesiredVelocity.copy();
 		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
@@ -110,6 +119,7 @@ public class IntakeIOSpark implements IntakeIO {
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getEncoder().getPosition());
+		inputs.pivotDesiredPosition = this.pivotDesiredPosition.copy();
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getEncoder().getVelocity());
 		inputs.pivotAppliedVoltage = Volts.of(pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage());
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getOutputCurrent());
