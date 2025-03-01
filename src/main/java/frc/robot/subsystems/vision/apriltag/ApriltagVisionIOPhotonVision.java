@@ -23,7 +23,7 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
         this.cam = cam;
         photonCam = new PhotonCamera(cam.hardwareName);
 
-        var fieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+        var fieldLayout = AprilTagFields.k2025ReefscapeWelded.loadAprilTagLayoutField();
 
         photonPoseEstimator = new PhotonPoseEstimator(fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam.getRobotToCam());
         photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
