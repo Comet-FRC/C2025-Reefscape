@@ -1,4 +1,4 @@
-/*
+
 package frc.robot.subsystems.vision.algae;
 
 import static edu.wpi.first.units.Units.*;
@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -13,11 +14,15 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.SwerveConstants;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.VirtualSubsystem;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -65,7 +70,7 @@ public class AlgaeVision extends VirtualSubsystem {
     CommandScheduler.getInstance()
         .onCommandFinish(
             (command) -> {
-              if (command.getName() == IntakeCommand.INTAKE.name()) {
+              if (command.getName() == "Intake") {
                 algaeMemories.stream()
                     .sorted(
                         (a, b) ->
@@ -107,6 +112,7 @@ public class AlgaeVision extends VirtualSubsystem {
     connections.sort((a, b) -> (int) Math.signum(a.getDistance() - b.getDistance()));
     var unusedMemories = new ArrayList<>(algaeMemories);
     var unusedTargets = new ArrayList<>(frameTargets);
+
     while (!connections.isEmpty()) {
       var confirmedConnection = connections.get(0);
       confirmedConnection.memory.updatePosWithFiltering(confirmedConnection.photonFrameTarget);
@@ -121,7 +127,7 @@ public class AlgaeVision extends VirtualSubsystem {
     unusedMemories.forEach(
         (memory) -> {
           if (Drive.getInstance().getPose().getTranslation().getDistance(memory.fieldPos)
-              > RobotConstants.robotLengthMeters * 0.5) {
+              > SwerveConstants.TRACK_WIDTH.in(Meters) * 0.5) {
             memory.decayConfidence(1);
           }
         });
@@ -187,10 +193,21 @@ public class AlgaeVision extends VirtualSubsystem {
                 })
             .orElse(0.0);
   }
+  public Supplier<Optional<Translation2d>> autoIntakeTargetLocation() {
+    return () -> optIntakeTarget.map(target -> target.fieldPos);
+}
 
-  public Supplier<Translation2d> autoIntakeTargetLocation() {
-    return () -> optIntakeTarget.map((target) -> target.fieldPos).get();
-  }
+public Supplier<ChassisSpeeds> getAutoIntakeTransSpeed(DoubleSupplier throttleSupplier) {
+  return () -> {
+      return optIntakeTarget.map((target) -> {
+          var robotTrans = Drive.getInstance().getPose().getTranslation();
+          var targetRelRobot = target.fieldPos.minus(robotTrans);
+          var targetRelRobotNormalized = targetRelRobot.div(targetRelRobot.getNorm());
+          var finalTrans = targetRelRobotNormalized.times(throttleSupplier.getAsDouble());
+          return new ChassisSpeeds(finalTrans.getX(), finalTrans.getY(), 0);
+      }).orElse(null);  // Return null if there's no target
+  };
+}
 
   public boolean hasTarget() {
     return optIntakeTarget.isPresent();
@@ -205,17 +222,18 @@ public class AlgaeVision extends VirtualSubsystem {
     optIntakeTarget = Optional.empty();
   }
 
-  public Command autoIntake(DoubleSupplier throttle, Drive drive, Intake intake) {
-    return Commands.runOnce(() -> intakeTargetLocked = true)
-        .alongWith(
-            drive.translationSubsystem.fieldRelative(
-                getAutoIntakeTransSpeed(throttle).orElseGet(ChassisSpeeds::new)),
-            drive.rotationalSubsystem.pointTo(
-                autoIntakeTargetLocation(), () -> RobotConstants.intakeForward))
-        .onlyWhile(() -> !intake.hasAlgae() && optIntakeTarget.isPresent())
-        .finallyDo(() -> intakeTargetLocked = false)
-        .withName("Auto Intake");
+    public Command autoIntake(DoubleSupplier throttle, Drive drive, Intake intake) {
+      return Commands.runOnce(() -> intakeTargetLocked = true)
+          .alongWith(
+              drive.fieldRelative(
+                getAutoIntakeTransSpeed(throttle)),
+              drive.pointTo(autoIntakeTargetLocation(), () -> IntakeConstants.intakeForward)
+          )
+          .onlyWhile(() -> optIntakeTarget.isPresent()) //!intake.hasAlgae()
+          .finallyDo(() -> intakeTargetLocked = false)
+          .withName("Auto Intake");
   }
+
 
   private static record PhotonMemoryConnection(
       TrackedAlgae memory, TrackedAlgae photonFrameTarget) {
@@ -243,13 +261,13 @@ public class AlgaeVision extends VirtualSubsystem {
     }
 
     public void decayConfidence(double rate) {
-      this.confidence -= confidenceDecayPerSecond.get() * rate * Constants.dtSeconds;
+      this.confidence -= confidenceDecayPerSecond.get() * rate * 0.02; //Represents confidence of Algae decreasing over 0.02 seconds
     }
 
     public double getPriority() {
-      var pose = RobotState.getInstance().getPose();
+      var pose = Drive.getInstance().getPose();
       var FORR = fieldPos.minus(pose.getTranslation());
-      var rotation = pose.getRotation().minus(RobotConstants.intakeForward);
+      var rotation = pose.getRotation().minus(IntakeConstants.intakeForward);
       return confidence
               * priorityPerConfidence.get()
               * VecBuilder.fill(rotation.getCos(), rotation.getSin()).dot(FORR.toVector().unit())
@@ -311,4 +329,4 @@ public class AlgaeVision extends VirtualSubsystem {
     }
   }
 }
-*/
+

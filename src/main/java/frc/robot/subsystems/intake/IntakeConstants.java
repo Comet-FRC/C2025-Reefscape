@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
@@ -11,6 +12,7 @@ public final class IntakeConstants {
 	public static final int PIVOT_MOTOR_ID = 16;
 
 	public static final Angle STARTING_ANGLE = Degrees.of(96);
+	public static final Rotation2d intakeForward = Rotation2d.fromDegrees(90); //Where the intake is facing
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
 	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 2/3; // 1:2 PULLEY RATIO

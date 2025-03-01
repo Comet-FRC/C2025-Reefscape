@@ -14,6 +14,8 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.drive.SwerveConstants.TRACK_WIDTH;
+import static frc.robot.subsystems.drive.SwerveConstants.WHEELBASE;
 
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
@@ -35,6 +37,8 @@ public class SwerveConstants {
     public static final Distance TRACK_WIDTH = Inches.of(19.5);
     /** @see https://en.wikipedia.org/wiki/Wheelbase */
     public static final Distance WHEELBASE = Inches.of(13.5);
+    public static final double maxTurnRateRadiansPerSec = MAX_SPEED.in(MetersPerSecond) / Math.hypot(TRACK_WIDTH.in(Meters)/2, WHEELBASE.in(Meters)/2);
+
 
     public static final Distance DRIVE_BASE_RADIUS = Meters.of(Math.hypot(TRACK_WIDTH.div(2.0).in(Meters), WHEELBASE.div(2.0).in(Meters)));
     
