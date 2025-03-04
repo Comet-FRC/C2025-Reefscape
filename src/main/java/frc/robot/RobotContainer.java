@@ -193,26 +193,29 @@ public class RobotContainer {
 	}
 
 	private void setupDefaultCommands() {
-		this.drive.setDefaultCommand(
-			this.drive.joystickDrive(
-				() -> -controller.getLeftY(),
-				() -> -controller.getLeftX(),
-				/*() ->  {
-					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
-					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
-					return right-left;
-				}*/
-				() -> controller.getRightX()
-			)
-		);
+		// this.drive.setDefaultCommand(
+		// 	this.drive.joystickDrive(
+		// 		() -> -controller.getLeftY(),
+		// 		() -> -controller.getLeftX(),
+		// 		/*() ->  {
+		// 			int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+		// 			int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+		// 			return right-left;
+		// 		}*/
+		// 		() -> controller.getRightX()
+		// 	)
+		// );
 
 		this.shooter.setDefaultCommand(
 			this.shooter.setWheelVoltages(() -> Volts.of(0))
 		);
 
 		this.hoodtake.setDefaultCommand(
-			this.hoodtake.setWheelVoltage(() -> Volts.of(0))
-			.andThen(this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE))
+			Commands.sequence(
+				this.hoodtake.setPivotVoltage(() -> Volts.of(0)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(0))
+			)
+			//.andThen(this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE))
 		);
 
 		this.indexer.setDefaultCommand(
@@ -256,9 +259,24 @@ public class RobotContainer {
 				)
 				.ignoringDisable(true));
 
-		this.controller.x().whileTrue(
-			this.indexer.setRightVoltage(() -> Volts.of(-6))
-			.andThen(this.indexer.setLeftVoltage(() -> Volts.of(6)))
+		// this.controller.x().whileTrue(
+		// 	this.indexer.setRightVoltage(() -> Volts.of(-12))
+		// 	.andThen(this.indexer.setLeftVoltage(() -> Volts.of(12)))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.up().whileTrue(
+		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(1))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.down().whileTrue(
+		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(-1))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		this.controller.b().whileTrue(
+			this.hoodtake.setPivotPosition(() -> Degrees.of(90))
 			.andThen(Commands.waitUntil(() -> false))
 		);
 

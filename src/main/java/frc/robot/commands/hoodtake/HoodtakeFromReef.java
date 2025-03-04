@@ -10,7 +10,7 @@ import frc.robot.subsystems.hoodtake.Hoodtake;
 public class HoodtakeFromReef extends WrapperCommand {
     public HoodtakeFromReef(Drive drive, Hoodtake hoodtake) {
         super(
-            Commands.defer(
+            Commands.defer( // we have to defer here so that this runs at runtime
                 () -> Commands.either(
                     new HoodtakeFromL3(drive, hoodtake),
                     new HoodtakeFromL2(drive, hoodtake),

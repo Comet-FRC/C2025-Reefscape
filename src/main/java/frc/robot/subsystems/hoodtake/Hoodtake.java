@@ -15,6 +15,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
@@ -53,29 +54,28 @@ public class Hoodtake extends SubsystemBase {
 		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 1;
 	}
 
-	public Command setPosition(Supplier<Angle> position) {
-		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this)
-			.andThen(Commands.waitUntil(this::atPosition));
-	}
-
-	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
-		return Commands.run(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
-	}
-	public Command setWheelVoltage(Supplier<Voltage> volts) {
-		return Commands.run(() -> io.setWheelVoltage(volts.get()), this);
-	};
-
+	public Command setPivotPosition(Supplier<Angle> position) {
+		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
+		}
 
 	public Command setPivotVoltage(Supplier<Voltage> volts) {
-		return Commands.run(() -> io.setPivotVoltage(volts.get()), this);
+		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
 	};
+
+	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
+		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
+	}
+	public Command setWheelVoltage(Supplier<Voltage> volts) {
+		return Commands.runOnce(() -> io.setWheelVoltage(volts.get()), this);
+	};
+
 
 
 public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				null,
-				Volts.of(0.5),
+				Volts.per(Second).of(0.25),
+				Volts.of(1),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/hoodtake-pivot", state.toString()
@@ -97,13 +97,13 @@ public Command sysIdRoutinePivot() {
 
 
 		Command routineCommand = new SequentialCommandGroup(
-			routine.dynamic(Direction.kReverse),
-			Commands.waitSeconds(1),
-			routine.dynamic(Direction.kForward),
-			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kReverse),
-			Commands.waitSeconds(1),
-			routine.quasistatic(Direction.kForward)
+			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20))),
+			Commands.waitSeconds(5),
+			routine.dynamic(Direction.kForward).until(() -> inputs.pivotPosition.gt(Degrees.of(100))),
+			Commands.waitSeconds(5),
+			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20))),
+			Commands.waitSeconds(5),
+			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gt(Degrees.of(100)))
 		);
 		
 

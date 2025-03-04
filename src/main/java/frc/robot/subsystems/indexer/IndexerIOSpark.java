@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
@@ -83,29 +84,44 @@ public class IndexerIOSpark implements IndexerIO {
 		leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
 
-	private MutVoltage leftVoltage = Volts.mutable(0);
-	private MutVoltage rightVoltage = Volts.mutable(0);
+	private Voltage leftVoltage = Volts.mutable(0);
+	private Voltage rightVoltage = Volts.mutable(0);
+
+	private MutVoltage leftRampingVoltage = Volts.mutable(0);
+	private MutVoltage rightRampingVoltage = Volts.mutable(0);
+
 	private boolean leftVoltageMode = false;
 	private boolean rightVoltageMode = false;
 
 	@Override
 	public void updateInputs(IndexerIOInputs inputs) {
-		if (leftVoltageMode)
-			leftMotor.setVoltage(this.leftVoltage.in(Volts));
+		if (leftVoltageMode) {
+			if (leftVoltage.minus(leftRampingVoltage.copy()).gt(Volts.of(1/0.02)))
+				leftRampingVoltage.mut_plus(Volts.of(1/0.02));
+			else
+				leftRampingVoltage.mut_replace(leftVoltage);
+			leftMotor.setVoltage(leftRampingVoltage.in(Volts));
+		}
 		
-		if (rightVoltageMode)
-			rightMotor.setVoltage(this.rightVoltage.in(Volts));
+		if (rightVoltageMode) {
+			if (rightVoltage.minus(rightRampingVoltage.copy()).gt(Volts.of(1)))
+				rightRampingVoltage.mut_plus(Volts.of(1));
+			else
+				rightRampingVoltage.mut_replace(rightVoltage);
+			rightMotor.setVoltage(rightRampingVoltage.in(Volts));
+		}
 
+		inputs.leftPosition = Radians.of(leftMotor.getEncoder().getPosition());
 		inputs.leftVelocity = RadiansPerSecond.of(leftMotor.getEncoder().getVelocity());
 		inputs.leftAppliedVoltage = Volts.of(leftMotor.getAppliedOutput() * leftMotor.getBusVoltage());
 		inputs.leftSupplyCurrent = Amps.of(leftMotor.getOutputCurrent());
 		inputs.leftTemperature = Celsius.of(leftMotor.getMotorTemperature());
 
-		inputs.rightPosition = Radians.of(leftMotor.getEncoder().getPosition());
-		inputs.rightVelocity = RadiansPerSecond.of(leftMotor.getEncoder().getVelocity());
-		inputs.rightAppliedVoltage = Volts.of(leftMotor.getAppliedOutput() * leftMotor.getBusVoltage());
-		inputs.rightSupplyCurrent = Amps.of(leftMotor.getOutputCurrent());
-		inputs.rightTemperature = Celsius.of(leftMotor.getMotorTemperature());
+		inputs.rightPosition = Radians.of(rightMotor.getEncoder().getPosition());
+		inputs.rightVelocity = RadiansPerSecond.of(rightMotor.getEncoder().getVelocity());
+		inputs.rightAppliedVoltage = Volts.of(rightMotor.getAppliedOutput() * rightMotor.getBusVoltage());
+		inputs.rightSupplyCurrent = Amps.of(rightMotor.getOutputCurrent());
+		inputs.rightTemperature = Celsius.of(rightMotor.getMotorTemperature());
 	}
 
 	@Override
@@ -120,13 +136,13 @@ public class IndexerIOSpark implements IndexerIO {
 
 	@Override
 	public void setLeftVoltage(Voltage voltage) {
-		this.leftVoltage.mut_replace(voltage);
+		this.leftVoltage = voltage;
 		this.leftVoltageMode = true;
 	}
 
 	@Override
 	public void setRightVoltage(Voltage voltage) {
-		this.rightVoltage.mut_replace(voltage);
+		this.rightVoltage = voltage;
 		this.rightVoltageMode = true;
 	}
 

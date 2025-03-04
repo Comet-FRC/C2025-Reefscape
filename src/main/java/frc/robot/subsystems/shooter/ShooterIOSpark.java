@@ -50,8 +50,8 @@ public class ShooterIOSpark implements ShooterIO {
 			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
-			.positionConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
+			.positionConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR)
+			.velocityConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(ShooterConstants.TOP_WHEEL_kP)
@@ -68,8 +68,8 @@ public class ShooterIOSpark implements ShooterIO {
 			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
-			.positionConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(ShooterConstants.WHEEL_CONVERSION_FACTOR / 60.0);
+			.positionConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR)
+			.velocityConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / 60.0);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(ShooterConstants.BOT_WHEEL_kP)

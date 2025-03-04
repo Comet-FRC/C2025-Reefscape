@@ -29,7 +29,7 @@ public class ShooterIOSim implements ShooterIO {
 		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
 			wheelGearbox,
 			ShooterConstants.WHEEL_MOMENT_OF_INERTIA,
-			ShooterConstants.WHEEL_CONVERSION_FACTOR
+			ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR
 		);
 		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
