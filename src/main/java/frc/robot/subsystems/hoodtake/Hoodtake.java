@@ -56,7 +56,7 @@ public class Hoodtake extends SubsystemBase {
 
 	public Command setPivotPosition(Supplier<Angle> position) {
 		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
-		}
+	}
 
 	public Command setPivotVoltage(Supplier<Voltage> volts) {
 		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
@@ -65,13 +65,12 @@ public class Hoodtake extends SubsystemBase {
 	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
 		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
+
 	public Command setWheelVoltage(Supplier<Voltage> volts) {
 		return Commands.runOnce(() -> io.setWheelVoltage(volts.get()), this);
 	};
 
-
-
-public Command sysIdRoutinePivot() {
+	public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
 				Volts.per(Second).of(0.25),
@@ -109,6 +108,7 @@ public Command sysIdRoutinePivot() {
 
 		return routineCommand;
 	}
+	
 	public Command sysIdRoutineWheel() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(

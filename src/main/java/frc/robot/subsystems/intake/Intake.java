@@ -44,24 +44,28 @@ public class Intake extends SubsystemBase {
 
 	private Command stop() {
 		return
-			Commands.run(
+			Commands.runOnce(
 				() -> {
-					io.stopPivot();
-					io.stopWheel();
+					io.stop();
 				},
 			this);
+	}
+
+	public Command setWheelVoltage(Supplier<Voltage> voltage) {
+		return Commands.runOnce(() -> io.setWheelVoltage(voltage.get()), this);
+	}
+
+
+	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
+		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
 
 	public Command setPivotPosition(Supplier<Angle> position) {
 		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
 	}
 
-	public Command setWheelVelocity(Supplier<AngularVelocity> velocity) {
-		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
-	}
-
 	public Command setPivotVoltage(Supplier<Voltage> volts) {
-		return Commands.run(() -> io.setPivotVoltage(volts.get()), this);
+		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
 	}
 
 	public Command sysIdRoutinePivot() {

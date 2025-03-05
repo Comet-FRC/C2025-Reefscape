@@ -136,20 +136,11 @@ public class Shooter extends SubsystemBase {
 		return routineCommand;
 	}
 
-	public Command setWheelVoltages(Supplier<Voltage> volts) {
-		return Commands.run(
-			() -> {
-				io.setTopVoltage(volts.get());
-				io.setBottomVoltage(volts.get());
-			}
-		, this);
-	}
-
 	public Command setTopVoltage(Supplier<Voltage> volts) {
-		return Commands.run(() -> io.setTopVoltage(volts.get()), this);
+		return Commands.runOnce(() -> io.setTopVoltage(volts.get()), this);
 	}
 
 	public Command setBottomVoltage(Supplier<Voltage> volts) {
-		return Commands.run(() -> io.setBottomVoltage(volts.get()), this);
+		return Commands.runOnce(() -> io.setBottomVoltage(volts.get()), this);
 	}
 }

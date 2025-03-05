@@ -26,7 +26,7 @@ public class IndexerIOSim implements IndexerIO {
 	private static SingleJointedArmSim configureLeftMotor() {
 		return new SingleJointedArmSim(
 			DCMotor.getNEO(1),
-			IndexerConstants.PULLEY_CONVERSION_FACTOR,
+			1.0/IndexerConstants.PULLEY_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,
@@ -40,7 +40,7 @@ public class IndexerIOSim implements IndexerIO {
 	private static SingleJointedArmSim configureRightMotor() {
 		return new SingleJointedArmSim(
 			DCMotor.getNEO(1),
-			IndexerConstants.PULLEY_CONVERSION_FACTOR,
+			1.0/IndexerConstants.PULLEY_CONVERSION_FACTOR,
 			SingleJointedArmSim.estimateMOI(IndexerConstants.LENGTH.in(Meters), IndexerConstants.MASS.in(Kilograms)),
 			IndexerConstants.LENGTH.in(Meters),
 			0.0,

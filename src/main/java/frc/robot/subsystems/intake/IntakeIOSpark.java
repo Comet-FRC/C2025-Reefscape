@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.indexer.IndexerConstants;
 import frc.robot.util.SparkUtil;
@@ -75,7 +76,7 @@ public class IntakeIOSpark implements IntakeIO {
 		config
 			.inverted(false)
 			.idleMode(IdleMode.kBrake)
-			.smartCurrentLimit(80); // TODO: Check if this is enough current
+			.smartCurrentLimit(40); // TODO: Check if this is enough current
 		config.encoder
 			.positionConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR)
 			.velocityConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
@@ -107,10 +108,23 @@ public class IntakeIOSpark implements IntakeIO {
 
 	
 	MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.mutable(0);
+	MutVoltage wheelDesiredVoltage = Volts.mutable(0);
+	boolean wheelVoltageMode = false;
+
 	MutAngle pivotDesiredPosition = IntakeConstants.STARTING_ANGLE.mutableCopy();
+	MutVoltage pivotDesiredVoltage = Volts.mutable(0);
+	boolean pivotVoltageMode = false;
 
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
+		if (pivotVoltageMode) {
+			this.pivotMotor.setVoltage(pivotDesiredVoltage.in(Volts));
+		}
+
+		if (wheelVoltageMode) {
+			this.wheelMotor.setVoltage(wheelDesiredVoltage.in(Volts));
+		}
+
 		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
 		inputs.wheelDesiredVelocity = this.wheelDesiredVelocity.copy();
@@ -128,23 +142,24 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void stopWheel() {
-		wheelMotor.setVoltage(0);
+		this.setWheelVoltage(Volts.of(0));
 	}
 
 	@Override	
 	public void stopPivot() {
-		pivotMotor.setVoltage(0);
+		this.setPivotVoltage(Volts.of(0));
 	}
 
 	@Override
 	public void setWheelVoltage(Voltage voltage) {
-		//TODO: Check if setting voltage directly automatically stops the closed loop control
-		//TODO: Check if we need to call this in a loop for voltage compensation to work
-		wheelMotor.setVoltage(voltage);
+		this.wheelVoltageMode = true;
+		this.wheelDesiredVoltage.mut_replace(voltage);
 	}
 	
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
+		this.wheelVoltageMode = false;
+
 		double velocityRadiansPerSecond = velocity.in(RadiansPerSecond);
 		double feedforward = wheelFF.calculate(velocityRadiansPerSecond);
 
@@ -161,6 +176,8 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void setPivotPositionSetpoint(Angle position) {
+		this.pivotVoltageMode = false;
+
 		double positionRadians = position.in(Radians);
 		double feedforward = pivotFF.calculate(positionRadians, 0);
 
@@ -177,6 +194,7 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void setPivotVoltage(Voltage volts) {
-		this.pivotMotor.setVoltage(volts);
+		this.pivotVoltageMode = true;
+		this.pivotDesiredVoltage.mut_replace(volts);
 	}
 }

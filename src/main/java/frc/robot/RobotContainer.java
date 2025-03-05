@@ -92,7 +92,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -193,21 +193,22 @@ public class RobotContainer {
 	}
 
 	private void setupDefaultCommands() {
-		// this.drive.setDefaultCommand(
-		// 	this.drive.joystickDrive(
-		// 		() -> -controller.getLeftY(),
-		// 		() -> -controller.getLeftX(),
-		// 		/*() ->  {
-		// 			int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
-		// 			int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
-		// 			return right-left;
-		// 		}*/
-		// 		() -> controller.getRightX()
-		// 	)
-		// );
+		this.drive.setDefaultCommand(
+			this.drive.joystickDrive(
+				() -> -controller.getLeftY(),
+				() -> -controller.getLeftX(),
+				/*() ->  {
+					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+					return right-left;
+				}*/
+				() -> controller.getRightX()
+			)
+		);
 
 		this.shooter.setDefaultCommand(
-			this.shooter.setWheelVoltages(() -> Volts.of(0))
+			this.shooter.setBottomVoltage(() -> Volts.of(0))
+			.andThen(this.shooter.setTopVoltage(() -> Volts.of(0)))
 		);
 
 		this.hoodtake.setDefaultCommand(
@@ -220,15 +221,28 @@ public class RobotContainer {
 
 		this.indexer.setDefaultCommand(
 			Commands.sequence(
-				this.indexer.setLeftVoltage(() -> Volts.of(0)),
-				this.indexer.setRightVoltage(() -> Volts.of(0))
-				//this.indexer.sit()
+				// this.indexer.setLeftVoltage(() -> Volts.of(0)),
+				// this.indexer.setRightVoltage(() -> Volts.of(0))
+				// ,
+				
+				Commands.either(
+					this.indexer.setLeftVoltage(() -> Volts.of(0)),
+					this.indexer.setLeftVoltage(() -> Volts.of(-1)),
+					indexer::isLeftAtHome
+				),
+				
+				Commands.either(
+					this.indexer.setRightVoltage(() -> Volts.of(0)),
+					this.indexer.setRightVoltage(() -> Volts.of(-1)),
+					indexer::isRightAtHome
+				)
 			)
 		);
 
-		// this.intake.setDefaultCommand(
-		// 	this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE)
-		// );
+		this.intake.setDefaultCommand(
+			this.intake.setPivotVoltage(() -> Volts.of(0))
+			//this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE)
+		);
 	}
 
 	private void setupButtonBindings() {
@@ -245,103 +259,46 @@ public class RobotContainer {
 		 */
 
 		// Switch to cross pattern when options button is pressed
-		controller.rightMenu().onTrue(Commands.runOnce(drive::stopWithX, drive));
+		// controller.rightMenu().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
 		// Reset gyro to 0° when A button is pressed
-		controller
-			.a()
-			.onTrue(
-				Commands.runOnce(
-					() -> {
-						drive.resetHeadingWithAlliance();
-					},
-				drive
-				)
-				.ignoringDisable(true));
+		// controller.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
+		// 	.ignoringDisable(true));
 
-		// this.controller.x().whileTrue(
-		// 	this.indexer.setRightVoltage(() -> Volts.of(-12))
-		// 	.andThen(this.indexer.setLeftVoltage(() -> Volts.of(12)))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
+		this.controller.leftTrigger().whileTrue(
+			this.shooter.setTopVoltage(() -> Volts.of(5))
+			.andThen(this.shooter.setBottomVoltage(() -> Volts.of(3)))
+			.andThen(Commands.waitUntil(() -> false))
+		);
 
-		// this.controller.up().whileTrue(
-		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(1))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
+		this.controller.rightTrigger().whileTrue(
+			this.indexer.setRightVoltage(() -> Volts.of(3))
+			.andThen(this.indexer.setLeftVoltage(() -> Volts.of(3)))
+			.andThen(Commands.waitUntil(() -> false))
+		);
 
-		// this.controller.down().whileTrue(
-		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(-1))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
 
-		this.controller.b().whileTrue(
+		this.controller.a().whileTrue(
 			this.hoodtake.setPivotPosition(() -> Degrees.of(90))
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
-		// this.controller.left().whileTrue(
-		// 	this.intake.sysIdRoutinePivot()
-		// );
+		this.controller.b().whileTrue(
+			this.hoodtake.setPivotPosition(() -> Degrees.of(45))
+			.andThen(Commands.waitUntil(() -> false))
+		);
 
-		// this.controller.up().whileTrue(
-		// 	this.intake.setPivotVoltage(() -> Volts.of(1.75))
-		// );
+		this.controller.x().whileTrue(
+			this.hoodtake.setPivotVoltage(() -> Volts.of(-12))
+			.andThen(Commands.waitUntil(() -> false))
+		);
 
-		// this.controller.down().whileTrue(
-		// 	this.intake.setPivotVoltage(() -> Volts.of(-1.75))
-		// );
+		this.controller.y().whileTrue(
+			this.hoodtake.setPivotVoltage(() -> Volts.of(12))
+			.andThen(Commands.waitUntil(() -> false))
+		);
 
-		// this.controller.right().whileTrue(
-		// 	this.intake.setPivotPosition(() -> Degrees.of(45))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
 
-		// this.controller.x().whileTrue(
-		// 	hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
-		// );
-
-		// this.controller.y().whileTrue(
-		// 	hoodtake.setWheelVoltage(() -> Volts.of(4))
-		// );
-
-		// this.controller.b().whileTrue(
-		// 	hoodtake.setWheelVoltage(() -> Volts.of(-4))
-		// );
-
-		// this.controller.left().onTrue(
-		// 	Commands.runOnce(
-		// 		() -> swerveDriveSimulation.setSimulationWorldPose(this.drive.getPose()),
-		// 		this.drive
-		// 	)
-		// );
-
-		// this.controller.leftBumper().whileTrue(
-		// 	indexer.setRightPosition(() -> Degrees.of(90))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-		// this.controller.x().whileTrue(
-		// 	new HoodtakeFromReef(drive, hoodtake)
-		// );
-
-		// this.controller.b().whileTrue(
-		// 	this.intake.setPosition(() -> Degrees.of(0))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-		// this.controller.y().onTrue(
-		// 	this.indexer.popUp()
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-		// this.controller.rightTrigger().whileTrue(
-		// 	new ShootOnMove(drive, shooter)
-		// );
-
-		// this.controller.rightBumper().whileTrue(
-		// 	intake.sysIdRoutinePivot()
-		// );
 	}
 
 	/**

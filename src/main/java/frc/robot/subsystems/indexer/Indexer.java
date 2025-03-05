@@ -46,26 +46,20 @@ public class Indexer extends SubsystemBase {
 		rightArmVisualizer.publish();
 	}
 
-	private Command stop() {
+	public boolean isLeftAtHome() {
+		return this.inputs.leftPosition.lt(Degrees.of(45));
+	}
+
+	public boolean isRightAtHome() {
+		return this.inputs.rightPosition.lt(Degrees.of(45));
+	}
+
+	public Command stop() {
 		return Commands.run(
 				() -> {
 					io.stop();
 				},
 				this);
-	}
-
-	public Command popUp() {
-		return Commands.sequence(
-			this.setLeftPosition(() -> Degrees.of(90)),
-			this.setRightPosition(() -> Degrees.of(90))
-		);
-	}
-
-	public Command sit() {
-		return Commands.sequence(
-			this.setLeftPosition(() -> Degrees.of(0)),
-			this.setRightPosition(() -> Degrees.of(0))
-		);
 	}
 
 	public Command setLeftPosition(Supplier<Angle> position) {

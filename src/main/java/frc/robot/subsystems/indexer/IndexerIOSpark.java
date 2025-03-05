@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.hoodtake.HoodtakeConstants;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SparkUtil;
 
 import static edu.wpi.first.units.Units.*;
@@ -54,7 +55,7 @@ public class IndexerIOSpark implements IndexerIO {
 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kBrake);
+			.idleMode(IdleMode.kCoast);
 		config.encoder
 			.positionConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR)
 			.velocityConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR / 60.0);
@@ -65,13 +66,21 @@ public class IndexerIOSpark implements IndexerIO {
 				.d(IndexerConstants.LEFT_kD);
 
 		leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+	
+		SparkUtil.tryUntilOk(
+			leftMotor,
+			5,
+			() -> leftMotor.getEncoder().setPosition(
+				0
+			)
+		);
 	}
 	private void configureRightMotor() {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-			.inverted(false)
-			.idleMode(IdleMode.kBrake);
+			.inverted(true)
+			.idleMode(IdleMode.kCoast);
 		config.encoder
 			.positionConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR)
 			.velocityConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR / 60.0);
@@ -81,7 +90,15 @@ public class IndexerIOSpark implements IndexerIO {
 				.i(IndexerConstants.LEFT_kI)
 				.d(IndexerConstants.LEFT_kD);
 
-		leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+		rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+	
+		SparkUtil.tryUntilOk(
+			rightMotor,
+			5,
+			() -> rightMotor.getEncoder().setPosition(
+				0
+			)
+		);
 	}
 
 	private Voltage leftVoltage = Volts.mutable(0);
@@ -104,8 +121,8 @@ public class IndexerIOSpark implements IndexerIO {
 		}
 		
 		if (rightVoltageMode) {
-			if (rightVoltage.minus(rightRampingVoltage.copy()).gt(Volts.of(1)))
-				rightRampingVoltage.mut_plus(Volts.of(1));
+			if (rightVoltage.minus(rightRampingVoltage.copy()).gt(Volts.of(1/0.02)))
+				rightRampingVoltage.mut_plus(Volts.of(1/0.02));
 			else
 				rightRampingVoltage.mut_replace(rightVoltage);
 			rightMotor.setVoltage(rightRampingVoltage.in(Volts));

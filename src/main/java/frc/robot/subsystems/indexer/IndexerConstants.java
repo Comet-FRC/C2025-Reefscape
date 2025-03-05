@@ -9,7 +9,7 @@ public final class IndexerConstants {
 	public static final int LEFT_MOTOR_ID = 20;
 	public static final int RIGHT_MOTOR_ID = 19;
 
-	public static final double PULLEY_CONVERSION_FACTOR = 2 * Math.PI;
+	public static final double PULLEY_CONVERSION_FACTOR = 2 * Math.PI * 1/9 * 1/2;
 
 	public static final double LEFT_kP = 0;
 	public static final double LEFT_kI = 0;

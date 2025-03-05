@@ -25,7 +25,15 @@ public interface ShooterIO {
 
 	public default void updateInputs(ShooterIOInputs inputs) {}
 	public default void stop() {}
-	public default void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {}
+
+	public default void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
+		this.setTopVelocitySetpoint(topVelocity);
+		this.setBottomVelocitySetpoint(bottomVelocity);
+	}
+	
+	public default void setTopVelocitySetpoint(AngularVelocity velocity) {}
+	public default void setBottomVelocitySetpoint(AngularVelocity velocity) {}
+	
 	public default void setTopVoltage(Voltage volts) {}
 	public default void setBottomVoltage(Voltage volts) {}
 }

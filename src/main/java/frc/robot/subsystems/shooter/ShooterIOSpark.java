@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 
 import com.revrobotics.spark.SparkMax;
@@ -46,7 +47,7 @@ public class ShooterIOSpark implements ShooterIO {
 		SparkMaxConfig config = new SparkMaxConfig();
 	 
 		config
-			.inverted(false)
+			.inverted(true)
 			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
@@ -78,10 +79,26 @@ public class ShooterIOSpark implements ShooterIO {
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	}
+
 	MutAngularVelocity topWheelDesiredVelocity = RadiansPerSecond.mutable(0);
 	MutAngularVelocity bottomWheelDesiredVelocity = RadiansPerSecond.mutable(0);
+
+	MutVoltage topDesiredVoltage = Volts.mutable(0);
+	boolean topVoltageMode = false;
+	
+	MutVoltage bottomDesiredVoltage = Volts.mutable(0);
+	boolean bottomVoltageMode = false;
+
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
+		if (topVoltageMode) {
+			this.topMotor.setVoltage(topDesiredVoltage.in(Volts));
+		}
+
+		if (bottomVoltageMode) {
+			this.bottomMotor.setVoltage(bottomDesiredVoltage.in(Volts));
+		}
+
 		inputs.topWheelPosition = Radians.of(topMotor.getEncoder().getPosition());
 		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
 		inputs.topWheelAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
@@ -98,12 +115,26 @@ public class ShooterIOSpark implements ShooterIO {
 	}
 
 	@Override
-	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
-		double topVelocityRadiansPerSecond = topVelocity.in(RadiansPerSecond);
-		double topFeedForward = topWheelFF.calculate(topVelocityRadiansPerSecond);
-
-		double bottomVelocityRadiansPerSecond = bottomVelocity.in(RadiansPerSecond);
+	public void setBottomVelocitySetpoint(AngularVelocity velocity) {
+		
+		double bottomVelocityRadiansPerSecond = velocity.in(RadiansPerSecond);
 		double bottomFeedForward = bottomWheelFF.calculate(bottomVelocityRadiansPerSecond);
+	
+		bottomMotor.getClosedLoopController().setReference(
+			bottomVelocityRadiansPerSecond,
+			ControlType.kVelocity,
+			ClosedLoopSlot.kSlot0,
+			bottomFeedForward,
+			ArbFFUnits.kVoltage
+		);
+
+		this.bottomWheelDesiredVelocity.mut_replace(velocity);	
+	}
+
+	@Override
+	public void setTopVelocitySetpoint(AngularVelocity velocity) {
+		double topVelocityRadiansPerSecond = velocity.in(RadiansPerSecond);
+		double topFeedForward = topWheelFF.calculate(topVelocityRadiansPerSecond);
 
 		topMotor.getClosedLoopController().setReference(
 			topVelocityRadiansPerSecond,
@@ -113,16 +144,7 @@ public class ShooterIOSpark implements ShooterIO {
 			ArbFFUnits.kVoltage
 		);
 
-		bottomMotor.getClosedLoopController().setReference(
-			bottomVelocityRadiansPerSecond,
-			ControlType.kVelocity,
-			ClosedLoopSlot.kSlot0,
-			bottomFeedForward,
-			ArbFFUnits.kVoltage
-		);
-
-		this.topWheelDesiredVelocity.mut_replace(topVelocity);
-		this.bottomWheelDesiredVelocity.mut_replace(bottomVelocity);	
+		this.topWheelDesiredVelocity.mut_replace(velocity);
 	}
 
 	@Override
@@ -132,11 +154,13 @@ public class ShooterIOSpark implements ShooterIO {
 
 	@Override
 	public void setTopVoltage(Voltage volts) {
-		this.topMotor.setVoltage(volts);
+		this.topVoltageMode = true;
+		this.topDesiredVoltage.mut_replace(volts);
 	}
 
 	@Override
 	public void setBottomVoltage(Voltage volts) {
-		this.bottomMotor.setVoltage(volts);
+		this.bottomVoltageMode = true;
+		this.bottomDesiredVoltage.mut_replace(volts);
 	}
 }

@@ -13,7 +13,7 @@ public final class HoodtakeConstants {
 	public static final Angle STARTING_ANGLE = Degrees.of(71.2+90);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
-	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 1/16 * 12/18; // 1:2 PULLEY RATIO
+	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/16.0) * (12.0/18.0); // 1:2 PULLEY RATIO
 
 	public static final double PIVOT_kP = 0;
 	public static final double PIVOT_kI = 0;
@@ -21,10 +21,10 @@ public final class HoodtakeConstants {
 	public static final double PIVOT_SIM_kP = 9;
 	public static final double PIVOT_SIM_kI = 0;
 	public static final double PIVOT_SIM_kD = 1.6;
-	public static final double PIVOT_kS = 0.05529;
-	public static final double PIVOT_kG = 0.51496;
-	public static final double PIVOT_kV = 0.4894;
-	public static final double PIVOT_kA = 0.093799;
+	public static final double PIVOT_kS = 0.13416;
+	public static final double PIVOT_kG = 0.46776;
+	public static final double PIVOT_kV = 0.45226;
+	public static final double PIVOT_kA = 0.088925;
 	public static final double PIVOT_SIM_kS = 0.95367;
 	public static final double PIVOT_SIM_kG = 6.8784;
 	public static final double PIVOT_SIM_kV = 0.064168;

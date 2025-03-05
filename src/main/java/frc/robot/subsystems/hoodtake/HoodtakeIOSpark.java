@@ -84,7 +84,8 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 
 		config
 				.inverted(true)
-				.idleMode(IdleMode.kBrake);
+				.idleMode(IdleMode.kBrake)
+				.smartCurrentLimit(40); // TODO: Check if this is enough current
 		config.encoder
 				.positionConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR)
 				.velocityConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
@@ -154,7 +155,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getEncoder().getPosition());
-		inputs.pivotDesiredPosition = Radians.of(pivotPID.getSetpoint().position);
+		inputs.pivotDesiredPosition = Radians.of(pivotPID.getGoal().position);
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getEncoder().getVelocity());
 		inputs.pivotAppliedVolts = Volts.of(pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage());
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getOutputCurrent());

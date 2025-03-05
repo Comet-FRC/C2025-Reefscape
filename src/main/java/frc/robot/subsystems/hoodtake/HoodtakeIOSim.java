@@ -9,14 +9,19 @@ package frc.robot.subsystems.hoodtake;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -40,9 +45,8 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	private static SingleJointedArmSim configurePivotMotor() {		
 		return new SingleJointedArmSim(
 				DCMotor.getNEO(1),
-				HoodtakeConstants.PIVOT_CONVERSION_FACTOR,
-				SingleJointedArmSim.estimateMOI(HoodtakeConstants.LENGTH.in(Meters),
-						HoodtakeConstants.MASS.in(Kilograms)),
+				1.0/HoodtakeConstants.PIVOT_CONVERSION_FACTOR,
+				SingleJointedArmSim.estimateMOI(HoodtakeConstants.LENGTH.in(Meters), HoodtakeConstants.MASS.in(Kilograms)),
 				HoodtakeConstants.LENGTH.in(Meters),
 				0.0,
 				HoodtakeConstants.STARTING_ANGLE.in(Radians),
@@ -62,10 +66,12 @@ public class HoodtakeIOSim implements HoodtakeIO {
 			HoodtakeConstants.WHEEL_SIM_kV,
 			HoodtakeConstants.WHEEL_SIM_kA);
 
-	private final PIDController pivotPID = new PIDController(
+	private final ProfiledPIDController pivotPID = new ProfiledPIDController(
 			HoodtakeConstants.PIVOT_SIM_kP,
 			HoodtakeConstants.PIVOT_SIM_kI,
-			HoodtakeConstants.PIVOT_SIM_kD);
+			HoodtakeConstants.PIVOT_SIM_kD,
+			new TrapezoidProfile.Constraints(5, 10)
+			);
 
 	private final ArmFeedforward pivotFF = new ArmFeedforward(
 			HoodtakeConstants.PIVOT_SIM_kS,
@@ -73,11 +79,13 @@ public class HoodtakeIOSim implements HoodtakeIO {
 			HoodtakeConstants.PIVOT_SIM_kV,
 			HoodtakeConstants.PIVOT_SIM_kA);
 
-	/** true = controlled by voltage, false = controled by PID + FF */
-	private boolean pivotVoltageMode = false;
-	private Voltage pivotAppliedVoltage = Volts.of(0.0);
-	/** true = controlled by voltage, false = controled by PID + FF */
+	private final MutVoltage wheelDesiredVoltage = Volts.mutable(0);
 	private boolean wheelVoltageMode = false;
+
+	private final MutAngle pivotDesiredPosition = Radians.mutable(0);
+	private final MutVoltage pivotDesiredVoltage = Volts.mutable(0);
+	private final MutVoltage pivotAppliedVoltage = Volts.mutable(0);
+	private boolean pivotVoltageMode = false;
 
 	public HoodtakeIOSim() {
 		this.setPivotPositionSetpoint(HoodtakeConstants.STARTING_ANGLE);
@@ -97,25 +105,33 @@ public class HoodtakeIOSim implements HoodtakeIO {
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getCurrentDrawAmps());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getAngleRads());
-		inputs.pivotDesiredPosition = Radians.of(pivotPID.getSetpoint());
+		inputs.pivotDesiredPosition = this.pivotDesiredPosition.copy();
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getVelocityRadPerSec());
-		inputs.pivotAppliedVolts = this.pivotAppliedVoltage;
+		inputs.pivotAppliedVolts = this.pivotAppliedVoltage.copy();
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getCurrentDrawAmps());
 	}
 
 	private void runLoopControl() {
-		if (!wheelVoltageMode) {
+		if (wheelVoltageMode) {
+			this.wheelMotor.setInputVoltage(this.wheelDesiredVoltage.in(Volts));
+		} else {
 			wheelMotor.setInputVoltage(
-					wheelPID.calculate(wheelMotor.getAngularVelocity().in(RadiansPerSecond))
-							+
-							wheelFF.calculate(wheelPID.getSetpoint()));
+				wheelPID.calculate(wheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				+
+				wheelFF.calculate(wheelPID.getSetpoint())
+			);
 		}
 
-		if (!pivotVoltageMode) {
-			pivotMotor.setInputVoltage(
-					pivotPID.calculate(pivotMotor.getAngleRads())
-							+
-							pivotFF.calculate(pivotPID.getSetpoint(), 0));
+		if (pivotVoltageMode) {
+			pivotMotor.setInputVoltage(this.pivotDesiredVoltage.in(Volts));
+			this.pivotAppliedVoltage.mut_replace(this.pivotDesiredVoltage);
+		} else {
+			this.pivotPID.setGoal(this.pivotDesiredPosition.in(Radians));
+			double pid = pivotPID.calculate(pivotMotor.getAngleRads());
+			double ff = pivotFF.calculate(pivotPID.getGoal().position, pivotPID.getGoal().velocity);
+			double volts = pid + ff;
+			this.pivotMotor.setInputVoltage(volts);
+			this.pivotAppliedVoltage.mut_replace(Volts.of(volts));
 		}
 	}
 
@@ -133,20 +149,19 @@ public class HoodtakeIOSim implements HoodtakeIO {
 
 	@Override
 	public void stopWheel() {
-		setWheelVoltage(Volts.of(0.0));
+		this.setWheelVoltage(Volts.of(0.0));
 	}
 
 	@Override
 	public void setPivotPositionSetpoint(Angle position) {
 		this.pivotVoltageMode = false;
-		pivotPID.setSetpoint(position.in(Radians));
+		this.pivotDesiredPosition.mut_replace(position);
 	}
 
 	@Override
 	public void setPivotVoltage(Voltage volts) {
 		this.pivotVoltageMode = true;
-		pivotMotor.setInputVoltage(volts.in(Volts));
-		this.pivotAppliedVoltage = volts;
+		this.pivotDesiredVoltage.mut_replace(volts);
 	}
 
 	@Override
