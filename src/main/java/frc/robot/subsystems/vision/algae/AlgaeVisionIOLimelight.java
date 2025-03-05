@@ -1,94 +1,90 @@
-// Copyright 2021-2024 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.vision.algae;
 
+import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TransferQueue;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
-import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.RobotController;
-import java.util.function.Supplier;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.LimelightHelpers;
+import edu.wpi.first.wpilibj.Timer;
 
-/** IO implementation for real Limelight hardware. */
 public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
-  private final Supplier<Rotation2d> rotationSupplier;
-  private final DoubleArrayPublisher orientationPublisher;
+  public double tx;
+  public String name;
+  public double ty;
+  public double ta;
+  public boolean hasTarget;
+  public double area;
+  public double confidence;
+  public double timestamp;
 
-  private final DoubleSubscriber latencySubscriber;
-  private final DoubleSubscriber txSubscriber;
-  private final DoubleSubscriber tySubscriber;
-  private final DoubleArraySubscriber megatag1Subscriber;
-  private final DoubleArraySubscriber megatag2Subscriber;
-  public static final Pose2d[] centerFaces =
-        new Pose2d[6];
-
-  /**
-   * Creates a new VisionIOLimelight.
-   *
-   * @param name The configured name of the Limelight.
-   * @param rotationSupplier Supplier for the current estimated rotation, used for MegaTag 2.
-   */
-  public AlgaeVisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
-    var table = NetworkTableInstance.getDefault().getTable(name);
-    this.rotationSupplier = rotationSupplier;
-    orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
-    latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
-    txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
-    tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
-    megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
-    megatag2Subscriber =
-        table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
-  centerFaces[0] =
-    new Pose2d(
-        Units.inchesToMeters(144.003),
-        Units.inchesToMeters(158.500),
-        Rotation2d.fromDegrees(180));
-  centerFaces[1] =
-    new Pose2d(
-        Units.inchesToMeters(160.373),
-        Units.inchesToMeters(186.857),
-        Rotation2d.fromDegrees(120));
-  centerFaces[2] =
-    new Pose2d(
-        Units.inchesToMeters(193.116),
-        Units.inchesToMeters(186.858),
-        Rotation2d.fromDegrees(60));
-  centerFaces[3] =
-    new Pose2d(
-        Units.inchesToMeters(209.489),
-        Units.inchesToMeters(158.502),
-        Rotation2d.fromDegrees(0));
-  centerFaces[4] =
-    new Pose2d(
-        Units.inchesToMeters(193.118),
-        Units.inchesToMeters(130.145),
-        Rotation2d.fromDegrees(-60));
-    centerFaces[5] =
-    new Pose2d(
-        Units.inchesToMeters(160.375), 
-        Units.inchesToMeters(130.144),
-        Rotation2d.fromDegrees(-120));
+  public AlgaeVisionIOLimelight(String name) {
+    this.name = name;
   }
 
-  @Override
   public void updateInputs(AlgaeVisionIOInputs inputs) {
-    // Update connection status based on whether an update has been seen in the last 250ms
-    inputs.connected = (RobotController.getFPGATime() - latencySubscriber.getLastChange()) < 250;
+    inputs.connected = true;
+    tx = LimelightHelpers.getTX(name);
+    ty = LimelightHelpers.getTY(name);
+    ta = LimelightHelpers.getTA(name);
+    hasTarget = LimelightHelpers.getTV(name);
+    var AlgaePose = getAlgaePose();
 
-    
+    for (TrackedAlgae existingPoses : inputs.AlgaePoses) {
+      double distance = existingPoses.getTranslation().getDistance(AlgaePose.getTranslation());
+      if (distance < AlgaeVisionConstants.VISION_DISTANCE_THRESHOLD.in(Meters)) {
+        confidence(); //placeholder
+      } else {
+        timestamp = Timer.getFPGATimestamp();
+        inputs.AlgaePoses.add(new TrackedAlgae(timestamp, AlgaePose, 1));
+      }
+    }
+
+  }
+
+  public Pose2d getAlgaePose() {
+    if (hasTarget) {
+      double tx = LimelightHelpers.getTX(name);
+      double ty = LimelightHelpers.getTY(name);
+
+      // Distance estimation using vertical angle
+      double targetAngle = AlgaeVisionConstants.LIMELIGHT.CAMERA_MOUNT_ANGLE.in(Degree) + Units.degreesToRadians(ty);
+      double distance = (AlgaeVisionConstants.LIMELIGHT.TARGET_HEIGHT.in(Inches)
+          - AlgaeVisionConstants.LIMELIGHT.CAMERA_HEIGHT.in(Inches)) / Math.tan(targetAngle);
+
+      // Get robot pose
+      Pose2d robotPose = Drive.getInstance().getPose();
+      double robotX = robotPose.getX();
+      double robotY = robotPose.getY();
+      double robotTheta = robotPose.getRotation().getRadians();
+
+      // Compute field position of the algae
+      double objectX = robotX + distance * Math.cos(robotTheta + Units.degreesToRadians(tx));
+      double objectY = robotY + distance * Math.sin(robotTheta + Units.degreesToRadians(tx));
+
+      return new Pose2d(objectX, objectY, new Rotation2d());
+    } else {
+      return new Pose2d(); //TODO: Fix this line or else stack will become too big
+    }
+  }
+
+//Run for every single Algae in list
+public double confidence(TrackedAlgae TrackedAlgae1){
+    double timestamp1 = TrackedAlgae1.timestamp;
+    double rightNow = Timer.getFPGATimestamp();
+    if ( /*IF SEEN ALGAE*/ ) //Implement Vision bounding box of limelight, seeing if the poses fit in the box.
+    {
+        return 1.0;
+    }
+    else{
+        return -0.01;
+    }
 }
 }

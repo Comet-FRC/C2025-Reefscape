@@ -69,6 +69,9 @@ import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
+import frc.robot.subsystems.vision.algae.AlgaeVision;
+import frc.robot.subsystems.vision.algae.AlgaeVisionIO;
+import frc.robot.subsystems.vision.algae.AlgaeVisionIOLimelight;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
@@ -87,6 +90,7 @@ public class RobotContainer {
 	// Subsystems
 	private final Drive drive;
 	private final ApriltagVision vision;
+	private final AlgaeVision algaeVision;
 	private final Shooter shooter;
 	private final Intake intake;
 	private final Hoodtake hoodtake;
@@ -112,6 +116,7 @@ public class RobotContainer {
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
+				this.algaeVision = new AlgaeVision(new AlgaeVisionIOLimelight());
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
