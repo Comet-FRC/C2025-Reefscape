@@ -116,7 +116,7 @@ public class RobotContainer {
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
-				this.algaeVision = new AlgaeVision(new AlgaeVisionIOLimelight());
+				this.algaeVision = new AlgaeVision(new AlgaeVisionIOLimelight("algae-limelight"));
 				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
@@ -163,6 +163,7 @@ public class RobotContainer {
 								robotToCamera0,
 								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
+				this.algaeVision = new AlgaeVision(new AlgaeVisionIOLimelight("algae-limelight") {});
 				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
@@ -178,6 +179,7 @@ public class RobotContainer {
 					new ModuleIO() {}
 				);
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
+				this.algaeVision = new AlgaeVision(new AlgaeVisionIOLimelight("algae-limelight") {});
 				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});

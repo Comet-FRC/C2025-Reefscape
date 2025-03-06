@@ -37,16 +37,36 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
     hasTarget = LimelightHelpers.getTV(name);
     var AlgaePose = getAlgaePose();
 
+    // if trackedalgae within distance threshold, add to list
     for (TrackedAlgae existingPoses : inputs.AlgaePoses) {
       double distance = existingPoses.getTranslation().getDistance(AlgaePose.getTranslation());
-      if (distance < AlgaeVisionConstants.VISION_DISTANCE_THRESHOLD.in(Meters)) {
-        confidence(); //placeholder
+      if (distance > AlgaeVisionConstants.VISION_DISTANCE_THRESHOLD.in(Meters)) {
+        continue;
       } else {
         timestamp = Timer.getFPGATimestamp();
         inputs.AlgaePoses.add(new TrackedAlgae(timestamp, AlgaePose, 1));
       }
     }
 
+    // Iterate over existing tracked algae poses
+    List<TrackedAlgae> toRemove = new ArrayList<>();
+    for (TrackedAlgae trackedAlgae : inputs.AlgaePoses) {
+      // Apply confidence decay
+      timeConfidence(trackedAlgae);
+      
+    for (TrackedAlgae trackedAlgae2: inputs.AlgaePoses){
+      poseConfidence(trackedAlgae2);
+    }
+    
+      // Remove outdated or low-confidence poses
+      if (Timer.getFPGATimestamp() - trackedAlgae.getTimestamp() > AlgaeVisionConstants.TIME_THRESHOLD
+          || trackedAlgae.getConfidence() <= 0) {
+        toRemove.add(trackedAlgae);
+      }
+    }
+
+    // Remove algae that no longer meet criteria
+    inputs.AlgaePoses.removeAll(toRemove);
   }
 
   public Pose2d getAlgaePose() {
@@ -71,20 +91,35 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
 
       return new Pose2d(objectX, objectY, new Rotation2d());
     } else {
-      return new Pose2d(); //TODO: Fix this line or else stack will become too big
+      return new Pose2d(); // TODO: Fix this line or else stack will become too big
     }
   }
 
-//Run for every single Algae in list
-public double confidence(TrackedAlgae TrackedAlgae1){
-    double timestamp1 = TrackedAlgae1.timestamp;
+  public void poseConfidence(TrackedAlgae trackedAlgae1) {
+    double limelightX = LimelightHelpers.getTX(name);
+    double limelightY = LimelightHelpers.getTY(name);
+    double targetArea = LimelightHelpers.getTA(name);
+
+    boolean withinXBounds = Math
+        .abs(trackedAlgae1.getPose().getX() - limelightX) < AlgaeVisionConstants.LIMELIGHT.X_THRESHOLD;
+    boolean withinYBounds = Math
+        .abs(trackedAlgae1.getPose().getY() - limelightY) < AlgaeVisionConstants.LIMELIGHT.Y_THRESHOLD;
+
+    if (withinXBounds && withinYBounds && targetArea > AlgaeVisionConstants.LIMELIGHT.AREA_THRESHOLD) {
+      trackedAlgae1.setConfidence(1.0);
+    } else {
+      trackedAlgae1.setConfidence(-0.2);
+    }
+  }
+
+  public void timeConfidence(TrackedAlgae TrackedAlgae1) {
+    double timestamp1 = TrackedAlgae.timestamp;
     double rightNow = Timer.getFPGATimestamp();
-    if ( /*IF SEEN ALGAE*/ ) //Implement Vision bounding box of limelight, seeing if the poses fit in the box.
+    if (rightNow - timestamp1 > AlgaeVisionConstants.TIME_THRESHOLD) // If the time difference is more than 7.0 seconds
     {
-        return 1.0;
+      TrackedAlgae1.setConfidence(-0.2);
+    } else {
+      TrackedAlgae1.setConfidence(1.0);
     }
-    else{
-        return -0.01;
-    }
-}
+  }
 }

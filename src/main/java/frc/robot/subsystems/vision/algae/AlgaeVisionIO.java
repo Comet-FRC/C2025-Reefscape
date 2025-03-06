@@ -35,6 +35,9 @@ public interface AlgaeVisionIO {
     public double getTimestamp() {
       return timestamp;
     }
+    public void setConfidence(double confidence){
+      this.confidence += confidence;
+    }
   }
   
   public default void updateInputs(AlgaeVisionIOInputs inputs) {}
