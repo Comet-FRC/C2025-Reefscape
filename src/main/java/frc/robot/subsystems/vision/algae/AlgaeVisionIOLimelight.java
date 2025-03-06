@@ -51,12 +51,8 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
     // Iterate over existing tracked algae poses
     List<TrackedAlgae> toRemove = new ArrayList<>();
     for (TrackedAlgae trackedAlgae : inputs.AlgaePoses) {
-      // Apply confidence decay
       timeConfidence(trackedAlgae);
-      
-    for (TrackedAlgae trackedAlgae2: inputs.AlgaePoses){
-      poseConfidence(trackedAlgae2);
-    }
+      poseConfidence(trackedAlgae);
     
       // Remove outdated or low-confidence poses
       if (Timer.getFPGATimestamp() - trackedAlgae.getTimestamp() > AlgaeVisionConstants.TIME_THRESHOLD
@@ -112,14 +108,10 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
     }
   }
 
-  public void timeConfidence(TrackedAlgae TrackedAlgae1) {
-    double timestamp1 = TrackedAlgae.timestamp;
-    double rightNow = Timer.getFPGATimestamp();
-    if (rightNow - timestamp1 > AlgaeVisionConstants.TIME_THRESHOLD) // If the time difference is more than 7.0 seconds
-    {
-      TrackedAlgae1.setConfidence(-0.2);
-    } else {
-      TrackedAlgae1.setConfidence(1.0);
+  public void timeConfidence(TrackedAlgae trackedAlgae) {
+    double timeElapsed = Timer.getFPGATimestamp() - trackedAlgae.getTimestamp();
+    if (timeElapsed > AlgaeVisionConstants.TIME_THRESHOLD) {
+      trackedAlgae.setConfidence(-0.2);
     }
   }
 }
