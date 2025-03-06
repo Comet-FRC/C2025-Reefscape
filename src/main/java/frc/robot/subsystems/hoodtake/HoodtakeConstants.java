@@ -15,12 +15,12 @@ public final class HoodtakeConstants {
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
 	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/16.0) * (12.0/18.0); // 1:2 PULLEY RATIO
 
-	public static final double PIVOT_kP = 0;
+	public static final double PIVOT_kP = 2;
 	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
-	public static final double PIVOT_SIM_kP = 9;
+	public static final double PIVOT_SIM_kP = 0;
 	public static final double PIVOT_SIM_kI = 0;
-	public static final double PIVOT_SIM_kD = 1.6;
+	public static final double PIVOT_SIM_kD = 0;
 	public static final double PIVOT_kS = 0.13416;
 	public static final double PIVOT_kG = 0.46776;
 	public static final double PIVOT_kV = 0.45226;

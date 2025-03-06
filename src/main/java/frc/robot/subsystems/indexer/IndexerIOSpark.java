@@ -107,8 +107,8 @@ public class IndexerIOSpark implements IndexerIO {
 	private MutVoltage leftRampingVoltage = Volts.mutable(0);
 	private MutVoltage rightRampingVoltage = Volts.mutable(0);
 
-	private boolean leftVoltageMode = false;
-	private boolean rightVoltageMode = false;
+	private boolean leftVoltageMode = true;
+	private boolean rightVoltageMode = true;
 
 	@Override
 	public void updateInputs(IndexerIOInputs inputs) {

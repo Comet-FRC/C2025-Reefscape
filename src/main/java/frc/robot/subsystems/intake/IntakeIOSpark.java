@@ -4,29 +4,30 @@
 
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
-import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.indexer.IndexerConstants;
 import frc.robot.util.SparkUtil;
 
 import static edu.wpi.first.units.Units.*;
+
+import org.littletonrobotics.junction.Logger;
 
 public class IntakeIOSpark implements IntakeIO {
 
@@ -34,42 +35,55 @@ public class IntakeIOSpark implements IntakeIO {
 	private final SparkMax pivotMotor = new SparkMax(IntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
 
 	private final ArmFeedforward pivotFF = new ArmFeedforward(
-		IntakeConstants.PIVOT_kS,
-		IntakeConstants.PIVOT_kG,
-		IntakeConstants.PIVOT_kV,
-		IntakeConstants.PIVOT_kA
-	);
+			IntakeConstants.PIVOT_kS,
+			IntakeConstants.PIVOT_kG,
+			IntakeConstants.PIVOT_kV,
+			IntakeConstants.PIVOT_kA);
 
 	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
-		IntakeConstants.WHEEL_kS,
-		IntakeConstants.WHEEL_kV,
-		IntakeConstants.WHEEL_kA
+			IntakeConstants.WHEEL_kS,
+			IntakeConstants.WHEEL_kV,
+			IntakeConstants.WHEEL_kA);
+
+	private final ProfiledPIDController pivotPID = new ProfiledPIDController(
+		IntakeConstants.PIVOT_kP,
+		IntakeConstants.PIVOT_kI,
+		IntakeConstants.PIVOT_kD,
+		new TrapezoidProfile.Constraints(Math.PI/2.0, Math.PI/2.0)
+	);
+
+	private final PIDController wheelPID = new PIDController(
+		IntakeConstants.WHEEL_kP,
+		IntakeConstants.WHEEL_kI,
+		IntakeConstants.WHEEL_kD
 	);
 
 	public IntakeIOSpark() {
-		this.configureWheelMotor();	
+		this.configureWheelMotor();
 		this.configurePivotMotor();
+		this.pivotPID.setGoal(IntakeConstants.STARTING_ANGLE.in(Radians));
 	}
 
 	private void configureWheelMotor() {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-			.inverted(false)
-			.idleMode(IdleMode.kCoast)
-			.smartCurrentLimit(20);
+				.inverted(false)
+				.idleMode(IdleMode.kCoast)
+				.smartCurrentLimit(30);
 		config.encoder
-			.positionConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
-		config.closedLoop
-			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(IntakeConstants.WHEEL_kP)
-				.i(IntakeConstants.WHEEL_kI)
-				.d(IntakeConstants.WHEEL_kD);
+				.positionConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR)
+				.velocityConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
+		// config.closedLoop
+		// 		.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+		// 		.p(IntakeConstants.WHEEL_kP)
+		// 		.i(IntakeConstants.WHEEL_kI)
+		// 		.d(IntakeConstants.WHEEL_kD);
 
 		wheelMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
 	}
+
 	private void configurePivotMotor() {
 		SparkMaxConfig config = new SparkMaxConfig();
 
@@ -80,16 +94,17 @@ public class IntakeIOSpark implements IntakeIO {
 		config.encoder
 			.positionConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR)
 			.velocityConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
-		config.closedLoop
-			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(IntakeConstants.PIVOT_kP)
-				.i(IntakeConstants.PIVOT_kI)
-				.d(IntakeConstants.PIVOT_kD);
+		// config.closedLoop
+		// 		.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+		// 		.p(IntakeConstants.PIVOT_kP)
+		// 		.i(IntakeConstants.PIVOT_kI)
+		// 		.d(IntakeConstants.PIVOT_kD)
+		// 		.outputRange(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 		config.signals
 			.primaryEncoderPositionAlwaysOn(true)
 			.primaryEncoderPositionPeriodMs(20)
 			.primaryEncoderVelocityAlwaysOn(true)
-			.primaryEncoderVelocityPeriodMs(10)
+			.primaryEncoderVelocityPeriodMs(20)
 			.appliedOutputPeriodMs(20)
 			.busVoltagePeriodMs(20)
 			.outputCurrentPeriodMs(20);
@@ -105,29 +120,46 @@ public class IntakeIOSpark implements IntakeIO {
 		);
 	}
 
+	private final MutVoltage wheelDesiredVoltage = Volts.mutable(0);
+	private boolean wheelVoltageMode = false;
 
-	
-	MutAngularVelocity wheelDesiredVelocity = RadiansPerSecond.mutable(0);
-	MutVoltage wheelDesiredVoltage = Volts.mutable(0);
-	boolean wheelVoltageMode = false;
-
-	MutAngle pivotDesiredPosition = IntakeConstants.STARTING_ANGLE.mutableCopy();
-	MutVoltage pivotDesiredVoltage = Volts.mutable(0);
-	boolean pivotVoltageMode = false;
+	private final MutAngle pivotDesiredPosition = Radians.mutable(0);
+	private final MutVoltage pivotDesiredVoltage = Volts.mutable(0);
+	private boolean pivotVoltageMode = false;
 
 	@Override
 	public void updateInputs(IntakeIOInputs inputs) {
 		if (pivotVoltageMode) {
-			this.pivotMotor.setVoltage(pivotDesiredVoltage.in(Volts));
+			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
+			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
+		} else {
+			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
+			this.pivotDesiredPosition.mut_replace(inputs.pivotPosition.plus(Radians.of(pivotPID.getPositionError())));
+			double ff = pivotFF.calculate(this.pivotDesiredPosition.in(Radians)-0.279, 0);
+			double volts;
+			volts = pid + ff;
+			volts = MathUtil.clamp(volts, -12, 12);
+			volts = MathUtil.applyDeadband(volts, 0.01);
+
+			Logger.recordOutput("Intake/pivotClosedLoopPID", pid);
+			Logger.recordOutput("Intake/pivotClosedLoopFF", ff);
+			Logger.recordOutput("Intake/pivotClosedLoopAppliedVolts", volts);
+			Logger.recordOutput("Intake/closedLoopError", pivotPID.getPositionError());
+			this.pivotMotor.setVoltage(Volts.of(volts));
 		}
 
 		if (wheelVoltageMode) {
-			this.wheelMotor.setVoltage(wheelDesiredVoltage.in(Volts));
+			this.wheelMotor.setVoltage(wheelDesiredVoltage.copy());
+		} else {
+			double pid = wheelPID.calculate(wheelMotor.getEncoder().getVelocity());
+			double ff = wheelFF.calculate(wheelPID.getSetpoint(), 0);
+			double volts = pid+ff;
+			this.wheelMotor.setVoltage(Volts.of(volts));
 		}
 
 		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.wheelDesiredVelocity = this.wheelDesiredVelocity.copy();
+		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
 		inputs.wheelAppliedVoltage = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
@@ -142,10 +174,10 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void stopWheel() {
-		this.setWheelVoltage(Volts.of(0));
+		wheelMotor.setVoltage(0);
 	}
 
-	@Override	
+	@Override
 	public void stopPivot() {
 		this.setPivotVoltage(Volts.of(0));
 	}
@@ -153,43 +185,19 @@ public class IntakeIOSpark implements IntakeIO {
 	@Override
 	public void setWheelVoltage(Voltage voltage) {
 		this.wheelVoltageMode = true;
-		this.wheelDesiredVoltage.mut_replace(voltage);
+		wheelMotor.setVoltage(voltage);
 	}
-	
+
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
 		this.wheelVoltageMode = false;
-
-		double velocityRadiansPerSecond = velocity.in(RadiansPerSecond);
-		double feedforward = wheelFF.calculate(velocityRadiansPerSecond);
-
-		wheelMotor.getClosedLoopController().setReference(
-			velocityRadiansPerSecond,
-			ControlType.kVelocity,
-			ClosedLoopSlot.kSlot0,
-			feedforward,
-			ArbFFUnits.kVoltage
-		);
-
-		this.wheelDesiredVelocity.mut_replace(velocity);
+		this.wheelPID.setSetpoint(velocity.in(RadiansPerSecond));
 	}
 
 	@Override
 	public void setPivotPositionSetpoint(Angle position) {
 		this.pivotVoltageMode = false;
-
-		double positionRadians = position.in(Radians);
-		double feedforward = pivotFF.calculate(positionRadians, 0);
-
-		pivotMotor.getClosedLoopController().setReference(
-			positionRadians,
-			ControlType.kPosition,
-			ClosedLoopSlot.kSlot0,
-			feedforward,
-			ArbFFUnits.kVoltage
-		);
-
-		this.pivotDesiredPosition.mut_replace(position);
+		pivotPID.setGoal(position.in(Radians));
 	}
 
 	@Override

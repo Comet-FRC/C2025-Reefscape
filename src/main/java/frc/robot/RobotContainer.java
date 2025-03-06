@@ -193,18 +193,18 @@ public class RobotContainer {
 	}
 
 	private void setupDefaultCommands() {
-		this.drive.setDefaultCommand(
-			this.drive.joystickDrive(
-				() -> -controller.getLeftY(),
-				() -> -controller.getLeftX(),
-				/*() ->  {
-					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
-					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
-					return right-left;
-				}*/
-				() -> controller.getRightX()
-			)
-		);
+		// this.drive.setDefaultCommand(
+		// 	this.drive.joystickDrive(
+		// 		() -> -controller.getLeftY(),
+		// 		() -> -controller.getLeftX(),
+		// 		/*() ->  {
+		// 			int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+		// 			int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+		// 			return right-left;
+		// 		}*/
+		// 		() -> controller.getRightX()
+		// 	)
+		// );
 
 		this.shooter.setDefaultCommand(
 			this.shooter.setBottomVoltage(() -> Volts.of(0))
@@ -228,19 +228,20 @@ public class RobotContainer {
 				Commands.either(
 					this.indexer.setLeftVoltage(() -> Volts.of(0)),
 					this.indexer.setLeftVoltage(() -> Volts.of(-1)),
-					indexer::isLeftAtHome
+					() -> indexer.getLeftPosition().lt(Degrees.of(40))
 				),
 				
 				Commands.either(
 					this.indexer.setRightVoltage(() -> Volts.of(0)),
 					this.indexer.setRightVoltage(() -> Volts.of(-1)),
-					indexer::isRightAtHome
+					() -> indexer.getRightPosition().lt(Degrees.of(40))
 				)
 			)
 		);
 
 		this.intake.setDefaultCommand(
 			this.intake.setPivotVoltage(() -> Volts.of(0))
+			.andThen(this.intake.setWheelVoltage(() -> Volts.of(0)))
 			//this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE)
 		);
 	}
@@ -272,33 +273,41 @@ public class RobotContainer {
 		);
 
 		this.controller.rightTrigger().whileTrue(
-			this.indexer.setRightVoltage(() -> Volts.of(3))
-			.andThen(this.indexer.setLeftVoltage(() -> Volts.of(3)))
+			Commands.sequence(
+				this.indexer.setRightVoltage(() -> Volts.of(3)),
+				this.indexer.setLeftVoltage(() -> Volts.of(3)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		this.controller.down().whileTrue(
+			this.hoodtake.setPivotPosition(() -> Degrees.of(0))
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
-
-		this.controller.a().whileTrue(
-			this.hoodtake.setPivotPosition(() -> Degrees.of(90))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		this.controller.b().whileTrue(
-			this.hoodtake.setPivotPosition(() -> Degrees.of(45))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		this.controller.x().whileTrue(
-			this.hoodtake.setPivotVoltage(() -> Volts.of(-12))
+		this.controller.up().whileTrue(
+			this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE)
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
 		this.controller.y().whileTrue(
-			this.hoodtake.setPivotVoltage(() -> Volts.of(12))
+			this.hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
+		// this.controller.right().whileTrue(
+		// 	this.indexer.setRightVoltage(() -> Volts.of(3))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
 
+		this.controller.x().whileTrue(
+			this.hoodtake.setPivotVoltage(() -> Volts.of(0.5))
+			.andThen(Commands.waitUntil(() -> false))
+		);
+
+		this.controller.b().whileTrue(
+			this.intake.sysIdRoutinePivot()	
+		);
 	}
 
 	/**

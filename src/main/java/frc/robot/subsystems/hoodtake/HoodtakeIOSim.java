@@ -166,6 +166,6 @@ public class HoodtakeIOSim implements HoodtakeIO {
 
 	@Override
 	public void stopPivot() {
-		setPivotVoltage(Volts.of(0.0));
+		this.setPivotVoltage(Volts.of(0.0));
 	}
 }

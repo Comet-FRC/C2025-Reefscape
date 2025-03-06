@@ -11,6 +11,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -46,12 +47,28 @@ public class Indexer extends SubsystemBase {
 		rightArmVisualizer.publish();
 	}
 
-	public boolean isLeftAtHome() {
-		return this.inputs.leftPosition.lt(Degrees.of(45));
+	public Angle getLeftPosition() {
+		return this.inputs.leftPosition;
 	}
 
-	public boolean isRightAtHome() {
-		return this.inputs.rightPosition.lt(Degrees.of(45));
+	public Angle getRightPosition() {
+		return this.inputs.rightPosition;
+	}
+
+	public Voltage getLeftVoltage() {
+		return this.inputs.leftAppliedVoltage;
+	}
+
+	public Voltage getRightVoltage() {
+		return this.inputs.rightAppliedVoltage;
+	}
+
+	public AngularVelocity getLeftVelocity() {
+		return this.inputs.leftVelocity;
+	}
+
+	public AngularVelocity getRightVelocity() {
+		return this.inputs.rightVelocity;
 	}
 
 	public Command stop() {

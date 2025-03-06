@@ -10,21 +10,21 @@ public final class IntakeConstants {
 	public static final int INTAKE_MOTOR_ID = 15;
 	public static final int PIVOT_MOTOR_ID = 16;
 
-	public static final Angle STARTING_ANGLE = Degrees.of(95);
+	public static final Angle STARTING_ANGLE = Degrees.of(96.0);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
-	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * 1/16 * 18/12; // 16:1 gear ratio, 18/12 sprocket ratio
+	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/25.0); // 16:1 gear ratio, 18/12 sprocket ratio
 
-	public static final double PIVOT_kP = 3.596;
+	public static final double PIVOT_kP = 2;
 	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
 	public static final double PIVOT_SIM_kP = 88.636;
 	public static final double PIVOT_SIM_kI = 0;
 	public static final double PIVOT_SIM_kD = 6.458;
-	public static final double PIVOT_kS = 0.37459;
-	public static final double PIVOT_kG = 0.87401;
-	public static final double PIVOT_kV = 0;
-	public static final double PIVOT_kA = 0.23811;
+	public static final double PIVOT_kS = 0.0043898;
+	public static final double PIVOT_kG = 0.58182;
+	public static final double PIVOT_kV = 0.75654;
+	public static final double PIVOT_kA = 0.083806;
 	public static final double PIVOT_SIM_kS = 1.024;
 	public static final double PIVOT_SIM_kG = 7.7827;
 	public static final double PIVOT_SIM_kV = 0.069055;

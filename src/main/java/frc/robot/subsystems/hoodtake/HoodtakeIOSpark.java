@@ -12,6 +12,7 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -19,11 +20,14 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.SparkUtil;
 
 import static edu.wpi.first.units.Units.*;
+
+import org.littletonrobotics.junction.Logger;
 
 public class HoodtakeIOSpark implements HoodtakeIO {
 
@@ -45,7 +49,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		HoodtakeConstants.PIVOT_kP,
 		HoodtakeConstants.PIVOT_kI,
 		HoodtakeConstants.PIVOT_kD,
-		new TrapezoidProfile.Constraints(5, 10)
+		new TrapezoidProfile.Constraints(Math.PI/2.0, Math.PI/2.0)
 	);
 
 	private final PIDController wheelPID = new PIDController(
@@ -57,6 +61,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	public HoodtakeIOSpark() {
 		this.configureWheelMotor();
 		this.configurePivotMotor();
+		this.pivotPID.setGoal(HoodtakeConstants.STARTING_ANGLE.in(Radians));
 	}
 
 	private void configureWheelMotor() {
@@ -83,12 +88,12 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-				.inverted(true)
-				.idleMode(IdleMode.kBrake)
-				.smartCurrentLimit(40); // TODO: Check if this is enough current
+			.inverted(true)
+			.idleMode(IdleMode.kBrake)
+			.smartCurrentLimit(40); // TODO: Check if this is enough current
 		config.encoder
-				.positionConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR)
-				.velocityConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
+			.positionConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR)
+			.velocityConversionFactor(HoodtakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
 		// config.closedLoop
 		// 		.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 		// 		.p(HoodtakeConstants.PIVOT_kP)
@@ -96,13 +101,13 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		// 		.d(HoodtakeConstants.PIVOT_kD)
 		// 		.outputRange(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 		config.signals
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs(20)
-                .primaryEncoderVelocityAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(20)
-                .appliedOutputPeriodMs(20)
-                .busVoltagePeriodMs(20)
-                .outputCurrentPeriodMs(20);
+			.primaryEncoderPositionAlwaysOn(true)
+			.primaryEncoderPositionPeriodMs(20)
+			.primaryEncoderVelocityAlwaysOn(true)
+			.primaryEncoderVelocityPeriodMs(20)
+			.appliedOutputPeriodMs(20)
+			.busVoltagePeriodMs(20)
+			.outputCurrentPeriodMs(20);
 
 		pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -118,6 +123,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	private final MutVoltage wheelDesiredVoltage = Volts.mutable(0);
 	private boolean wheelVoltageMode = false;
 
+	private final MutAngle pivotDesiredPosition = HoodtakeConstants.STARTING_ANGLE.mutableCopy();
 	private final MutVoltage pivotDesiredVoltage = Volts.mutable(0);
 	private boolean pivotVoltageMode = false;
 
@@ -125,26 +131,30 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	public void updateInputs(HoodtakeIOInputs inputs) {
 		if (pivotVoltageMode) {
 			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
+			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
-			this.pivotMotor.setVoltage(
-				Volts.of(
-					pivotPID.calculate(pivotMotor.getEncoder().getPosition())
-					+
-					pivotFF.calculate(pivotPID.getSetpoint().position, pivotPID.getSetpoint().velocity)
-				)
-			);
+			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
+			this.pivotDesiredPosition.mut_replace(inputs.pivotPosition.plus(Radians.of(pivotPID.getPositionError())));
+			double ff = pivotFF.calculate(this.pivotDesiredPosition.in(Radians)-0.279, 0);
+			double volts;
+			volts = pid + ff;
+			volts = MathUtil.clamp(volts, -12, 12);
+			volts = MathUtil.applyDeadband(volts, 0.01);
+
+			Logger.recordOutput("Hoodtake/pivotClosedLoopPID", pid);
+			Logger.recordOutput("Hoodtake/pivotClosedLoopFF", ff);
+			Logger.recordOutput("Hoodtake/pivotClosedLoopAppliedVolts", volts);
+			Logger.recordOutput("Hoodtake/closedLoopError", pivotPID.getPositionError());
+			this.pivotMotor.setVoltage(Volts.of(volts));
 		}
 
 		if (wheelVoltageMode) {
 			this.wheelMotor.setVoltage(wheelDesiredVoltage.copy());
 		} else {
-			this.wheelMotor.setVoltage(
-				Volts.of(
-					wheelPID.calculate(wheelMotor.getEncoder().getVelocity())
-					+
-					wheelFF.calculate(wheelPID.getSetpoint(), 0)
-				)
-			);
+			double pid = wheelPID.calculate(wheelMotor.getEncoder().getVelocity());
+			double ff = wheelFF.calculate(wheelPID.getSetpoint(), 0);
+			double volts = pid+ff;
+			this.wheelMotor.setVoltage(Volts.of(volts));
 		}
 
 		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
@@ -155,7 +165,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getEncoder().getPosition());
-		inputs.pivotDesiredPosition = Radians.of(pivotPID.getGoal().position);
+		inputs.pivotDesiredPosition = this.pivotDesiredPosition.copy();
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getEncoder().getVelocity());
 		inputs.pivotAppliedVolts = Volts.of(pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage());
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getOutputCurrent());

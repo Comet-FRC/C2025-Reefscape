@@ -71,8 +71,8 @@ public class Intake extends SubsystemBase {
 	public Command sysIdRoutinePivot() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				Volts.per(Second).of(1),
-				Volts.of(3),
+				Volts.per(Second).of(0.25),
+				Volts.of(1),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/intake-pivot", state.toString()
@@ -94,13 +94,13 @@ public class Intake extends SubsystemBase {
 
 
 		Command routineCommand = new SequentialCommandGroup(
-			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(40))),
+			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(20))),
 			Commands.waitSeconds(5),
-			routine.dynamic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(50))),
+			routine.dynamic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(90))),
 			Commands.waitSeconds(5),
-			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(30))),
+			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lte(Degrees.of(20))),
 			Commands.waitSeconds(5),
-			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(85)))
+			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gte(Degrees.of(90)))
 		);
 		
 
