@@ -6,12 +6,14 @@ import static edu.wpi.first.units.Units.Meters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TransferQueue;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.vision.algae.AlgaeVisionIO.TrackedAlgae;
 import frc.robot.util.LimelightHelpers;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -35,25 +37,27 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
     ty = LimelightHelpers.getTY(name);
     ta = LimelightHelpers.getTA(name);
     hasTarget = LimelightHelpers.getTV(name);
-    var AlgaePose = getAlgaePose();
+    Optional<Pose2d> AlgaePoseOpt = getAlgaePose();
 
     // if trackedalgae within distance threshold, add to list
-    for (TrackedAlgae existingPoses : inputs.AlgaePoses) {
-      double distance = existingPoses.getTranslation().getDistance(AlgaePose.getTranslation());
-      if (distance > AlgaeVisionConstants.VISION_DISTANCE_THRESHOLD.in(Meters)) {
-        continue;
-      } else {
-        timestamp = Timer.getFPGATimestamp();
-        inputs.AlgaePoses.add(new TrackedAlgae(timestamp, AlgaePose, 1));
+    AlgaePoseOpt.ifPresent(AlgaePose -> {
+      for (TrackedAlgae existingPoses : inputs.AlgaePoses) {
+        double distance = existingPoses.getTranslation().getDistance(AlgaePose.getTranslation());
+        if (distance > AlgaeVisionConstants.VISION_DISTANCE_THRESHOLD.in(Meters)) {
+          continue;
+        } else {
+          timestamp = Timer.getFPGATimestamp();
+          inputs.AlgaePoses.add(new TrackedAlgae(timestamp, AlgaePose, 1));
+        }
       }
-    }
+    });
 
     // Iterate over existing tracked algae poses
     List<TrackedAlgae> toRemove = new ArrayList<>();
     for (TrackedAlgae trackedAlgae : inputs.AlgaePoses) {
       timeConfidence(trackedAlgae);
       poseConfidence(trackedAlgae);
-    
+
       // Remove outdated or low-confidence poses
       if (Timer.getFPGATimestamp() - trackedAlgae.getTimestamp() > AlgaeVisionConstants.TIME_THRESHOLD
           || trackedAlgae.getConfidence() <= 0) {
@@ -65,7 +69,7 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
     inputs.AlgaePoses.removeAll(toRemove);
   }
 
-  public Pose2d getAlgaePose() {
+  public Optional<Pose2d> getAlgaePose() {
     if (hasTarget) {
       double tx = LimelightHelpers.getTX(name);
       double ty = LimelightHelpers.getTY(name);
@@ -85,9 +89,9 @@ public class AlgaeVisionIOLimelight implements AlgaeVisionIO {
       double objectX = robotX + distance * Math.cos(robotTheta + Units.degreesToRadians(tx));
       double objectY = robotY + distance * Math.sin(robotTheta + Units.degreesToRadians(tx));
 
-      return new Pose2d(objectX, objectY, new Rotation2d());
+      return Optional.of(new Pose2d(objectX, objectY, new Rotation2d()));
     } else {
-      return new Pose2d(); // TODO: Fix this line or else stack will become too big
+      return Optional.empty();
     }
   }
 

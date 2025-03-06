@@ -4,15 +4,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.algae.AlgaeVisionIO.AlgaeVisionIOInputs;
 
 public class AlgaeVision extends SubsystemBase {
-  private final AlgaeVisionIOLimelight limelight;
-  private final AlgaeVisionIOInputs inputs = new AlgaeVisionIOInputs(); // Store inputs
+  public final AlgaeVisionIO io;
+  private final AlgaeVisionIOInputs inputs; // Store inputs
 
-  public AlgaeVision(AlgaeVisionIOLimelight limelight) {
-    this.limelight = limelight; // Store the passed-in limelight instance
+  public AlgaeVision(AlgaeVisionIO io) {
+    this.io = io; // Store the passed-in io instance
+    this.inputs = new AlgaeVisionIOInputs(); // Initialize inputs
   }
 
   @Override
   public void periodic() {
-    limelight.updateInputs(inputs); // Call updateInputs with stored inputs
+    io.updateInputs(inputs); // Call updateInputs with stored inputs
   }
 }
