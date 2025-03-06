@@ -140,7 +140,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 			volts = pid + ff;
 			volts = MathUtil.clamp(volts, -12, 12);
 			volts = MathUtil.applyDeadband(volts, 0.01);
-
+			
 			Logger.recordOutput("Hoodtake/pivotClosedLoopPID", pid);
 			Logger.recordOutput("Hoodtake/pivotClosedLoopFF", ff);
 			Logger.recordOutput("Hoodtake/pivotClosedLoopAppliedVolts", volts);
