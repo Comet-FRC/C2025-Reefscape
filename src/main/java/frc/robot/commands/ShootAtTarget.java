@@ -19,13 +19,11 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.controller.CometController;
 
 public class ShootAtTarget extends WrapperCommand {
-    private final CometController controller;
-
     public ShootAtTarget(CometController controller, Drive drive, Shooter shooter, Indexer indexer) {
         super(
             Commands.sequence(
                 Commands.deadline(
-                    Commands.waitUntil(() -> !shooter.isReadyToShoot()),
+                    Commands.waitUntil(() -> shooter.isReadyToShoot()),
                     drive.driveWithAngleSetpoint(
                         () -> -controller.getLeftY(),
                         () -> -controller.getLeftX(),
@@ -44,12 +42,5 @@ public class ShootAtTarget extends WrapperCommand {
                 Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter)
             )
         );
-        
-        this.controller = controller;
-    }
-
-    @Override
-    public void end(boolean interrupted) {
-        this.controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0);
     }
 }

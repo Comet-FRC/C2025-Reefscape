@@ -48,7 +48,7 @@ public class ShooterIOSim implements ShooterIO {
 			ShooterConstants.WHEEL_SIM_kD
 		);
 
-	private final SimpleMotorFeedforward WheelFF = new SimpleMotorFeedforward(
+	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
 		ShooterConstants.WHEEL_SIM_kS,
 		ShooterConstants.WHEEL_SIM_kV,
 		ShooterConstants.WHEEL_SIM_kA
@@ -84,13 +84,13 @@ public class ShooterIOSim implements ShooterIO {
 			topWheelMotor.setInputVoltage(
 				topPID.calculate(topWheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
-				WheelFF.calculate(topPID.getSetpoint())
+				wheelFF.calculate(topPID.getSetpoint())
 			);
 
 			bottomWheelMotor.setInputVoltage(
 				botPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
 				+
-				WheelFF.calculate(botPID.getSetpoint())
+				wheelFF.calculate(botPID.getSetpoint())
 			);
 		}
 

@@ -38,8 +38,8 @@ public class ShooterConstants {
 	public static final double WHEEL_SIM_kP = 0.013657;
 	public static final double WHEEL_SIM_kI = 0;
 	public static final double WHEEL_SIM_kD = 0;
-	public static final double WHEEL_SIM_kS = -0.0041375;
-	public static final double WHEEL_SIM_kV = 0.083116;
+	public static final double WHEEL_SIM_kS = 0;
+	public static final double WHEEL_SIM_kV = 0.1;
 	public static final double WHEEL_SIM_kA = 0.00094517;
 
 	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RadiansPerSecond.of(0.1);	
