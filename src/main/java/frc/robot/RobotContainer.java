@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.commands.ShootAtTarget;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
@@ -64,6 +65,7 @@ import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSpark;
+import frc.robot.subsystems.shooter.NetTargetSelector;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -92,7 +94,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -193,18 +195,18 @@ public class RobotContainer {
 	}
 
 	private void setupDefaultCommands() {
-		// this.drive.setDefaultCommand(
-		// 	this.drive.joystickDrive(
-		// 		() -> -controller.getLeftY(),
-		// 		() -> -controller.getLeftX(),
-		// 		/*() ->  {
-		// 			int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
-		// 			int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
-		// 			return right-left;
-		// 		}*/
-		// 		() -> controller.getRightX()
-		// 	)
-		// );
+		this.drive.setDefaultCommand(
+			this.drive.joystickDrive(
+				() -> -controller.getLeftY(),
+				() -> -controller.getLeftX(),
+				/*() ->  {
+					int left = controller.leftBumper().getAsBoolean() ? 1 : 0;
+					int right = controller.rightBumper().getAsBoolean() ? 1 : 0;
+					return right-left;
+				}*/
+				() -> controller.getRightX()
+			)
+		);
 
 		this.shooter.setDefaultCommand(
 			this.shooter.setBottomVoltage(() -> Volts.of(0))
@@ -274,40 +276,43 @@ public class RobotContainer {
 
 		this.controller.rightTrigger().whileTrue(
 			Commands.sequence(
-				this.indexer.setRightVoltage(() -> Volts.of(3)),
-				this.indexer.setLeftVoltage(() -> Volts.of(3)),
+				this.indexer.shoot(),
 				Commands.waitUntil(() -> false)
 			)
 		);
 
-		this.controller.down().whileTrue(
-			this.hoodtake.setPivotPosition(() -> Degrees.of(0))
-			.andThen(Commands.waitUntil(() -> false))
+		this.controller.b().whileTrue(
+			new ShootAtTarget(controller, drive, shooter, indexer)
 		);
 
-		this.controller.up().whileTrue(
-			this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE)
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		this.controller.y().whileTrue(
-			this.hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		// this.controller.right().whileTrue(
-		// 	this.indexer.setRightVoltage(() -> Volts.of(3))
+		// this.controller.down().whileTrue(
+		// 	this.hoodtake.setPivotPosition(() -> Degrees.of(0))
 		// 	.andThen(Commands.waitUntil(() -> false))
 		// );
 
-		this.controller.x().whileTrue(
-			this.hoodtake.setPivotVoltage(() -> Volts.of(0.5))
-			.andThen(Commands.waitUntil(() -> false))
-		);
+		// this.controller.up().whileTrue(
+		// 	this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE)
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
 
-		this.controller.b().whileTrue(
-			this.intake.sysIdRoutinePivot()	
-		);
+		// this.controller.y().whileTrue(
+		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// // this.controller.right().whileTrue(
+		// // 	this.indexer.setRightVoltage(() -> Volts.of(3))
+		// // 	.andThen(Commands.waitUntil(() -> false))
+		// // );
+
+		// this.controller.x().whileTrue(
+		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(0.5))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.b().whileTrue(
+		// 	this.intake.sysIdRoutinePivot()	
+		// );
 	}
 
 	/**

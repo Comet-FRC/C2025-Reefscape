@@ -634,6 +634,55 @@ public class Drive extends SubsystemBase {
 	}
 
 	/**
+	 * Field relative drive command using two joysticks (controlling linear and
+	 * angular velocities).
+	 */
+	public Command driveWithAngleSetpoint(
+			DoubleSupplier xSupplier,
+			DoubleSupplier ySupplier,
+			Supplier<Rotation2d> rotation) {
+		return new FunctionalCommand(
+			() -> this.isHeadingPIDEnabled = true, 
+			() -> {
+				this.headingPID.setSetpoint(rotation.get().getRadians());
+				double x = xSupplier.getAsDouble();
+				double y = ySupplier.getAsDouble();
+
+				double linearSpeed;
+				linearSpeed = Math.hypot(x, y);
+				linearSpeed = MathUtil.applyDeadband(linearSpeed,
+						DriveConstants.MINUMUM_VELOCITY.in(MetersPerSecond));
+				linearSpeed = MathUtil.clamp(linearSpeed, -1, 1);
+				Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
+
+				Translation2d linearTranslation = new Translation2d(linearSpeed, linearDirection);
+
+				
+
+
+				ChassisSpeeds speeds = new ChassisSpeeds(
+						this.getMaximumSpeed().times(linearTranslation.getX()),
+						this.getMaximumSpeed().times(linearTranslation.getY()),
+						RadiansPerSecond.of(0));
+
+				boolean isFlipped = DriverStation.getAlliance().isPresent()
+						&& DriverStation.getAlliance().get() == Alliance.Red;
+
+				Rotation2d robotAngle = isFlipped
+						? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
+						: this.getRotation();
+
+				speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
+
+				this.runVelocity(speeds);
+			},
+		(interrupted) -> this.isHeadingPIDEnabled = false,
+		() -> false,
+		this
+		);
+	}
+
+	/**
 	 * Turns the robot to a specified angle using PID control.
 	 * To specify both translation and rotation, use
 	 * {@link #moveToPosePID(Supplier)}.

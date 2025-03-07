@@ -15,6 +15,10 @@ public abstract class CometController {
     this.controller = controller;
   }
 
+  public CommandGenericHID getHid() {
+    return this.controller;
+  }
+
   public abstract double getLeftY();
 
   public abstract double getLeftX();

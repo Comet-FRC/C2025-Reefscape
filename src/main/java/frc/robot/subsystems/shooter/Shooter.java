@@ -33,7 +33,7 @@ public class Shooter extends SubsystemBase {
 	}
 
 
-	public boolean readyToShoot(){
+	public boolean isReadyToShoot(){
 		if (inputs.topWheelDesiredVelocity.minus(inputs.topWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;
 		if (inputs.bottomWheelDesiredVelocity.minus(inputs.bottomWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
