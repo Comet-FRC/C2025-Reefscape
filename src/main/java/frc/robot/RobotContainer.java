@@ -282,7 +282,7 @@ public class RobotContainer {
 		);
 
 		this.controller.b().whileTrue(
-			new ShootAtTarget(controller, drive, shooter, indexer)
+			new ShootAtTarget(controller, drive, shooter)
 		);
 
 		// this.controller.down().whileTrue(
