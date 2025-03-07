@@ -40,6 +40,10 @@ public class ShootAtTarget extends WrapperCommand {
                     )
                 ),
                 Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter)
+            ).finallyDo(
+                (interrupted) -> {
+                    controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5);
+                }
             )
         );
     }
