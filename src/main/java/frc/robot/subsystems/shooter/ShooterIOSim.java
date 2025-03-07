@@ -29,7 +29,7 @@ public class ShooterIOSim implements ShooterIO {
 		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
 			wheelGearbox,
 			ShooterConstants.WHEEL_MOMENT_OF_INERTIA,
-			ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR
+			ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / (2.0 * Math.PI) 
 		);
 		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
@@ -54,8 +54,8 @@ public class ShooterIOSim implements ShooterIO {
 		ShooterConstants.WHEEL_SIM_kA
 	);
 
-	/** true = controlled by voltage, false = controled by PID + FF */
-	private boolean wheelVoltageMode = false;
+	private boolean topVoltageMode = false;
+	private boolean bottomVoltageMode = false;
 
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
@@ -79,41 +79,49 @@ public class ShooterIOSim implements ShooterIO {
 	}
 
 	private void runLoopControl() {
-		if (!wheelVoltageMode) {
+		if (!topVoltageMode) {
 
 			topWheelMotor.setInputVoltage(
 				topPID.calculate(topWheelMotor.getAngularVelocity().in(RadiansPerSecond))
-				+
-				wheelFF.calculate(topPID.getSetpoint())
-			);
-
-			bottomWheelMotor.setInputVoltage(
-				botPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
-				+
-				wheelFF.calculate(botPID.getSetpoint())
+				// +
+				// wheelFF.calculate(topPID.getSetpoint())
 			);
 		}
 
-
+		if (!bottomVoltageMode) {
+			bottomWheelMotor.setInputVoltage(
+				botPID.calculate(bottomWheelMotor.getAngularVelocity().in(RadiansPerSecond))
+				// +
+				// wheelFF.calculate(botPID.getSetpoint())
+			);
+		}
 	}
 
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity topVelocity, AngularVelocity bottomVelocity) {
-		this.wheelVoltageMode = false;
-		topPID.setSetpoint(topVelocity.in(RadiansPerSecond));
-		botPID.setSetpoint(bottomVelocity.in(RadiansPerSecond));
+		this.topVoltageMode = false;
+		this.bottomVoltageMode = false;
+		this.topPID.setSetpoint(topVelocity.in(RadiansPerSecond));
+		this.botPID.setSetpoint(bottomVelocity.in(RadiansPerSecond));
 	}
 
 	@Override
 	public void setTopVoltage(Voltage volts) {
-		this.wheelVoltageMode = true;
-		topWheelMotor.setInputVoltage(volts.in(Volts));
-		bottomWheelMotor.setInputVoltage(volts.in(Volts));
+		this.topVoltageMode = true;
+		this.topWheelMotor.setInputVoltage(volts.in(Volts));
 	}
 
 	@Override
+	public void setBottomVoltage(Voltage volts) {
+		this.topVoltageMode = true;
+		this.bottomWheelMotor.setInputVoltage(volts.in(Volts));
+	}
+
+
+	@Override
 	public void stop() {
-		setTopVoltage(Volts.of(0.0));
+		this.setTopVoltage(Volts.of(0.0));
+		this.setBottomVoltage(Volts.of(0.0));
 	}
 
 }

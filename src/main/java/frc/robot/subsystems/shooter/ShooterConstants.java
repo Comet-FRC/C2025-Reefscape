@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -35,12 +36,12 @@ public class ShooterConstants {
 	public static final double BOT_WHEEL_kV = 0.2604;
 	public static final double BOT_WHEEL_kA = 1.1668;
 	
-	public static final double WHEEL_SIM_kP = 0.013657;
-	public static final double WHEEL_SIM_kI = 0;
+	public static final double WHEEL_SIM_kP = 0.5;
+	public static final double WHEEL_SIM_kI = 0.01;
 	public static final double WHEEL_SIM_kD = 0;
 	public static final double WHEEL_SIM_kS = 0;
 	public static final double WHEEL_SIM_kV = 0.1;
 	public static final double WHEEL_SIM_kA = 0.00094517;
 
-	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RadiansPerSecond.of(0.1);	
+	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RPM.of(10);	
 }
