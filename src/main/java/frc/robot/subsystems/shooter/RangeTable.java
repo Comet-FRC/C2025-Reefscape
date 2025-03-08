@@ -25,7 +25,7 @@ public class RangeTable {
 
     private void setupRangeTable() {
         RANGE_TABLE.put(0.0, new ShooterSpeed(0, 0));
-        RANGE_TABLE.put(10.0, new ShooterSpeed(5000, 5000));
+        RANGE_TABLE.put(10.0, new ShooterSpeed(100, 100));
 	}
 
     /**

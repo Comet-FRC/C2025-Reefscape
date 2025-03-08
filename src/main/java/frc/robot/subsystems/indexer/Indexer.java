@@ -95,6 +95,13 @@ public class Indexer extends SubsystemBase {
 		return Commands.runOnce(() -> io.setRightVoltage(volts.get()), this);
 	};
 
+	public Command shoot() {
+		return Commands.sequence(
+			this.setRightVoltage(() -> Volts.of(3)),
+			this.setLeftVoltage(() -> Volts.of(3))
+		);
+	}
+
 	public Command sysIdRoutineLeft() {
 		SysIdRoutine routine = new SysIdRoutine(
 				new SysIdRoutine.Config(
