@@ -13,27 +13,28 @@ import frc.robot.util.controller.CometController;
 public class ShootAtTarget extends WrapperCommand {
     public ShootAtTarget(CometController controller, Drive drive, Shooter shooter) {
         super(
-            Commands.sequence(
-                Commands.deadline(
+            Commands.parallel(
+                Commands.sequence(
                     Commands.waitUntil(() -> shooter.isReadyToShoot()),
-                    drive.driveWithAngleSetpoint(
-                        () -> -controller.getLeftY(),
-                        () -> -controller.getLeftX(),
-                        () -> {
-                            Translation2d netTranslation2d = NetTargetSelector.getInstance().getTranslation();
-                            Translation2d robotTranslation2d = drive.getPose().getTranslation();
-                            Translation2d diff = netTranslation2d.minus(robotTranslation2d);
-                            double rotation = Math.atan2(diff.getY(),diff.getX());
-                            return new Rotation2d(rotation);
-                        }
-                    ),
-                    Commands.repeatingSequence(
-                        shooter.setFlywheelVelocitiesFromDistance(() -> drive.getDistanceFrom(NetTargetSelector.getInstance().getTranslation()))
-                    )
+                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter)
                 ),
-                Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter),
-                Commands.waitUntil(() -> false)
-            ).finallyDo(
+                drive.driveWithAngleSetpoint(
+                    () -> -controller.getLeftY(),
+                    () -> -controller.getLeftX(),
+                    () -> {
+                        Translation2d netTranslation2d = NetTargetSelector.getInstance().getTranslation();
+                        Translation2d robotTranslation2d = drive.getPose().getTranslation();
+                        Translation2d diff = netTranslation2d.minus(robotTranslation2d);
+                        double rotation = Math.atan2(diff.getY(),diff.getX());
+                        return new Rotation2d(rotation);
+                    }
+                ),
+                Commands.repeatingSequence(
+                    shooter.setFlywheelVelocitiesFromDistance(() -> drive.getDistanceFrom(NetTargetSelector.getInstance().getTranslation()))
+                )
+            )
+            .andThen(Commands.waitUntil(() -> false))
+            .finallyDo(
                 (interrupted) -> {
                     controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5);
                 }
