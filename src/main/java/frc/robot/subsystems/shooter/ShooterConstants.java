@@ -36,7 +36,7 @@ public class ShooterConstants {
 	public static final double BOT_WHEEL_kV = 0.2604;
 	public static final double BOT_WHEEL_kA = 1.1668;
 	
-	public static final double WHEEL_SIM_kP = 0.5;
+	public static final double WHEEL_SIM_kP = 0.65;
 	public static final double WHEEL_SIM_kI = 0.01;
 	public static final double WHEEL_SIM_kD = 0;
 	public static final double WHEEL_SIM_kS = 0;

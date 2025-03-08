@@ -14,10 +14,10 @@ public class ShootAtTarget extends WrapperCommand {
     public ShootAtTarget(CometController controller, Drive drive, Shooter shooter) {
         super(
             Commands.parallel(
-                Commands.sequence(
-                    Commands.waitUntil(() -> shooter.isReadyToShoot()),
-                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter)
-                ),
+                Commands.either(
+                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5), shooter),
+                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0), shooter),
+                    () -> shooter.isReadyToShoot()),
                 drive.driveWithAngleSetpoint(
                     () -> -controller.getLeftY(),
                     () -> -controller.getLeftX(),
@@ -33,10 +33,9 @@ public class ShootAtTarget extends WrapperCommand {
                     shooter.setFlywheelVelocitiesFromDistance(() -> drive.getDistanceFrom(NetTargetSelector.getInstance().getTranslation()))
                 )
             )
-            .andThen(Commands.waitUntil(() -> false))
             .finallyDo(
                 (interrupted) -> {
-                    controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5);
+                    controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0);
                 }
             )
         );

@@ -94,7 +94,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -215,10 +215,10 @@ public class RobotContainer {
 
 		this.hoodtake.setDefaultCommand(
 			Commands.sequence(
-				this.hoodtake.setPivotVoltage(() -> Volts.of(0)),
+				this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE),
 				this.hoodtake.setWheelVoltage(() -> Volts.of(0))
 			)
-			//.andThen(this.hoodtake.setPosition(() -> HoodtakeConstants.STARTING_ANGLE))
+			
 		);
 
 		this.indexer.setDefaultCommand(
@@ -242,9 +242,10 @@ public class RobotContainer {
 		);
 
 		this.intake.setDefaultCommand(
-			this.intake.setPivotVoltage(() -> Volts.of(0))
-			.andThen(this.intake.setWheelVoltage(() -> Volts.of(0)))
-			//this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE)
+			Commands.sequence(
+				this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
+				this.intake.setWheelVoltage(() -> Volts.of(0))
+			)
 		);
 	}
 
