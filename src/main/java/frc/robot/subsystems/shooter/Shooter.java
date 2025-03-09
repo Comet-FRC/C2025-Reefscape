@@ -42,7 +42,7 @@ public class Shooter extends SubsystemBase {
 	}
 
 	public Command stop() {
-		return Commands.run(() -> io.setWheelVelocitySetpoint(RPM.of(0), RPM.of(0)));
+		return Commands.run(() -> io.setWheelVelocitySetpoint(RPM.of(0), RPM.of(0)), this);
 	}
 
 	public Command setFlywheelVelocitiesFromDistance(Supplier<Distance> distance) {
@@ -56,10 +56,16 @@ public class Shooter extends SubsystemBase {
 		);
 	}
 
+	public Command setTopVelocity(Supplier<AngularVelocity> speed) {
+		return Commands.runOnce(() -> io.setTopVelocitySetpoint(speed.get()), this);
+	}
+
+	public Command setBottomVelocity(Supplier<AngularVelocity> speed) {
+		return Commands.runOnce(() -> io.setBottomVelocitySetpoint(speed.get()), this);
+	}
+
 	public Command setFlywheelVelocities(Supplier<AngularVelocity> topSpeed, Supplier<AngularVelocity> botSpeed) {
-		return Commands.runOnce(() -> {
-				io.setWheelVelocitySetpoint(topSpeed.get(), botSpeed.get());
-		});
+		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(topSpeed.get(), botSpeed.get()), this);
 	}
 
 	public Command topSysId() {

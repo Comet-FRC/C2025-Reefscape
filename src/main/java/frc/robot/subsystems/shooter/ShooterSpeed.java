@@ -1,4 +1,5 @@
 package frc.robot.subsystems.shooter;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.interpolation.Interpolatable;
@@ -13,8 +14,8 @@ public class ShooterSpeed implements Interpolatable<ShooterSpeed> {
     AngularVelocity botMotorSpeed;
 
     public ShooterSpeed() {
-        this.topMotorSpeed = RadiansPerSecond.of(0);
-        this.botMotorSpeed = RadiansPerSecond.of(0);
+        this.topMotorSpeed = RPM.of(0);
+        this.botMotorSpeed = RPM.of(0);
     }
 
     public ShooterSpeed(AngularVelocity topMotorSpeed, AngularVelocity bottomMotorSpeed) {
@@ -23,8 +24,8 @@ public class ShooterSpeed implements Interpolatable<ShooterSpeed> {
     }
 
     public ShooterSpeed(double topMotorSpeed, double bottomMotorSpeed) {
-        this.topMotorSpeed = RadiansPerSecond.of(topMotorSpeed);
-        this.botMotorSpeed = RadiansPerSecond.of(bottomMotorSpeed);
+        this.topMotorSpeed = RPM.of(topMotorSpeed);
+        this.botMotorSpeed = RPM.of(bottomMotorSpeed);
 ;    }
 
     private ShooterSpeed diff (ShooterSpeed o) {

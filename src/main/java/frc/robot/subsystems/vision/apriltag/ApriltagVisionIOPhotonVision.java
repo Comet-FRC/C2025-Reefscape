@@ -1,58 +1,132 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot.subsystems.vision.apriltag;
 
-import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.targeting.PhotonTrackedTarget;
-import edu.wpi.first.apriltag.AprilTagFields;
+import static frc.robot.subsystems.vision.VisionConstants.*;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.vision.VisionConstants.Camera;
-import frc.robot.util.Alert;
-import frc.robot.util.Alert.AlertType;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import org.photonvision.PhotonCamera;
+
+/** IO implementation for real PhotonVision hardware. */
 public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
+  protected final PhotonCamera camera;
+  protected final Transform3d robotToCamera;
 
-    private final PhotonCamera photonCam;
-    private final Camera cam;
-    private PhotonPoseEstimator photonPoseEstimator;
+  /**
+   * Creates a new VisionIOPhotonVision.
+   *
+   * @param name The configured name of the camera.
+   * @param rotationSupplier The 3D position of the camera relative to the robot.
+   */
+  public ApriltagVisionIOPhotonVision(Camera camera) {
+    this.camera = new PhotonCamera(camera.hardwareName);
+    this.robotToCamera = camera.getRobotToCam();
+  }
 
-    public ApriltagVisionIOPhotonVision(Camera cam) {
-        this.cam = cam;
-        photonCam = new PhotonCamera(cam.hardwareName);
+  @Override
+  public void updateInputs(ApriltagVisionIOInputs inputs) {
+    inputs.isConnected = camera.isConnected();
 
-        var fieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    // Read new camera observations
+    Set<Short> tagIds = new HashSet<>();
+    List<PoseObservation> poseObservations = new LinkedList<>();
+    for (var result : camera.getAllUnreadResults()) {
+      // Update latest target observation
+      if (result.hasTargets()) {
+        inputs.latestTargetObservation =
+            new TargetObservation(
+                Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
+                Rotation2d.fromDegrees(result.getBestTarget().getPitch()));
+      } else {
+        inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d());
+      }
 
-        photonPoseEstimator = new PhotonPoseEstimator(fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cam.getRobotToCam());
-        photonPoseEstimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+      // Add pose observation
+      if (result.multitagResult.isPresent()) { // Multitag result
+        var multitagResult = result.multitagResult.get();
 
-        notConnectedAlert = new Alert(cam.hardwareName + " is not connected", AlertType.ERROR);
+        // Calculate robot pose
+        Transform3d fieldToCamera = multitagResult.estimatedPose.best;
+        Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
+        Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+
+        // Calculate average tag distance
+        double totalTagDistance = 0.0;
+        for (var target : result.targets) {
+          totalTagDistance += target.bestCameraToTarget.getTranslation().getNorm();
+        }
+
+        // Add tag IDs
+        tagIds.addAll(multitagResult.fiducialIDsUsed);
+
+        // Add observation
+        poseObservations.add(
+            new PoseObservation(
+                result.getTimestampSeconds(), // Timestamp
+                robotPose, // 3D pose estimate
+                multitagResult.estimatedPose.ambiguity, // Ambiguity
+                multitagResult.fiducialIDsUsed.size(), // Tag count
+                totalTagDistance / result.targets.size(), // Average tag distance
+                PoseObservationType.PHOTONVISION)); // Observation type
+
+      } else if (!result.targets.isEmpty()) { // Single tag result
+        var target = result.targets.get(0);
+
+        // Calculate robot pose
+        var tagPose = aprilTagLayout.getTagPose(target.fiducialId);
+        if (tagPose.isPresent()) {
+          Transform3d fieldToTarget =
+              new Transform3d(tagPose.get().getTranslation(), tagPose.get().getRotation());
+          Transform3d cameraToTarget = target.bestCameraToTarget;
+          Transform3d fieldToCamera = fieldToTarget.plus(cameraToTarget.inverse());
+          Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
+          Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+
+          // Add tag ID
+          tagIds.add((short) target.fiducialId);
+
+          // Add observation
+          poseObservations.add(
+              new PoseObservation(
+                  result.getTimestampSeconds(), // Timestamp
+                  robotPose, // 3D pose estimate
+                  target.poseAmbiguity, // Ambiguity
+                  1, // Tag count
+                  cameraToTarget.getTranslation().getNorm(), // Average tag distance
+                  PoseObservationType.PHOTONVISION)); // Observation type
+        }
+      }
     }
 
-    private final Alert notConnectedAlert;
-    public void updateInputs(ApriltagVisionIOInputs inputs) {
-        // set default values
-        inputs.isConnected = photonCam.isConnected();
-        notConnectedAlert.set(!inputs.isConnected);
-        inputs.hasResult = false;
-
-        if ((!inputs.isConnected) || (photonPoseEstimator == null)) return;
-
-        photonPoseEstimator.setRobotToCameraTransform(cam.getRobotToCam());
-        photonPoseEstimator.setReferencePose(Drive.getInstance().getPose());
-
-        var result = photonCam.getLatestResult();
-        var optRobotPose = photonPoseEstimator.update(result);
-        
-        optRobotPose.ifPresent((e) -> {
-            Logger.recordOutput("DEBUG/VISION/" + cam.name(), result.getBestTarget().getBestCameraToTarget());
-            inputs.hasResult = true;
-            inputs.timestamp = e.timestampSeconds;
-            inputs.estimatedRobotPose = e.estimatedPose;
-            inputs.cameraToTagDist = e.targetsUsed.stream().map(PhotonTrackedTarget::getBestCameraToTarget).map(Transform3d::getTranslation).mapToDouble(Translation3d::getNorm).toArray();
-            inputs.tagsSeen = e.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray();
-        });
+    // Save pose observations to inputs object
+    inputs.poseObservations = new PoseObservation[poseObservations.size()];
+    for (int i = 0; i < poseObservations.size(); i++) {
+      inputs.poseObservations[i] = poseObservations.get(i);
     }
+
+    // Save tag IDs to inputs objects
+    inputs.tagsSeen = new int[tagIds.size()];
+    int i = 0;
+    for (int id : tagIds) {
+      inputs.tagsSeen[i++] = id;
+    }
+  }
 }

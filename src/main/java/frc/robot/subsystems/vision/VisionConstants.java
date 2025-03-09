@@ -42,7 +42,7 @@ public class VisionConstants {
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
-  public static double maxZError = 0.75;
+  public static double maxZError = 5;
 
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)
@@ -63,36 +63,36 @@ public class VisionConstants {
       Double.POSITIVE_INFINITY; // No rotation data available
               public static enum Camera {
             FrontApriltag(
-                "Left Apriltag Cam",
+                "Front OV9782",
                 0.6,
                 5,
                 new Transform3d(
                     new Translation3d(
-                        Inches.of(+12.225),
-                        Inches.of(+9.557),
-                        Inches.of(+10.932)
+                        Inches.of(+15),
+                        Inches.of(+1),
+                        Inches.of(+21)
                     ),
                     new Rotation3d(
-                        Units.degreesToRadians(0),
-                        Units.degreesToRadians(-12.348-5),
-                        Units.degreesToRadians(+0)
+                       Degrees.of(-19),
+                        Degrees.of(0),
+                        Degrees.of(0)
                     )
                 )
             ),
             BackApriltag(
-                "Right Apriltag Cam",
+                "Back OV9281",
                 1,
                 4,
                 new Transform3d(
                     new Translation3d(
-                        Inches.of(+12.225),
-                        Inches.of(-9.557),
-                        Inches.of(+10.932)
+                        Inches.of(-15),
+                        Inches.of(+6),
+                        Inches.of(+20.25)
                     ),
                     new Rotation3d(
+                        Units.degreesToRadians(-19),
                         Units.degreesToRadians(0),
-                        Units.degreesToRadians(-32.414),
-                        Units.degreesToRadians(0)
+                        Units.degreesToRadians(180)
                     )
                 )
             ),

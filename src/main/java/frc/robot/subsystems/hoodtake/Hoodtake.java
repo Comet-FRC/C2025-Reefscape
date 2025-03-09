@@ -51,10 +51,14 @@ public class Hoodtake extends SubsystemBase {
 	}
 
 	public boolean atPosition() {
-		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 1;
+		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 2;
 	}
 
 	public Command setPivotPosition(Supplier<Angle> position) {
+		return Commands.runOnce(() -> io.setPivotPosition(position.get()), this);
+	}
+
+	public Command setPivotPositionSetpoint(Supplier<Angle> position) {
 		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
 	}
 

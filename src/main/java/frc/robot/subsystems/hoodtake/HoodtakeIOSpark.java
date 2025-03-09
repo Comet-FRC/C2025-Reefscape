@@ -49,7 +49,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		HoodtakeConstants.PIVOT_kP,
 		HoodtakeConstants.PIVOT_kI,
 		HoodtakeConstants.PIVOT_kD,
-		new TrapezoidProfile.Constraints(Math.PI/2.0, Math.PI/2.0)
+		new TrapezoidProfile.Constraints(2, 4)
 	);
 
 	private final PIDController wheelPID = new PIDController(
@@ -123,7 +123,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	private final MutVoltage wheelDesiredVoltage = Volts.mutable(0);
 	private boolean wheelVoltageMode = false;
 
-	private final MutAngle pivotDesiredPosition = HoodtakeConstants.STARTING_ANGLE.mutableCopy();
+	//private final MutAngle pivotDesiredPosition = HoodtakeConstants.STARTING_ANGLE.mutableCopy();
 	private final MutVoltage pivotDesiredVoltage = Volts.mutable(0);
 	private boolean pivotVoltageMode = false;
 
@@ -134,17 +134,15 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
-			this.pivotDesiredPosition.mut_replace(inputs.pivotPosition.plus(Radians.of(pivotPID.getPositionError())));
-			double ff = pivotFF.calculate(this.pivotDesiredPosition.in(Radians)-0.279, 0);
+			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, 0);
 			double volts;
 			volts = pid + ff;
 			volts = MathUtil.clamp(volts, -12, 12);
-			volts = MathUtil.applyDeadband(volts, 0.01);
 			
-			Logger.recordOutput("Hoodtake/pivotClosedLoopPID", pid);
-			Logger.recordOutput("Hoodtake/pivotClosedLoopFF", ff);
-			Logger.recordOutput("Hoodtake/pivotClosedLoopAppliedVolts", volts);
-			Logger.recordOutput("Hoodtake/closedLoopError", pivotPID.getPositionError());
+			// Logger.recordOutput("Hoodtake/pivotClosedLoopPID", pid);
+			// Logger.recordOutput("Hoodtake/pivotClosedLoopFF", ff);
+			// Logger.recordOutput("Hoodtake/pivotClosedLoopAppliedVolts", volts);
+			// Logger.recordOutput("Hoodtake/closedLoopError", pivotPID.getPositionError());
 			this.pivotMotor.setVoltage(Volts.of(volts));
 		}
 
@@ -165,7 +163,9 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
 
 		inputs.pivotPosition = Radians.of(pivotMotor.getEncoder().getPosition());
-		inputs.pivotDesiredPosition = this.pivotDesiredPosition.copy();
+		inputs.pivotDesiredPosition = Radians.of(pivotPID.getGoal().position);
+		// inputs.pivotDesiredPosition = this.pivotDesiredPosition.copy();
+		inputs.pivotDesiredPositionSetpoint = Radians.of(this.pivotPID.getSetpoint().position);
 		inputs.pivotVelocity = RadiansPerSecond.of(pivotMotor.getEncoder().getVelocity());
 		inputs.pivotAppliedVolts = Volts.of(pivotMotor.getAppliedOutput() * pivotMotor.getBusVoltage());
 		inputs.pivotSupplyCurrent = Amps.of(pivotMotor.getOutputCurrent());
@@ -185,7 +185,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	@Override
 	public void setWheelVoltage(Voltage voltage) {
 		this.wheelVoltageMode = true;
-		wheelMotor.setVoltage(voltage);
+		this.wheelDesiredVoltage.mut_replace(voltage);
 	}
 
 	@Override
@@ -195,8 +195,13 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	}
 
 	@Override
-	public void setPivotPositionSetpoint(Angle position) {
+	public void setPivotPosition(Angle position) {
 		this.pivotVoltageMode = false;
+		pivotPID.setGoal(position.in(Radians));
+	}
+
+	@Override
+	public void setPivotPositionSetpoint(Angle position) {
 		pivotPID.setGoal(position.in(Radians));
 	}
 

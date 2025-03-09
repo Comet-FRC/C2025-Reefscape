@@ -16,25 +16,25 @@ public class ShooterConstants {
  	public static final int TOP_MOTOR_ID = 13;
   	public static final int BOTTOM_MOTOR_ID = 14;
 
-	public static final double TOP_WHEEL_CONVERSION_FACTOR = 2 * Math.PI * 15/18; // 2:3 PULLEY RATIO
-	public static final double BOTTOM_WHEEL_CONVERSION_FACTOR = 2 * Math.PI * 9/18;
+	public static final double TOP_WHEEL_CONVERSION_FACTOR = 2 * Math.PI * (15.0/18.0); // 2:3 PULLEY RATIO
+	public static final double BOTTOM_WHEEL_CONVERSION_FACTOR = 2 * Math.PI * (9.0/18.0);
 	public static final Distance WHEEL_RADIUS = Inches.of(3);
 	public static final Mass WHEEL_MASS = Pounds.of(0.86);
 	public static final double WHEEL_MOMENT_OF_INERTIA = 0.5 * WHEEL_MASS.in(Kilograms) * Math.pow(WHEEL_RADIUS.in(Meters), 2);
 
-	public static final double TOP_WHEEL_kP = 0.26136;
+	public static final double TOP_WHEEL_kP = 0.01;
 	public static final double TOP_WHEEL_kI = 0;
-	public static final double TOP_WHEEL_kD = 0;
-	public static final double TOP_WHEEL_kS = 0.040598;
-	public static final double TOP_WHEEL_kV = 0.2604;
-	public static final double TOP_WHEEL_kA = 1.1668;
+	public static final double TOP_WHEEL_kD = 0.001;
+	public static final double TOP_WHEEL_kS = 0.048874;
+	public static final double TOP_WHEEL_kV = 0.04;
+	public static final double TOP_WHEEL_kA = 0.011556;
 	
-	public static final double BOT_WHEEL_kP = 0.26136;
+	public static final double BOT_WHEEL_kP = 3.1872E-06;
 	public static final double BOT_WHEEL_kI = 0;
-	public static final double BOT_WHEEK_kD = 0;
-	public static final double BOT_WHEEL_kS = 0.040598;
-	public static final double BOT_WHEEL_kV = 0.2604;
-	public static final double BOT_WHEEL_kA = 1.1668;
+	public static final double BOT_WHEEL_kD = 0;
+	public static final double BOT_WHEEL_kS = 0.048874;
+	public static final double BOT_WHEEL_kV = 0.041276;
+	public static final double BOT_WHEEL_kA = 0.011556;
 	
 	public static final double WHEEL_SIM_kP = 0.65;
 	public static final double WHEEL_SIM_kI = 0.01;

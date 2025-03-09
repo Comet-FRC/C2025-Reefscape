@@ -195,9 +195,9 @@ public class ModuleIOSpark implements ModuleIO {
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
 
-        Logger.recordOutput(
-                "Drive/Module" + moduleNumber + "/cancoder measurement",
-                turnCANcoder.getPosition().getValue().in(Radians));
+        // Logger.recordOutput(
+        //         "Drive/Module" + moduleNumber + "/cancoder measurement",
+        //         turnCANcoder.getPosition().getValue().in(Radians));
 
         // Update drive inputs
         sparkStickyFault = false;

@@ -15,6 +15,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -38,6 +39,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -74,6 +76,7 @@ import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
+import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.controller.*;
 
 /**
@@ -94,11 +97,13 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
 	private SwerveDriveSimulation swerveDriveSimulation;
+
+
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -188,6 +193,9 @@ public class RobotContainer {
 		setupButtonBindings();
 
 		DriverStation.silenceJoystickConnectionWarning(true);
+
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 100);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 100);
 	}
 
 	private void setupAutoCommands() {
@@ -215,10 +223,14 @@ public class RobotContainer {
 
 		this.hoodtake.setDefaultCommand(
 			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE),
+				this.hoodtake.setPivotPositionSetpoint(() -> HoodtakeConstants.STARTING_ANGLE),
+				Commands.either(
+					this.hoodtake.setPivotVoltage(() -> Volts.of(0)),
+					this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE),
+					this.hoodtake::atPosition
+				),
 				this.hoodtake.setWheelVoltage(() -> Volts.of(0))
 			)
-			
 		);
 
 		this.indexer.setDefaultCommand(
@@ -243,7 +255,11 @@ public class RobotContainer {
 
 		this.intake.setDefaultCommand(
 			Commands.sequence(
-				this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
+				Commands.either(
+					this.intake.setPivotVoltage(() -> Volts.of(0.3)),
+					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
+					() -> intake.getPivotPosition().gt(Degrees.of(85))
+				),
 				this.intake.setWheelVoltage(() -> Volts.of(0))
 			)
 		);
@@ -266,53 +282,111 @@ public class RobotContainer {
 		// controller.rightMenu().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
 		// Reset gyro to 0° when A button is pressed
-		// controller.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
-		// 	.ignoringDisable(true));
+		controller.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
+			.ignoringDisable(true));
 
 		this.controller.leftTrigger().whileTrue(
-			this.shooter.setTopVoltage(() -> Volts.of(5))
-			.andThen(this.shooter.setBottomVoltage(() -> Volts.of(3)))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		this.controller.rightTrigger().whileTrue(
 			Commands.sequence(
-				this.indexer.shoot(),
+				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
+				Commands.repeatingSequence(
+					this.shooter.setFlywheelVelocities(
+						() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 0)),
+						() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 0))
+					)
+				),
+				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
 				Commands.waitUntil(() -> false)
 			)
 		);
 
-		this.controller.b().whileTrue(
-			new ShootAtTarget(controller, drive, shooter)
+		this.controller.rightTrigger().whileTrue(
+			Commands.sequence(
+				this.indexer.shoot()
+				// Commands.waitUntil(() -> false)
+			)
 		);
 
-		// this.controller.down().whileTrue(
-		// 	this.hoodtake.setPivotPosition(() -> Degrees.of(0))
-		// 	.andThen(Commands.waitUntil(() -> false))
+		this.controller.left().whileTrue(
+			this.shooter.topSysId()
+		);
+
+		this.controller.up().whileTrue(
+			this.intake.setPivotVoltage(() -> Volts.of(0.5))
+			.andThen(Commands.waitUntil(() -> false))
+		);
+
+		this.controller.down().whileTrue(
+			this.intake.setPivotVoltage(() -> Volts.of(-0.5))
+			.andThen(Commands.waitUntil(() -> false))
+		);
+
+
+		this.controller.y().whileTrue(
+			Commands.sequence(
+				// this.shooter.setBottomVelocity(() -> RPM.of(100)),
+				this.shooter.setTopVelocity(() -> RPM.of(500)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// this.controller.leftBumper().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setWheelVoltage(() -> Volts.of(3)),
+		// 		this.intake.setPivotPosition(() -> Degrees.of(45)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
 		// );
 
-		// this.controller.up().whileTrue(
-		// 	this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE)
-		// 	.andThen(Commands.waitUntil(() -> false))
+		// this.controller.x().whileTrue(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setWheelVoltage(() -> Volts.of(-3)),
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
 		// );
 
 		// this.controller.y().whileTrue(
-		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(-0.5))
+		// 	this.hoodtake.setWheelVoltage(() -> Volts.of(3))
 		// 	.andThen(Commands.waitUntil(() -> false))
 		// );
 
-		// // this.controller.right().whileTrue(
-		// // 	this.indexer.setRightVoltage(() -> Volts.of(3))
-		// // 	.andThen(Commands.waitUntil(() -> false))
-		// // );
 
-		// this.controller.x().whileTrue(
-		// 	this.hoodtake.setPivotVoltage(() -> Volts.of(0.5))
-		// 	.andThen(Commands.waitUntil(() -> false))
+
+		// processor
+		this.controller.x().whileTrue(
+			Commands.sequence(
+				this.intake.setWheelVoltage(() -> Volts.of(-3)),
+				this.intake.setPivotPosition(() -> Degrees.of(85)),
+				this.indexer.setRightVoltage(() -> Volts.of(3)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+
+		// intake
+		this.controller.b().whileTrue(
+			Commands.sequence(
+				this.intake.setWheelVoltage(() -> Volts.of(3)),
+				this.intake.setPivotPosition(() -> Degrees.of(45)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// this.controller.y().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setPivotPosition(() -> Degrees.of(55)),
+		// 		Commands.waitUntil(() -> intake.atPosition())
+		// 		// ,
+		// 		// this.intake.setWheelVoltage(() -> Volts.of(-7)),
+		// 		// Commands.waitUntil(() -> false)
+		// 	)
 		// );
 
-		// this.controller.b().whileTrue(
-		// 	this.intake.sysIdRoutinePivot()	
+		// this.controller.y().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setWheelVoltage(() -> Volts.of(-7)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
 		// );
 	}
 

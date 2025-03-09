@@ -88,7 +88,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	private boolean pivotVoltageMode = false;
 
 	public HoodtakeIOSim() {
-		this.setPivotPositionSetpoint(HoodtakeConstants.STARTING_ANGLE);
+		this.setPivotPosition(HoodtakeConstants.STARTING_ANGLE);
 	}
 
 	@Override
@@ -153,7 +153,7 @@ public class HoodtakeIOSim implements HoodtakeIO {
 	}
 
 	@Override
-	public void setPivotPositionSetpoint(Angle position) {
+	public void setPivotPosition(Angle position) {
 		this.pivotVoltageMode = false;
 		this.pivotDesiredPosition.mut_replace(position);
 	}

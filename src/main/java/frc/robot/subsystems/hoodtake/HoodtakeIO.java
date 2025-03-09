@@ -20,6 +20,7 @@ public interface HoodtakeIO {
 		public Current wheelSupplyCurrent = Amps.of(0);
 		public Temperature wheelMotorTemperature = Celsius.of(0);
 
+		public Angle pivotDesiredPositionSetpoint = Radians.of(0);
 		public Angle pivotDesiredPosition = Radians.of(0);
 		public AngularVelocity pivotVelocity = RadiansPerSecond.of(0);
 		public Angle pivotPosition = Radians.of(0);
@@ -41,6 +42,9 @@ public interface HoodtakeIO {
 	}
 
 	public default void setWheelVoltage(Voltage volts) {
+	}
+
+	public default void setPivotPosition(Angle position) {
 	}
 
 	public default void setPivotPositionSetpoint(Angle position) {

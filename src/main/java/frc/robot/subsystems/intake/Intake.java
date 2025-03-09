@@ -42,15 +42,6 @@ public class Intake extends SubsystemBase {
 		armVisualizer.publish();
 	}
 
-	private Command stop() {
-		return
-			Commands.runOnce(
-				() -> {
-					io.stop();
-				},
-			this);
-	}
-
 	public Command setWheelVoltage(Supplier<Voltage> voltage) {
 		return Commands.runOnce(() -> io.setWheelVoltage(voltage.get()), this);
 	}
@@ -60,12 +51,24 @@ public class Intake extends SubsystemBase {
 		return Commands.runOnce(() -> io.setWheelVelocitySetpoint(velocity.get()), this);
 	}
 
+	public boolean atPosition() {
+		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 2;
+	}
+
 	public Command setPivotPosition(Supplier<Angle> position) {
+		return Commands.runOnce(() -> io.setPivotPosition(position.get()), this);
+	}
+
+	public Command setPivotPositionSetpoint(Supplier<Angle> position) {
 		return Commands.runOnce(() -> io.setPivotPositionSetpoint(position.get()), this);
 	}
 
 	public Command setPivotVoltage(Supplier<Voltage> volts) {
 		return Commands.runOnce(() -> io.setPivotVoltage(volts.get()), this);
+	}
+
+	public Angle getPivotPosition() {
+		return inputs.pivotPosition;
 	}
 
 	public Command sysIdRoutinePivot() {
@@ -81,11 +84,11 @@ public class Intake extends SubsystemBase {
 			new SysIdRoutine.Mechanism(
 				io::setPivotVoltage,
 				log -> {
-					Logger.recordOutput("SysId/intake-pivot/Voltage", inputs.pivotAppliedVoltage);
+					Logger.recordOutput("SysId/intake-pivot/Voltage", inputs.pivotAppliedVolts);
 					Logger.recordOutput("SysId/intake-pivot/Position", inputs.pivotPosition);
 					Logger.recordOutput("SysId/intake-pivot/Velocity", inputs.pivotVelocity);
 					log.motor("intake-pivot")
-						.voltage(inputs.pivotAppliedVoltage)
+						.voltage(inputs.pivotAppliedVolts)
 						.angularPosition(inputs.pivotPosition)
 						.angularVelocity(inputs.pivotVelocity);
 				}, 
@@ -119,11 +122,11 @@ public class Intake extends SubsystemBase {
 			new SysIdRoutine.Mechanism(
 				io::setWheelVoltage,
 				log -> {
-					Logger.recordOutput("SysId/intake-wheel/Voltage", inputs.wheelAppliedVoltage);
+					Logger.recordOutput("SysId/intake-wheel/Voltage", inputs.wheelAppliedVolts);
 					Logger.recordOutput("SysId/intake-wheel/Velocity", inputs.wheelVelocity);
 					Logger.recordOutput("SysId/intake-wheel/Position", inputs.wheelPosition);
 					log.motor("intake-wheel")
-						.voltage(inputs.wheelAppliedVoltage)
+						.voltage(inputs.wheelAppliedVolts)
 						.angularPosition(inputs.wheelPosition)
 						.angularVelocity(inputs.wheelVelocity);
 				}, 

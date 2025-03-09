@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -98,7 +99,8 @@ public class Indexer extends SubsystemBase {
 	public Command shoot() {
 		return Commands.sequence(
 			this.setRightVoltage(() -> Volts.of(3)),
-			this.setLeftVoltage(() -> Volts.of(3))
+			this.setLeftVoltage(() -> Volts.of(3)),
+			Commands.waitUntil(() -> (inputs.leftSupplyCurrent.gt(Amps.of(80)) || inputs.rightSupplyCurrent.gt(Amps.of(80))))
 		);
 	}
 
