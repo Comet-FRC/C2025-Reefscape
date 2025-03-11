@@ -83,8 +83,9 @@ public class SwerveConstants {
     // Drive PID configuration
     public static final double DRIVE_kP = 0.0;
     public static final double DRIVE_kD = 0.0;
-    public static final double DRIVE_kS = 0.14173;
-    public static final double DRIVE_kV = 0.16171;
+    public static final double DRIVE_kS = 0.06674;
+    public static final double DRIVE_kV = 0.15844;
+    public static final double DRIVE_kA = 0.022025;
     public static final double DRIVE_SIM_kP = 0.05;
     public static final double DRIVE_SIM_kD = 0.0;
     public static final double DRIVE_SIM_kS = 0.02493;

@@ -86,8 +86,16 @@ public class Module {
     io.setTurnPosition(new Rotation2d());
   }
 
+  public void setTurnPosition(Rotation2d angle) {
+    io.setTurnPosition(angle);
+  }
+
+  public void setDriveVoltage(Voltage voltage) {
+    io.setDriveOpenLoop(voltage);
+  }
+
   /** Runs the module with the specified output while controlling to zero degrees. */
-  public void runCharacterization(Voltage output) {
+  public void runCharacterizationLinear(Voltage output) {
     io.setDriveOpenLoop(output);
     io.setTurnPosition(new Rotation2d());
   }
@@ -112,6 +120,10 @@ public class Module {
   public LinearVelocity getVelocity() {
     return MetersPerSecond.of(
         inputs.driveAngularVelocity.in(RadiansPerSecond) * WHEEL_RADIUS.in(Meters));
+  }
+
+  public Voltage getAppliedVoltage() {
+    return inputs.driveAppliedVolts;
   }
 
   /** Returns the module position (turn angle and drive position). */

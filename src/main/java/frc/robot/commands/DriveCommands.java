@@ -175,7 +175,7 @@ public class DriveCommands {
 				// Allow modules to orient
 				Commands.run(
 								() -> {
-									drive.runCharacterization(Volts.of(0.0));
+									drive.runCharacterizationLinear(Volts.of(0.0));
 								},
 								drive)
 						.withTimeout(FF_START_DELAY),
@@ -187,7 +187,7 @@ public class DriveCommands {
 				Commands.run(
 								() -> {
 									Voltage voltage = Volts.of(timer.get() * FF_RAMP_RATE);
-									drive.runCharacterization(voltage);
+									drive.runCharacterizationLinear(voltage);
 									velocitySamples.add(drive.getFFCharacterizationVelocity());
 									voltageSamples.add(voltage.in(Volts));
 								},

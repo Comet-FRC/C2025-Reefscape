@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.commands.ScoreProcessor;
 import frc.robot.commands.ShootAtTarget;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
@@ -314,11 +315,11 @@ public class RobotContainer {
 
 		// L3 Hoodtake
 
-		this.controller.y().whileTrue(
-			new HoodtakeFromReef(drive, hoodtake)
-			.andThen(Commands.waitUntil(() -> false))
-			//drive.driveToClosestAlgaePID(() -> Meters.of(0.5))
-		);
+		// this.controller.y().whileTrue(
+		// 	new HoodtakeFromReef(drive, hoodtake)
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// 	//drive.driveToClosestAlgaePID(() -> Meters.of(0.5))
+		// );
 
 		// this.controller.y().whileTrue(
 		// 	Commands.sequence(
@@ -334,29 +335,34 @@ public class RobotContainer {
 		// 	)
 		// );
 
-		this.controller.b().whileTrue(
-			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
-				Commands.waitUntil(() -> false)
-			)
-		).onFalse(
-			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-				this.shooter.setTopVoltage(() -> Volts.of(-2)),
-				this.shooter.setBottomVoltage(() -> Volts.of(-2)),
-				Commands.waitSeconds(1)
-			)
-		);
+		//L2
+
+		// this.controller.b().whileTrue(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+		// 		this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// ).onFalse(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+		// 		this.shooter.setTopVoltage(() -> Volts.of(-2)),
+		// 		this.shooter.setBottomVoltage(() -> Volts.of(-2)),
+		// 		Commands.waitSeconds(1)
+		// 	)
+		// );
 
 		// this.controller.x().whileTrue(
 		// 	this.drive.turnToAngle(() -> new Rotation2d())
 		// );
 
-		// this.controller.left().whileTrue(
-		// 	this.shooter.topSysId()
-		// );
+		this.controller.left().whileTrue(
+			drive.sysIdAngular()
+		);
 
+		this.controller.up().whileTrue(
+			drive.sysIdLinear()
+		);
 		// this.controller.up().whileTrue(
 		// 	this.intake.setPivotVoltage(() -> Volts.of(0.5))
 		// 	.andThen(Commands.waitUntil(() -> false))
@@ -409,6 +415,11 @@ public class RobotContainer {
 			)
 		);
 
+		this.controller.b().whileTrue(
+			new ScoreProcessor(drive, intake, indexer)
+			.andThen(Commands.waitUntil(() -> false))
+		);
+
 
 		// intake
 		this.controller.leftBumper().whileTrue(
@@ -417,6 +428,10 @@ public class RobotContainer {
 				this.intake.setPivotPosition(() -> Degrees.of(40)),
 				Commands.waitUntil(() -> false)
 			)
+		).onFalse(
+			this.intake.setWheelVoltage(() -> Volts.of(3))
+			.andThen(Commands.waitSeconds(0.5))
+			
 		);
 
 		// this.controller.y().whileTrue(

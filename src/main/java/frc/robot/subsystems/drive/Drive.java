@@ -19,6 +19,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.SwerveConstants.DRIVE_BASE_RADIUS;
 import static frc.robot.subsystems.drive.SwerveConstants.MAX_SPEED;
@@ -68,8 +69,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.FieldConstants;
@@ -187,7 +190,7 @@ public class Drive extends SubsystemBase {
 						null,
 						null,
 						(state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-				new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage), null, this));
+				new SysIdRoutine.Mechanism((voltage) -> runCharacterizationLinear(voltage), null, this));
 	
 		this.setupLoopControllers();			
 	}
@@ -327,9 +330,29 @@ public class Drive extends SubsystemBase {
 	}
 
 	/** Runs the drive in a straight line with the specified drive output. */
-	public void runCharacterization(Voltage output) {
+	public void runDriveVoltage(Voltage output) {
 		for (int i = 0; i < 4; i++) {
-			modules[i].runCharacterization(output);
+			modules[i].setDriveVoltage(output);;
+		}
+	}
+
+	public void setDriveAngleSetpoints(Rotation2d angle) {
+		for (int i = 0; i < 4; i++) {
+			modules[i].setTurnPosition(angle);
+		}
+	};
+	
+	
+	public void setDriveAngleSetpointToRotationPattern() {
+		for (int i = 0; i < 4; i++) {
+			modules[i].setTurnPosition(MODULE_TRANSLATIONS[i].getAngle().plus(Rotation2d.fromDegrees(90)));
+		}
+	};
+
+	/** Runs the drive in a straight line with the specified drive output. */
+	public void runCharacterizationLinear(Voltage output) {
+		for (int i = 0; i < 4; i++) {
+			modules[i].runCharacterizationLinear(output);
 		}
 	}
 
@@ -355,14 +378,14 @@ public class Drive extends SubsystemBase {
 
 	/** Returns a command to run a quasistatic test in the specified direction. */
 	public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-		return run(() -> runCharacterization(Volts.of(0.0)))
+		return run(() -> runCharacterizationLinear(Volts.of(0.0)))
 				.withTimeout(1.0)
 				.andThen(sysId.quasistatic(direction));
 	}
 
 	/** Returns a command to run a dynamic test in the specified direction. */
 	public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-		return run(() -> runCharacterization(Volts.of(0.0)))
+		return run(() -> runCharacterizationLinear(Volts.of(0.0)))
 				.withTimeout(1.0)
 				.andThen(sysId.dynamic(direction));
 	}
@@ -485,9 +508,35 @@ public class Drive extends SubsystemBase {
 		return RadiansPerSecond.of(MAX_SPEED.in(MetersPerSecond) / DRIVE_BASE_RADIUS.in(Meters));
 	}
 
+	public Voltage getAverageModuleDriveAppliedVoltage() {
+		double voltage = 0.0;
+		for (int i = 0; i < 4; i++) {
+			voltage += modules[i].getAppliedVoltage().in(Volts);
+		}
+		return Volts.of(voltage / 4.0);
+	}
+
+	public Angle getAverageDriveAngularPosition() {
+		double position = 0.0;
+		for (int i = 0; i < 4; i++) {
+			position += modules[i].getWheelRadiusCharacterizationPosition().in(Radians);
+		}
+		return Radians.of(position / 4.0);
+	}
+
+	public AngularVelocity getAverageDriveAngularVelocity() {
+		double velocity = 0.0;
+		for (int i=0; i< 4; ++i) {
+			velocity += modules[i].getFFCharacterizationVelocity().in(RadiansPerSecond);
+		}
+		return RadiansPerSecond.of(velocity/4.0);
+	}
+
 	public Distance getDistanceFrom(Translation2d other) {
 		return Meters.of(this.getPose().getTranslation().getDistance(other));
 	}
+
+
 
 	public Distance getDistanceFrom(Pose2d other) {
 		return this.getDistanceFrom(other.getTranslation());
@@ -495,13 +544,14 @@ public class Drive extends SubsystemBase {
 
 	private Field2d field = new Field2d();
 
+
 	public void initializePoseEstimator(
 			SwerveDriveKinematics kinematics,
 			Rotation2d gyroAngle,
 			SwerveModulePosition[] modulePositions,
 			Pose2d initialPoseMeters) {
 		poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
-		SmartDashboard.putData(field);
+		SmartDashboard.putData("field", field);
 		logOdometry();
 	}
 
@@ -737,5 +787,88 @@ public class Drive extends SubsystemBase {
 				},
 				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),
 				this);
+	}
+
+	public Command sysIdLinear() {
+		SysIdRoutine routine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				Volts.per(Second).of(0.5),
+				Volts.of(2),
+				null,
+				(state) -> Logger.recordOutput(
+					"SysId/drive-linear", state.toString()
+				)
+			),
+			new SysIdRoutine.Mechanism(
+				this::runDriveVoltage,
+				log -> {
+					Logger.recordOutput("SysId/drive-linear/Voltage", this.getAverageModuleDriveAppliedVoltage());
+					Logger.recordOutput("SysId/drive-linear/Position", this.getAverageDriveAngularPosition());
+					Logger.recordOutput("SysId/drive-linear/Velocity", this.getAverageDriveAngularVelocity());
+					log.motor("drive-linear")
+						.voltage(this.getAverageModuleDriveAppliedVoltage())
+						.angularPosition(this.getAverageDriveAngularPosition())
+						.angularVelocity(this.getAverageDriveAngularVelocity());
+				}, 
+				this)
+		);
+
+
+		Command routineCommand =
+			Commands.parallel(
+				Commands.run(() -> this.setDriveAngleSetpoints(new Rotation2d())),
+				Commands.sequence(
+					routine.dynamic(Direction.kForward),
+					Commands.waitSeconds(2),
+					routine.dynamic(Direction.kReverse),
+					Commands.waitSeconds(2),
+					routine.quasistatic(Direction.kForward),
+					Commands.waitSeconds(2),
+					routine.quasistatic(Direction.kReverse)
+				)
+			);
+		return routineCommand;
+	}
+
+
+	public Command sysIdAngular() {
+		SysIdRoutine routine = new SysIdRoutine(
+			new SysIdRoutine.Config(
+				Volts.per(Second).of(0.5),
+				Volts.of(3),
+				null,
+				(state) -> Logger.recordOutput(
+					"SysId/drive-rotational", state.toString()
+				)
+			),
+			new SysIdRoutine.Mechanism(
+				this::runDriveVoltage,
+				log -> {
+					Logger.recordOutput("SysId/drive-rotational/Voltage", this.getAverageModuleDriveAppliedVoltage());
+					Logger.recordOutput("SysId/drive-rotational/Position", this.getAverageDriveAngularPosition());
+					Logger.recordOutput("SysId/drive-rotational/Velocity", this.getAverageDriveAngularVelocity());
+					log.motor("drive-rotational")
+						.voltage(this.getAverageModuleDriveAppliedVoltage())
+						.angularPosition(this.getAverageDriveAngularPosition())
+						.angularVelocity(this.getAverageDriveAngularVelocity());
+				}, 
+				this)
+		);
+
+
+		Command routineCommand =
+			Commands.parallel(
+				Commands.run(() -> this.setDriveAngleSetpointToRotationPattern()),
+				Commands.sequence(
+					routine.dynamic(Direction.kForward),
+					Commands.waitSeconds(2),
+					routine.dynamic(Direction.kReverse),
+					Commands.waitSeconds(2),
+					routine.quasistatic(Direction.kReverse),
+					Commands.waitSeconds(2),
+					routine.quasistatic(Direction.kForward)
+				)
+			);
+		return routineCommand;
 	}
 }
