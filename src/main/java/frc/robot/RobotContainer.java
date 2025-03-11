@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.Volts;
 
 import org.ironmaple.simulation.SimulatedArena;
@@ -69,6 +70,7 @@ import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSpark;
 import frc.robot.subsystems.shooter.NetTargetSelector;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSpark;
@@ -97,7 +99,7 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometPS4Controller(0);
+	private final CometController controller = new CometXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -194,8 +196,14 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 100);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 100);
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1000);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1000);
+		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
+		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
+		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
+		SmartDashboard.putNumber("Shooter/botI", ShooterConstants.BOT_WHEEL_kI);
+		SmartDashboard.putNumber("Shooter/topD", ShooterConstants.TOP_WHEEL_kD);
+		SmartDashboard.putNumber("Shooter/botD", ShooterConstants.BOT_WHEEL_kD);
 	}
 
 	private void setupAutoCommands() {
@@ -288,11 +296,9 @@ public class RobotContainer {
 		this.controller.leftTrigger().whileTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
-				Commands.repeatingSequence(
-					this.shooter.setFlywheelVelocities(
-						() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 0)),
-						() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 0))
-					)
+				this.shooter.setFlywheelVelocities(
+					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 1000)),
+					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 1000))
 				),
 				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
 				Commands.waitUntil(() -> false)
@@ -306,28 +312,69 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.left().whileTrue(
-			this.shooter.topSysId()
-		);
-
-		this.controller.up().whileTrue(
-			this.intake.setPivotVoltage(() -> Volts.of(0.5))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
-		this.controller.down().whileTrue(
-			this.intake.setPivotVoltage(() -> Volts.of(-0.5))
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
+		// L3 Hoodtake
 
 		this.controller.y().whileTrue(
+			new HoodtakeFromReef(drive, hoodtake)
+			.andThen(Commands.waitUntil(() -> false))
+			//drive.driveToClosestAlgaePID(() -> Meters.of(0.5))
+		);
+
+		// this.controller.y().whileTrue(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(55)),
+		// 		this.hoodtake.setWheelVoltage(() -> Volts.of(-5)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// ).onFalse(
+		// 	Commands.sequence(
+		// 		this.shooter.setTopVoltage(() -> Volts.of(-2)),
+		// 		this.shooter.setBottomVoltage(() -> Volts.of(-2)),
+		// 		Commands.waitSeconds(1)
+		// 	)
+		// );
+
+		this.controller.b().whileTrue(
 			Commands.sequence(
-				// this.shooter.setBottomVelocity(() -> RPM.of(100)),
-				this.shooter.setTopVelocity(() -> RPM.of(500)),
+				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
 				Commands.waitUntil(() -> false)
 			)
+		).onFalse(
+			Commands.sequence(
+				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+				this.shooter.setTopVoltage(() -> Volts.of(-2)),
+				this.shooter.setBottomVoltage(() -> Volts.of(-2)),
+				Commands.waitSeconds(1)
+			)
 		);
+
+		// this.controller.x().whileTrue(
+		// 	this.drive.turnToAngle(() -> new Rotation2d())
+		// );
+
+		// this.controller.left().whileTrue(
+		// 	this.shooter.topSysId()
+		// );
+
+		// this.controller.up().whileTrue(
+		// 	this.intake.setPivotVoltage(() -> Volts.of(0.5))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+		// this.controller.down().whileTrue(
+		// 	this.intake.setPivotVoltage(() -> Volts.of(-0.5))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
+
+
+		// this.controller.y().whileTrue(
+		// 	Commands.sequence(
+		// 		this.shooter.setBottomVelocity(() -> RPM.of(500)),
+		// 		this.shooter.setTopVelocity(() -> RPM.of(500)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
 		// this.controller.leftBumper().whileTrue(
 		// 	Commands.sequence(
@@ -353,7 +400,7 @@ public class RobotContainer {
 
 
 		// processor
-		this.controller.x().whileTrue(
+		this.controller.rightBumper().whileTrue(
 			Commands.sequence(
 				this.intake.setWheelVoltage(() -> Volts.of(-3)),
 				this.intake.setPivotPosition(() -> Degrees.of(85)),
@@ -364,10 +411,10 @@ public class RobotContainer {
 
 
 		// intake
-		this.controller.b().whileTrue(
+		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
 				this.intake.setWheelVoltage(() -> Volts.of(3)),
-				this.intake.setPivotPosition(() -> Degrees.of(45)),
+				this.intake.setPivotPosition(() -> Degrees.of(40)),
 				Commands.waitUntil(() -> false)
 			)
 		);

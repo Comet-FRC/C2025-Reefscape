@@ -23,15 +23,15 @@ public class ShooterConstants {
 	public static final double WHEEL_MOMENT_OF_INERTIA = 0.5 * WHEEL_MASS.in(Kilograms) * Math.pow(WHEEL_RADIUS.in(Meters), 2);
 
 	public static final double TOP_WHEEL_kP = 0.01;
-	public static final double TOP_WHEEL_kI = 0;
-	public static final double TOP_WHEEL_kD = 0.001;
+	public static final double TOP_WHEEL_kI = 0.000004;
+	public static final double TOP_WHEEL_kD = 10;
 	public static final double TOP_WHEEL_kS = 0.048874;
 	public static final double TOP_WHEEL_kV = 0.04;
 	public static final double TOP_WHEEL_kA = 0.011556;
 	
-	public static final double BOT_WHEEL_kP = 3.1872E-06;
-	public static final double BOT_WHEEL_kI = 0;
-	public static final double BOT_WHEEL_kD = 0;
+	public static final double BOT_WHEEL_kP = 0.009;
+	public static final double BOT_WHEEL_kI = 0.000006;
+	public static final double BOT_WHEEL_kD = 100;
 	public static final double BOT_WHEEL_kS = 0.048874;
 	public static final double BOT_WHEEL_kV = 0.041276;
 	public static final double BOT_WHEEL_kA = 0.011556;

@@ -2,6 +2,7 @@ package frc.robot.commands.hoodtake;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -14,13 +15,16 @@ public class HoodtakeFromL3 extends SequentialCommandGroup {
         super(
             Commands.deadline(
                 drive.pathfindToPose(drive.getTargetAlgae()::pose, 1),
-                hoodtake.setPivotPosition(() -> Degrees.of(63))
-                    .andThen(Commands.waitUntil(hoodtake::atPosition))
+                Commands.sequence(
+                    hoodtake.setWheelVoltage(() -> Volts.of(-3)),
+                    hoodtake.setPivotPosition(() -> Degrees.of(55)),
+                    Commands.waitUntil(hoodtake::atPosition)
+                )
             ),
-            drive.driveToClosestAlgaePID(() -> Meters.of(0.44)),
-            hoodtake.setPivotPosition(() -> Degrees.of(80))
-                .andThen(Commands.waitUntil(hoodtake::atPosition)),
-            drive.driveToClosestAlgaePID(() -> Meters.of(0.51))
+            drive.driveToClosestAlgaePID(() -> Meters.of(0.7))
+            // hoodtake.setPivotPosition(() -> Degrees.of(80))
+            //     .andThen(Commands.waitUntil(hoodtake::atPosition))
+            //drive.driveToClosestAlgaePID(() -> Meters.of(0.51))
         );
     }
 

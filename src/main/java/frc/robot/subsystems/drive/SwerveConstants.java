@@ -100,7 +100,7 @@ public class SwerveConstants {
     public static final double AZIMUTH_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / 60.0 / AZIMUTH_REDUCTION; // RPM -> Rad/Sec
 
     // Turn PID configuration
-    public static final double AZIMUTH_kP = 0.5;
+    public static final double AZIMUTH_kP = 0.4;
     public static final double AZIMUTH_kD = 0.0;
     public static final double AZIMUTH_SIM_kP = 8.0;
     public static final double AZIMUTH_SIM_kD = 0.0;
