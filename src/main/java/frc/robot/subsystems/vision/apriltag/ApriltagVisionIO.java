@@ -15,6 +15,7 @@ package frc.robot.subsystems.vision.apriltag;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ApriltagVisionIO {
@@ -23,7 +24,7 @@ public interface ApriltagVisionIO {
     public boolean isConnected = false;
     public TargetObservation latestTargetObservation =
         new TargetObservation(new Rotation2d(), new Rotation2d());
-    public PoseObservation[] poseObservations = new PoseObservation[0];
+    public PoseObservation[] poseObservations = { new PoseObservation(0, Pose3d.kZero, 1, 0, 0, PoseObservationType.BRAZIL) };
     public boolean hasResult;
     public double timestamp;
     public int[] tagsSeen = new int[0];
@@ -46,7 +47,8 @@ public interface ApriltagVisionIO {
   public static enum PoseObservationType {
     MEGATAG_1,
     MEGATAG_2,
-    PHOTONVISION
+    PHOTONVISION,
+    BRAZIL
   }
 
   public default void updateInputs(ApriltagVisionIOInputs inputs) {}

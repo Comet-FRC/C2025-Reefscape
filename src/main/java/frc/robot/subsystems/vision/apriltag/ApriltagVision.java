@@ -100,6 +100,8 @@ public class ApriltagVision extends SubsystemBase {
 
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
+				if (observation.type() == PoseObservationType.BRAZIL)
+					continue;
 				
 				// Check whether to reject pose
 				boolean rejectPose = observation.tagCount() == 0 // Must have at least one tag
