@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class DriveConstants {
-    public static final LinearVelocity MINUMUM_VELOCITY = MetersPerSecond.of(0.35);
-    public static final AngularVelocity MINUMUM_ANGULAR_VELOCITY = RadiansPerSecond.of(0.01);
+    public static final double JOYSTICK_DEADBAND_LINEAR = 0.1;
+    public static final double JOYSTICK_DEADBAND_ANGULAR = 0.01;
 
     // These values are also used for pathplanner
     public static final double HEADING_kP = 5.0596;

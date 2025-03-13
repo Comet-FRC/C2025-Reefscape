@@ -81,6 +81,7 @@ import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.SparkOdometryThread;
+import frc.robot.util.CometMathUtil;
 import frc.robot.util.LocalADStarAK;
 
 public class Drive extends SubsystemBase {
@@ -109,6 +110,9 @@ public class Drive extends SubsystemBase {
 					new SwerveModulePosition(),
 					new SwerveModulePosition()
 			};
+
+	private Field2d field = new Field2d();
+		
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(3, 3, new Rotation2d()));
 
@@ -192,7 +196,9 @@ public class Drive extends SubsystemBase {
 						(state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
 				new SysIdRoutine.Mechanism((voltage) -> runCharacterizationLinear(voltage), null, this));
 	
-		this.setupLoopControllers();			
+		this.setupLoopControllers();		
+		
+		SmartDashboard.putData(field);
 	}
 
 	public void setupLoopControllers() {
@@ -318,6 +324,7 @@ public class Drive extends SubsystemBase {
 		DriveConstants.ALERT_DISCONNECTED_GYRO.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
 		this.updateTargetAlgae();
+		this.field.setRobotPose(getPose());
 	}
 
 	/**
@@ -542,18 +549,18 @@ public class Drive extends SubsystemBase {
 		return this.getDistanceFrom(other.getTranslation());
 	}
 
-	private Field2d field = new Field2d();
+	
 
 
-	public void initializePoseEstimator(
-			SwerveDriveKinematics kinematics,
-			Rotation2d gyroAngle,
-			SwerveModulePosition[] modulePositions,
-			Pose2d initialPoseMeters) {
-		poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
-		SmartDashboard.putData("field", field);
-		logOdometry();
-	}
+	// public void initializePoseEstimator(
+	// 		SwerveDriveKinematics kinematics,
+	// 		Rotation2d gyroAngle,
+	// 		SwerveModulePosition[] modulePositions,
+	// 		Pose2d initialPoseMeters) {
+	// 	poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
+	// 	SmartDashboard.putData("field", field);
+	// 	logOdometry();
+	// }
 
 	public void addDriveMeasurement(Rotation2d rotation, SwerveModulePosition[] modulePositions) {
 		poseEstimator.update(rotation, modulePositions);
@@ -561,18 +568,18 @@ public class Drive extends SubsystemBase {
 
 	public void addVisionMeasurement(Pose2d pose, Matrix<N3, N1> stdDevs, double timestamp) {
 		poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
-		field.setRobotPose(getPose());
+		//field.setRobotPose(getPose());
 	}
 
 	public void setPose(Rotation2d rotation, SwerveModulePosition[] modulePositions, Pose2d fieldToVehicle) {
 		poseEstimator.resetPosition(rotation, modulePositions, fieldToVehicle);
 	}
 
-	public void logOdometry() {
-		Pose2d pose = getPose();
-		Logger.recordOutput("Odometry/Robot", pose);
-		field.setRobotPose(pose);
-	}
+	// public void logOdometry() {
+	// 	Pose2d pose = getPose();
+	// 	Logger.recordOutput("Odometry/Robot", pose);
+	// 	field.setRobotPose(pose);
+	// }
 
 	public boolean isOnOpposingSide() {
 		return this.getPose().getX() > FieldConstants.fieldLength / 2.0;
@@ -591,25 +598,47 @@ public class Drive extends SubsystemBase {
 					double x = xSupplier.getAsDouble();
 					double y = ySupplier.getAsDouble();
 
-					double linearSpeed;
-					linearSpeed = Math.hypot(x, y);
-					linearSpeed = MathUtil.applyDeadband(linearSpeed,
-							DriveConstants.MINUMUM_VELOCITY.in(MetersPerSecond));
-					linearSpeed = MathUtil.clamp(linearSpeed, -1, 1);
+					x = MathUtil.clamp(x, -1.0, 1.0);
+					y= MathUtil.clamp(y, -1.0, 1.0);
+
+
+					// linear
+					double linearSpeedScalar;
+					linearSpeedScalar = Math.hypot(x, y);
+
+					linearSpeedScalar = MathUtil.clamp(linearSpeedScalar, -1.0, 1.0);
+					linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
+
+
+					linearSpeedScalar = CometMathUtil.minMaxScale(
+						linearSpeedScalar,
+						DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+						1
+					);
+
 					Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
+					Translation2d linearTranslation = new Translation2d(linearSpeedScalar, linearDirection);
 
-					Translation2d linearTranslation = new Translation2d(linearSpeed, linearDirection);
-
-					double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(),
-							DriveConstants.MINUMUM_ANGULAR_VELOCITY.in(RadiansPerSecond));
+					// angular
+					double omegaSpeedScalar;
+					omegaSpeedScalar = omegaSupplier.getAsDouble();
+					omegaSpeedScalar = MathUtil.clamp(omegaSpeedScalar, -1.0, 1.0);
+					omegaSpeedScalar = MathUtil.applyDeadband(omegaSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_ANGULAR);
+					omegaSpeedScalar = CometMathUtil.minMaxScale(
+						omegaSpeedScalar,
+						DriveConstants.JOYSTICK_DEADBAND_ANGULAR,
+						1
+					);
+					
 					// omega = Math.signum(omega) * Math.pow(omega, 2);
-					omega = Math.pow(omega, 3);
-					omega *= -1;
+					// omegaSpeedScalar = Math.pow(omegaSpeedScalar, 3);
+					// omegaSpeedScalar *= -1;
 
 					ChassisSpeeds speeds = new ChassisSpeeds(
 							this.getMaximumSpeed().times(linearTranslation.getX()),
 							this.getMaximumSpeed().times(linearTranslation.getY()),
-							this.getMaximumAngularSpeed().times(omega));
+							this.getMaximumAngularSpeed().times(omegaSpeedScalar));
+
 
 					boolean isFlipped = DriverStation.getAlliance().isPresent()
 							&& DriverStation.getAlliance().get() == Alliance.Red;
@@ -698,15 +727,22 @@ public class Drive extends SubsystemBase {
 				double x = xSupplier.getAsDouble();
 				double y = ySupplier.getAsDouble();
 
-				double linearSpeed;
-				linearSpeed = Math.hypot(x, y);
-				linearSpeed = MathUtil.applyDeadband(linearSpeed,
-						DriveConstants.MINUMUM_VELOCITY.in(MetersPerSecond));
-				linearSpeed = MathUtil.clamp(linearSpeed, -1, 1);
+				// linear
+				double linearSpeedScalar;
+				linearSpeedScalar = Math.hypot(x, y);
+
+				linearSpeedScalar = MathUtil.clamp(linearSpeedScalar, -1.0, 1.0);
+				linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
+
+
+				linearSpeedScalar = CometMathUtil.minMaxScale(
+					linearSpeedScalar,
+					DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+					1
+				);
+
 				Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
-
-				Translation2d linearTranslation = new Translation2d(linearSpeed, linearDirection);
-
+				Translation2d linearTranslation = new Translation2d(linearSpeedScalar, linearDirection);
 				
 
 

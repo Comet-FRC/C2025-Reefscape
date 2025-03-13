@@ -131,7 +131,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	public void updateInputs(HoodtakeIOInputs inputs) {
 		if (pivotVoltageMode) {
 			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
-			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
+			//this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
 			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, 0);
@@ -197,11 +197,19 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	@Override
 	public void setPivotPosition(Angle position) {
 		this.pivotVoltageMode = false;
+		pivotPID.reset(
+			pivotMotor.getEncoder().getPosition(),
+			pivotMotor.getEncoder().getVelocity()
+		);
 		pivotPID.setGoal(position.in(Radians));
 	}
 
 	@Override
 	public void setPivotPositionSetpoint(Angle position) {
+		pivotPID.reset(
+			pivotMotor.getEncoder().getPosition(),
+			pivotMotor.getEncoder().getVelocity()
+		);
 		pivotPID.setGoal(position.in(Radians));
 	}
 

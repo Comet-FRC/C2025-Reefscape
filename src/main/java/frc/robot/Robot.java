@@ -13,6 +13,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -99,6 +101,9 @@ public class Robot extends LoggedRobot {
 
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
+
+    // Logger.recordOutput("DriverStation/Match Time", DriverStation.getMatchTime());
+		Logger.recordOutput("DriverStation/Battery Voltage", RobotController.getBatteryVoltage());
   }
 
   /** This function is called once when the robot is disabled. */
