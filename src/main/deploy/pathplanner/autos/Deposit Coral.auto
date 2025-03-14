@@ -9,6 +9,12 @@
           "data": {
             "pathName": "Deposit Coral"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Deposit Coral"
+          }
         }
       ]
     }

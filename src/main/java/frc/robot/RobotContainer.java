@@ -44,9 +44,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.commands.ScoreProcessor;
-import frc.robot.commands.ShootAtTarget;
+import frc.robot.commands.AutoScoreProcessor;
+import frc.robot.commands.ShootAtTargetFromDistance;
 import frc.robot.commands.ShootOnMove;
+import frc.robot.commands.coral.AutoDepositCoral;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -209,6 +210,7 @@ public class RobotContainer {
 
 	private void setupAutoCommands() {
 		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake));
+		NamedCommands.registerCommand("Deposit Coral", new AutoDepositCoral(drive, intake));
 	}
 
 	private void setupDefaultCommands() {
@@ -306,6 +308,10 @@ public class RobotContainer {
 			)
 		);
 
+		this.controller.x().whileTrue(
+			new ShootAtTargetFromDistance(controller, drive, shooter, hoodtake)
+		);
+
 		this.controller.rightTrigger().whileTrue(
 			Commands.sequence(
 				this.indexer.shoot()
@@ -313,13 +319,26 @@ public class RobotContainer {
 			)
 		);
 
-		// L3 Hoodtake
+		// intake
+		this.controller.leftBumper().whileTrue(
+			Commands.sequence(
+				this.intake.setWheelVoltage(() -> Volts.of(2.5)),
+				this.intake.setPivotPosition(() -> Degrees.of(35)),
+				Commands.waitUntil(() -> false)
+			)
+		);
 
-		// this.controller.y().whileTrue(
-		// 	new HoodtakeFromReef(drive, hoodtake)
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// 	//drive.driveToClosestAlgaePID(() -> Meters.of(0.5))
-		// );
+		// processor
+		this.controller.rightBumper().whileTrue(
+			Commands.sequence(
+				this.intake.setWheelVoltage(() -> Volts.of(-3)),
+				this.intake.setPivotPosition(() -> Degrees.of(85)),
+				this.indexer.setRightVoltage(() -> Volts.of(3)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// L3 Hoodtake
 
 		this.controller.y().whileTrue(
 			Commands.sequence(
@@ -339,95 +358,23 @@ public class RobotContainer {
 			)
 		);
 
-		// this.controller.x().whileTrue(
-		// 	this.drive.turnToAngle(() -> new Rotation2d())
-		// );
+		this.controller.left().whileTrue(
+			Commands.sequence(
+				this.intake.setPivotPosition(() -> Degrees.of(70)),
+				Commands.waitUntil(() -> intake.atPosition()),
+				this.intake.setWheelVoltage(() -> Volts.of(-7)),
+				Commands.waitUntil(() -> false)
+			)
+		);
 
 		// this.controller.left().whileTrue(
-		// 	drive.sysIdAngular()
+		// 	new AutoDepositCoral(drive, intake)
 		// );
 
-		// this.controller.up().whileTrue(
-		// 	drive.sysIdLinear()
-		// );
-
-		// this.controller.up().whileTrue(
-		// 	this.intake.setPivotVoltage(() -> Volts.of(0.5))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-		// this.controller.down().whileTrue(
-		// 	this.intake.setPivotVoltage(() -> Volts.of(-0.5))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-
-		// this.controller.y().whileTrue(
-		// 	Commands.sequence(
-		// 		this.shooter.setBottomVelocity(() -> RPM.of(500)),
-		// 		this.shooter.setTopVelocity(() -> RPM.of(500)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// this.controller.leftBumper().whileTrue(
-		// 	Commands.sequence(
-		// 		this.intake.setWheelVoltage(() -> Volts.of(3)),
-		// 		this.intake.setPivotPosition(() -> Degrees.of(45)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// this.controller.x().whileTrue(
-		// 	Commands.sequence(
-		// 		this.hoodtake.setWheelVoltage(() -> Volts.of(-3)),
-		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// this.controller.y().whileTrue(
-		// 	this.hoodtake.setWheelVoltage(() -> Volts.of(3))
-		// 	.andThen(Commands.waitUntil(() -> false))
-		// );
-
-
-
-		// processor
-		this.controller.rightBumper().whileTrue(
-			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(-3)),
-				this.intake.setPivotPosition(() -> Degrees.of(85)),
-				this.indexer.setRightVoltage(() -> Volts.of(3)),
-				Commands.waitUntil(() -> false)
-			)
+		this.controller.right().whileTrue(
+			this.indexer.setRightVoltage(() -> Volts.of(3))
+			.andThen(Commands.waitUntil(() -> false))
 		);
-
-		// intake
-		this.controller.leftBumper().whileTrue(
-			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(2.5)),
-				this.intake.setPivotPosition(() -> Degrees.of(35)),
-				Commands.waitUntil(() -> false)
-			)
-		);
-
-		// this.controller.y().whileTrue(
-		// 	Commands.sequence(
-		// 		this.intake.setPivotPosition(() -> Degrees.of(55)),
-		// 		Commands.waitUntil(() -> intake.atPosition())
-		// 		// ,
-		// 		// this.intake.setWheelVoltage(() -> Volts.of(-7)),
-		// 		// Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// this.controller.y().whileTrue(
-		// 	Commands.sequence(
-		// 		this.intake.setWheelVoltage(() -> Volts.of(-7)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
 	}
 
 	/**

@@ -23,129 +23,114 @@ import edu.wpi.first.math.util.Units;
 
 import static edu.wpi.first.units.Units.*;
 
-
 public class VisionConstants {
-  // AprilTag layout
-  public static AprilTagFieldLayout aprilTagLayout =
-      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    // AprilTag layout
+    public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  // Camera names, must match names configured on coprocessor
-  public static String camera0Name = "limelight-shooter";
-  public static String camera1Name = "limelight-intake";
+    // Camera names, must match names configured on coprocessor
+    public static String camera0Name = "limelight-shooter";
+    public static String camera1Name = "limelight-intake";
 
-  // Robot to camera transforms
-  // (Not used by Limelight, configure in web UI instead)
-  public static Transform3d robotToCamera0 =
-      new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0));
-  public static Transform3d robotToCamera1 =
-      new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI));
+    // Robot to camera transforms
+    // (Not used by Limelight, configure in web UI instead)
+    public static Transform3d robotToCamera0 = new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0));
+    public static Transform3d robotToCamera1 = new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI));
 
-  // Basic filtering thresholds
-  public static double maxAmbiguity = 0.3;
-  public static double maxZError = 5;
+    // Basic filtering thresholds
+    public static double maxAmbiguity = 0.3;
+    public static double maxZError = 5;
 
-  // Standard deviation baselines, for 1 meter distance and 1 tag
-  // (Adjusted automatically based on distance and # of tags)
-  public static double linearStdDevBaseline = 0.02; // Meters
-  public static double angularStdDevBaseline = 0.06; // Radians
+    // Standard deviation baselines, for 1 meter distance and 1 tag
+    // (Adjusted automatically based on distance and # of tags)
+    public static double linearStdDevBaseline = 0.02; // Meters
+    public static double angularStdDevBaseline = 0.06; // Radians
 
-  // Standard deviation multipliers for each camera
-  // (Adjust to trust some cameras more than others)
-  public static double[] cameraStdDevFactors =
-      new double[] {
-        1.0, // Camera 0
-        1.0 // Camera 1
-      };
+    // Standard deviation multipliers for each camera
+    // (Adjust to trust some cameras more than others)
+    public static double[] cameraStdDevFactors = new double[] {
+            1.0, // Camera 0
+            1.0 // Camera 1
+    };
 
-  // Multipliers to apply for MegaTag 2 observations
-  public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-  public static double angularStdDevMegatag2Factor =
-      Double.POSITIVE_INFINITY; // No rotation data available
-              public static enum Camera {
-            FrontApriltag(
+    // Multipliers to apply for MegaTag 2 observations
+    public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
+    public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
+
+    public static enum Camera {
+        FrontApriltag(
                 "Front OV9782",
                 0.6,
                 5,
                 new Transform3d(
-                    new Translation3d(
-                        Inches.of(+15),
-                        Inches.of(+1),
-                        Inches.of(+21)
-                    ),
-                    new Rotation3d(
-                       Degrees.of(-19),
-                        Degrees.of(0),
-                        Degrees.of(0)
-                    )
-                )
-            ),
-            BackApriltag(
+                        new Translation3d(
+                                Inches.of(+13.75),
+                                Inches.of(-1),
+                                Inches.of(+21)),
+                        new Rotation3d(
+                                Degrees.of(-19),
+                                Degrees.of(0),
+                                Degrees.of(0)))),
+        BackApriltag(
                 "Back OV9281",
                 1,
                 4,
                 new Transform3d(
-                    new Translation3d(
-                        Inches.of(-15),
-                        Inches.of(-13),
-                        Inches.of(+20.25)
-                    ),
-                    new Rotation3d(
-                        Units.degreesToRadians(-19),
-                        Units.degreesToRadians(0),
-                        Units.degreesToRadians(180)
-                    )
-                )
-            ),
-            NoteVision(
+                        new Translation3d(
+                                Inches.of(-13.25),
+                                Inches.of(-4.8),
+                                Inches.of(+20.25)),
+                        new Rotation3d(
+                                Degrees.of(0),
+                                Degrees.of(0),
+                                Degrees.of(180)))),
+        NoteVision(
                 "Note Cam",
                 0,
                 0,
                 new Transform3d(
-                    new Translation3d(
-                        Inches.of(-14.047),
-                        Inches.of(+0),
-                        Inches.of(+12.584)
-                    ),
-                    new Rotation3d(
-                        0,
-                        Degrees.of(15).in(Radians),
-                        Math.PI
-                    )
-                )
-            ),
-            ;
-            public final String hardwareName;
-            private final Transform3d intermediateToCamera;
-            public final double cameraStdCoef;
-            public final double trustDistance;
-            private Supplier<Transform3d> robotToIntermediate;
-            Camera(String hardwareName, double cameraStdCoef, double trustDistance, Transform3d finalToCamera) {
-                this.hardwareName = hardwareName;
-                this.cameraStdCoef = cameraStdCoef;
-                this.trustDistance = trustDistance;
-                this.intermediateToCamera = finalToCamera;
-                this.robotToIntermediate = Transform3d::new;
-            }
-            @SuppressWarnings("unused")
-            private static Transform3d robotToCameraFromCalibTag(Transform3d robotToCalibTag, Transform3d cameraToCalibTag) {
-                return robotToCalibTag.plus(cameraToCalibTag.inverse());
-            }
-            public Camera withRobotToIntermediate(Supplier<Transform3d> robotToFinal) {
-                this.robotToIntermediate = robotToFinal;
-                return this;
-            }
+                        new Translation3d(
+                                Inches.of(-14.047),
+                                Inches.of(+0),
+                                Inches.of(+12.584)),
+                        new Rotation3d(
+                                0,
+                                Degrees.of(15).in(Radians),
+                                Math.PI)));
 
-            public Transform3d getRobotToCam() {
-                return robotToIntermediate.get().plus(intermediateToCamera);
-            }
+        public final String hardwareName;
+        private final Transform3d intermediateToCamera;
+        public final double cameraStdCoef;
+        public final double trustDistance;
+        private Supplier<Transform3d> robotToIntermediate;
 
-        
-
+        Camera(String hardwareName, double cameraStdCoef, double trustDistance, Transform3d finalToCamera) {
+            this.hardwareName = hardwareName;
+            this.cameraStdCoef = cameraStdCoef;
+            this.trustDistance = trustDistance;
+            this.intermediateToCamera = finalToCamera;
+            this.robotToIntermediate = Transform3d::new;
         }
 
-        // TODO: figure out vision stdDevs
-        public static final double singleTagAmbiguityCutoff = 0.05;
-        public static final double minimumStdDev = 0.5;
-        public static final double stdDevEulerMultiplier = 0.3;
-        public static final double stdDevDistanceMultiplier = 0.4;
+        @SuppressWarnings("unused")
+        private static Transform3d robotToCameraFromCalibTag(Transform3d robotToCalibTag,
+                Transform3d cameraToCalibTag) {
+            return robotToCalibTag.plus(cameraToCalibTag.inverse());
+        }
+
+        public Camera withRobotToIntermediate(Supplier<Transform3d> robotToFinal) {
+            this.robotToIntermediate = robotToFinal;
+            return this;
+        }
+
+        public Transform3d getRobotToCam() {
+            return robotToIntermediate.get().plus(intermediateToCamera);
+        }
+
+    }
+
+    // TODO: figure out vision stdDevs
+    public static final double singleTagAmbiguityCutoff = 0.05;
+    public static final double minimumStdDev = 0.5;
+    public static final double stdDevEulerMultiplier = 0.3;
+    public static final double stdDevDistanceMultiplier = 0.4;
 }

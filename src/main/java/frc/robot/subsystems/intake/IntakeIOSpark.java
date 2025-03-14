@@ -61,6 +61,7 @@ public class IntakeIOSpark implements IntakeIO {
 	public IntakeIOSpark() {
 		this.configureWheelMotor();
 		this.configurePivotMotor();
+		this.pivotPID.reset(IntakeConstants.STARTING_ANGLE.in(Radians));
 		this.pivotPID.setGoal(IntakeConstants.STARTING_ANGLE.in(Radians));
 	}
 
@@ -131,7 +132,7 @@ public class IntakeIOSpark implements IntakeIO {
 	public void updateInputs(IntakeIOInputs inputs) {
 		if (pivotVoltageMode) {
 			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
-			//this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
+			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
 			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, 0);
@@ -197,19 +198,11 @@ public class IntakeIOSpark implements IntakeIO {
 	@Override
 	public void setPivotPosition(Angle position) {
 		this.pivotVoltageMode = false;
-		pivotPID.reset(
-			pivotMotor.getEncoder().getPosition(),
-			pivotMotor.getEncoder().getVelocity()
-		);
 		pivotPID.setGoal(position.in(Radians));
 	}
 
 	@Override
 	public void setPivotPositionSetpoint(Angle position) {
-		pivotPID.reset(
-			pivotMotor.getEncoder().getPosition(),
-			pivotMotor.getEncoder().getVelocity()
-		);
 		pivotPID.setGoal(position.in(Radians));
 	}
 

@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -64,6 +65,15 @@ public class Indexer extends SubsystemBase {
 		return this.inputs.rightAppliedVoltage;
 	}
 
+	public Current getLeftSupplyCurrent() {
+		return this.inputs.leftSupplyCurrent;
+	}
+
+	public Current getRightSupplyCurrent() {
+		return this.inputs.rightSupplyCurrent;
+	}
+
+
 	public AngularVelocity getLeftVelocity() {
 		return this.inputs.leftVelocity;
 	}
@@ -98,8 +108,8 @@ public class Indexer extends SubsystemBase {
 
 	public Command shoot() {
 		return Commands.sequence(
-			this.setRightVoltage(() -> Volts.of(3)),
-			this.setLeftVoltage(() -> Volts.of(3)),
+			this.setRightVoltage(() -> Volts.of(3.25)),
+			this.setLeftVoltage(() -> Volts.of(3.25)),
 			Commands.waitUntil(() -> (inputs.leftSupplyCurrent.gt(Amps.of(80)) || inputs.rightSupplyCurrent.gt(Amps.of(80))))
 		);
 	}

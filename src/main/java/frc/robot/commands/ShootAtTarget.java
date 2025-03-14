@@ -14,10 +14,10 @@ public class ShootAtTarget extends WrapperCommand {
     public ShootAtTarget(CometController controller, Drive drive, Shooter shooter) {
         super(
             Commands.parallel(
-                Commands.either(
-                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5)),
-                    Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0)),
-                    () -> shooter.isReadyToShoot()),
+                // Commands.either(
+                //     Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0.5)),
+                //     Commands.runOnce(() -> controller.getHid().setRumble(GenericHID.RumbleType.kBothRumble, 0)),
+                //     () -> shooter.isReadyToShoot()),
                 drive.driveWithAngleSetpoint(
                     () -> -controller.getLeftY(),
                     () -> -controller.getLeftX(),

@@ -61,7 +61,11 @@ public class ShooterIOSpark implements ShooterIO {
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(ShooterConstants.TOP_WHEEL_kP)
 				.i(ShooterConstants.TOP_WHEEL_kI)
-				.d(ShooterConstants.TOP_WHEEL_kD);
+				.d(ShooterConstants.TOP_WHEEL_kD)
+			.maxMotion
+				.maxAcceleration(100)
+				.allowedClosedLoopError(3.75);
+
 
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	
@@ -87,7 +91,10 @@ public class ShooterIOSpark implements ShooterIO {
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(ShooterConstants.BOT_WHEEL_kP)
 				.i(ShooterConstants.BOT_WHEEL_kI)
-				.d(ShooterConstants.BOT_WHEEL_kD);
+				.d(ShooterConstants.BOT_WHEEL_kD)
+			.maxMotion
+				.maxAcceleration(100)
+				.allowedClosedLoopError(3.75);
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	
@@ -160,10 +167,7 @@ public class ShooterIOSpark implements ShooterIO {
 	
 		bottomMotor.getClosedLoopController().setReference(
 			bottomVelocityRadiansPerSecond,
-			ControlType.kVelocity,
-			ClosedLoopSlot.kSlot0,
-			0,
-			ArbFFUnits.kVoltage
+			ControlType.kVelocity
 		);
 
 		this.bottomWheelDesiredVelocity.mut_replace(velocity);	
@@ -193,10 +197,7 @@ public class ShooterIOSpark implements ShooterIO {
 
 		topMotor.getClosedLoopController().setReference(
 			topVelocityRadiansPerSecond,
-			ControlType.kVelocity,
-			ClosedLoopSlot.kSlot0,
-			0,
-			ArbFFUnits.kVoltage
+			ControlType.kVelocity
 		);
 
 		System.out.println("topD: " + topMotor.configAccessor.closedLoop.getD());

@@ -55,7 +55,8 @@ public class IndexerIOSpark implements IndexerIO {
 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast);
+			.idleMode(IdleMode.kCoast)
+			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR)
 			.velocityConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR / 60.0);
@@ -80,7 +81,8 @@ public class IndexerIOSpark implements IndexerIO {
 
 		config
 			.inverted(true)
-			.idleMode(IdleMode.kCoast);
+			.idleMode(IdleMode.kCoast)
+			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR)
 			.velocityConversionFactor(IndexerConstants.PULLEY_CONVERSION_FACTOR / 60.0);

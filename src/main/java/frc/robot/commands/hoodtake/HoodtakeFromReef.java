@@ -12,8 +12,8 @@ public class HoodtakeFromReef extends WrapperCommand {
         super(
             Commands.defer( // we have to defer here so that this runs at runtime
                 () -> Commands.either(
-                    new HoodtakeFromL3(drive, hoodtake),
-                    new HoodtakeFromL2(drive, hoodtake),
+                    new HoodtakeFromL3Auto(drive, hoodtake),
+                    new HoodtakeFromL2Auto(drive, hoodtake),
                     () -> drive.getTargetAlgae().id() % 2 == 0
                 ),
                 Set.of(drive, hoodtake)

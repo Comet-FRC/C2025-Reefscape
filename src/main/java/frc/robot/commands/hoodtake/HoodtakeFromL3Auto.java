@@ -9,9 +9,9 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hoodtake.Hoodtake;
 
-public class HoodtakeFromL3 extends SequentialCommandGroup {
+public class HoodtakeFromL3Auto extends SequentialCommandGroup {
     
-    public HoodtakeFromL3(Drive drive, Hoodtake hoodtake) {
+    public HoodtakeFromL3Auto(Drive drive, Hoodtake hoodtake) {
         super(
             Commands.deadline(
                 drive.pathfindToPose(drive.getTargetAlgae()::pose, 1),

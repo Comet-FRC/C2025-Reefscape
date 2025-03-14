@@ -32,9 +32,9 @@ public class SwerveConstants {
     public static final Frequency ODOMETRY_FREQUENCY = Hertz.of(100.0); // Hz
     
     /** @see https://en.wikipedia.org/wiki/Axle_track */
-    public static final Distance TRACK_WIDTH = Inches.of(19.5);
+    public static final Distance TRACK_WIDTH = Inches.of(23.25);
     /** @see https://en.wikipedia.org/wiki/Wheelbase */
-    public static final Distance WHEELBASE = Inches.of(13.5);
+    public static final Distance WHEELBASE = Inches.of(23.25);
 
     public static final Distance DRIVE_BASE_RADIUS = Meters.of(Math.hypot(TRACK_WIDTH.div(2.0).in(Meters), WHEELBASE.div(2.0).in(Meters)));
     
@@ -49,9 +49,6 @@ public class SwerveConstants {
     public static final Rotation2d frontRightZeroRotation = new Rotation2d(Radians.of(0.2070874124765396));
     public static final Rotation2d backLeftZeroRotation = new Rotation2d(Radians.of(3.4591267108917236));
     public static final Rotation2d backRightZeroRotation = new Rotation2d(Radians.of(-7.534914016723633));
-
-    public static final boolean IS_HEADING_CORRECTION_ENABLED = false;
-    public static final boolean IS_COSINE_COMPENSATION_ENABLED = false;
 
     // Device CAN IDs
     public static final int pigeonCanId = 21;
@@ -73,7 +70,7 @@ public class SwerveConstants {
 
     // Drive motor configuration
     public static final Distance WHEEL_RADIUS = Inches.of(2);
-    public static final Current DRIVE_CURRENT_LIMIT = Amps.of(50);
+    public static final Current DRIVE_CURRENT_LIMIT = Amps.of(48); // I got this value from pathplanner
     public static final double DRIVE_MOTOR_REDUCTION = (50.0 * 19.0 * 45.0) / (14.0 * 25.0 * 15.0);
 
     // Drive encoder configuration
@@ -107,8 +104,8 @@ public class SwerveConstants {
     public static final double AZIMUTH_SIM_kD = 0.0;
 
     // PathPlanner configuration
-    public static final Mass ROBOT_MASS = Pounds.of(86.5);
-    public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.883);
+    public static final Mass ROBOT_MASS = Pounds.of(100);
+    public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(8.276);
     /** @see https://www.vexrobotics.com/colsonperforma.html */
     public static final double wheelCOF = 1.2;
 

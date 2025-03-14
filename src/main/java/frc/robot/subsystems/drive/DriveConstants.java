@@ -1,30 +1,27 @@
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class DriveConstants {
     public static final double JOYSTICK_DEADBAND_LINEAR = 0.1;
-    public static final double JOYSTICK_DEADBAND_ANGULAR = 0.01;
+    public static final double JOYSTICK_DEADBAND_ANGULAR = 0.1;
 
     // These values are also used for pathplanner
     public static final double HEADING_kP = 5.0596;
     public static final double HEADING_kI = 0;
     public static final double HEADING_kD = 0.18657275;
 
-    public static final double TRANSLATION_kP = 1;
+    public static final double TRANSLATION_kP = 2;
     public static final double TRANSLATION_kI = 0;
     public static final double TRANSLATION_kD = 0;
 
-    public static final double angularVelocityCoefficient = 0.0;
-    public static final boolean angularVelocityCorrection = true;
+    public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
 
-    public static final boolean headingCorrection = true;
+    public static final double angularVelocityCoefficient = 0.0;
+    public static final boolean IS_ANGULAR_VELOCITY_CORRECTION_ENABLED = true;
+
+    public static final boolean IS_HEADING_CORRECTION_ENABLED = true;
     public static final double HEADING_CORRECTION_DEADBAND = 0.01;
 
     public static final Alert ALERT_DISCONNECTED_GYRO = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);

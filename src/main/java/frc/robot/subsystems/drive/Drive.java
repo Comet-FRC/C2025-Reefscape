@@ -45,6 +45,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -56,6 +57,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -116,10 +118,19 @@ public class Drive extends SubsystemBase {
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(3, 3, new Rotation2d()));
 
-	private PIDController headingPID = new PIDController(
+	private ProfiledPIDController headingPID = new ProfiledPIDController(
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
-			DriveConstants.HEADING_kD);
+			DriveConstants.HEADING_kD,
+			new TrapezoidProfile.Constraints(Math.PI, Math.PI)
+	);
+
+	private ProfiledPIDController headingCorrectionPID = new ProfiledPIDController(
+			DriveConstants.HEADING_kP,
+			DriveConstants.HEADING_kI,
+			DriveConstants.HEADING_kD,
+			new TrapezoidProfile.Constraints(Math.PI, Math.PI)
+	);
 
 	private PIDController xPID = new PIDController(
 			DriveConstants.TRANSLATION_kP,
@@ -203,45 +214,54 @@ public class Drive extends SubsystemBase {
 
 	public void setupLoopControllers() {
 		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
-		this.xPID.setTolerance(0.005);
-		this.yPID.setTolerance(0.005);
-		this.headingPID.setTolerance(Units.degreesToRadians(1));
+		this.headingCorrectionPID.enableContinuousInput(-Math.PI, Math.PI);
+		this.xPID.setTolerance(0.1);
+		this.yPID.setTolerance(0.1);
+		this.headingPID.setTolerance(Units.degreesToRadians(4));
+		this.headingPID.reset(this.getPose().getRotation().getRadians());
+		this.headingCorrectionPID.reset(this.getPose().getRotation().getRadians());
 	}
 
 	@Override
 	public void periodic() {
-		//Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
-		//Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
-		//Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+		
+		
 
 		if (isTranslationPIDEnabled) {
+			
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
 			targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
 			targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
 
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
+		
+			// Logger.recordOutput("Drive/xPID Error", this.xPID.getError());
+			// Logger.recordOutput("Drive/yPID Error", this.yPID.getError());
+		
 		}
 
 		if (isHeadingPIDEnabled) {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
+			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
 		// HEADING CORRECION
-		if (DriveConstants.headingCorrection) {
+		if (DriveConstants.IS_HEADING_CORRECTION_ENABLED) {
 			if (Math.abs(targetChassisSpeeds.omegaRadiansPerSecond) < DriveConstants.HEADING_CORRECTION_DEADBAND
 					&& (Math.abs(targetChassisSpeeds.vxMetersPerSecond) > DriveConstants.HEADING_CORRECTION_DEADBAND
 							|| Math.abs(
 									targetChassisSpeeds.vyMetersPerSecond) > DriveConstants.HEADING_CORRECTION_DEADBAND)) {
-				targetChassisSpeeds.omegaRadiansPerSecond = headingPID
+				targetChassisSpeeds.omegaRadiansPerSecond = headingCorrectionPID
 						.calculate(this.getPose().getRotation().getRadians(), lastHeadingRadians.in(Radians));
 			} else {
 				lastHeadingRadians = Radians.of(this.getPose().getRotation().getRadians());
+				headingCorrectionPID.reset(lastHeadingRadians.in(Radians));
 			}
 		}
 
 		// ANGULAR VELOCITY CORRECTION
-		if (DriveConstants.angularVelocityCorrection) {
+		if (DriveConstants.IS_ANGULAR_VELOCITY_CORRECTION_ENABLED) {
 			Rotation2d angularVelocity = new Rotation2d(gyroInputs.yawVelocity.in(RadiansPerSecond))
 					.times(DriveConstants.angularVelocityCoefficient);
 			if (angularVelocity.getRadians() != 0.0) {
@@ -629,8 +649,10 @@ public class Drive extends SubsystemBase {
 						DriveConstants.JOYSTICK_DEADBAND_ANGULAR,
 						1
 					);
+
+
 					
-					// omega = Math.signum(omega) * Math.pow(omega, 2);
+					omegaSpeedScalar = Math.signum(omegaSpeedScalar) * Math.pow(omegaSpeedScalar, 2);
 					// omegaSpeedScalar = Math.pow(omegaSpeedScalar, 3);
 					// omegaSpeedScalar *= -1;
 
@@ -656,7 +678,7 @@ public class Drive extends SubsystemBase {
 
 	@AutoLogOutput(key = "Swerve/HeadingPIDSetpoint")
 	public Rotation2d getHeadingPIDSetpoint() {
-		return Rotation2d.fromRadians(this.headingPID.getSetpoint());
+		return Rotation2d.fromRadians(this.headingPID.getSetpoint().position);
 	}
 
 	public void updateTargetAlgae() {
@@ -721,9 +743,12 @@ public class Drive extends SubsystemBase {
 			DoubleSupplier ySupplier,
 			Supplier<Rotation2d> rotation) {
 		return new FunctionalCommand(
-			() -> this.isHeadingPIDEnabled = true, 
 			() -> {
-				this.headingPID.setSetpoint(rotation.get().getRadians());
+				this.isHeadingPIDEnabled = true;
+				this.headingPID.reset(this.getPose().getRotation().getRadians());
+			},
+			() -> {
+				this.headingPID.setGoal(rotation.get().getRadians());
 				double x = xSupplier.getAsDouble();
 				double y = ySupplier.getAsDouble();
 
@@ -775,8 +800,11 @@ public class Drive extends SubsystemBase {
 	 */
 	public Command turnToAngle(Supplier<Rotation2d> rotation) {
 		return new FunctionalCommand(
-				() -> this.isHeadingPIDEnabled = true,
-				() -> this.headingPID.setSetpoint(rotation.get().getRadians()),
+				() -> {
+					this.isHeadingPIDEnabled = true;
+					this.headingPID.reset(this.getPose().getRotation().getRadians());
+				},
+				() -> this.headingPID.setGoal(rotation.get().getRadians()),
 				(interrupted) -> this.isHeadingPIDEnabled = false,
 				this.headingPID::atSetpoint,
 				this);
@@ -789,7 +817,11 @@ public class Drive extends SubsystemBase {
 	 */
 	public Command moveToTranslationPID(Supplier<Translation2d> pose) {
 		return new FunctionalCommand(
-				() -> this.isTranslationPIDEnabled = true,
+				() -> {
+					this.isTranslationPIDEnabled = true;
+					this.xPID.reset();
+					this.yPID.reset();
+				},
 				() -> {
 					this.xPID.setSetpoint(pose.get().getX());
 					this.yPID.setSetpoint(pose.get().getY());
@@ -810,9 +842,13 @@ public class Drive extends SubsystemBase {
 				() -> {
 					this.isHeadingPIDEnabled = true;
 					this.isTranslationPIDEnabled = true;
+					// we do this just so that atSetpoint() doesn't return true immediately
+					this.headingPID.reset(this.getPose().getRotation().getRadians());
+					this.xPID.reset();
+					this.yPID.reset();
 				},
 				() -> {
-					this.headingPID.setSetpoint(pose.get().getRotation().getRadians());
+					this.headingPID.setGoal(pose.get().getRotation().getRadians());
 					this.xPID.setSetpoint(pose.get().getX());
 					this.yPID.setSetpoint(pose.get().getY());
 				},

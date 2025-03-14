@@ -26,6 +26,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.SwerveConstants;
 
 import org.littletonrobotics.junction.Logger;
@@ -74,7 +75,7 @@ public class Module {
     // Optimize velocity setpoint
     state.optimize(getAngle());
 
-    if (SwerveConstants.IS_COSINE_COMPENSATION_ENABLED) state.cosineScale(inputs.turnPosition);
+    if (DriveConstants.IS_COSINE_COMPENSATION_ENABLED) state.cosineScale(inputs.turnPosition);
 
     // Apply setpoints
 
