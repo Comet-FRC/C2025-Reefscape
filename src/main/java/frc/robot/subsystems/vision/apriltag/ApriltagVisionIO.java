@@ -24,7 +24,7 @@ public interface ApriltagVisionIO {
     public boolean isConnected = false;
     public TargetObservation latestTargetObservation =
         new TargetObservation(new Rotation2d(), new Rotation2d());
-    public PoseObservation[] poseObservations = { new PoseObservation(0, Pose3d.kZero, 1, 0, 0, PoseObservationType.BRAZIL) };
+    public PoseObservation[] poseObservations = { new PoseObservation(1, Pose3d.kZero, 1, 1, 1, PoseObservationType.BRAZIL) };
     public boolean hasResult;
     public double timestamp;
     public int[] tagsSeen = new int[0];
