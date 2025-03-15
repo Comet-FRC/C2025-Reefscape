@@ -275,8 +275,14 @@ public class RobotContainer {
 				),
 				this.intake.setWheelVoltage(() -> Volts.of(0))
 			).ignoringDisable(true)
-			.onlyWhile(() -> Constants.INTAKE_PIVOT_IGNORE_DISABLE)
+			.onlyIf(() -> Constants.INTAKE_PIVOT_IGNORE_DISABLE)
 		);
+
+		
+		this.intake.setPivotVoltage(() -> Volts.of(0.3))
+			.ignoringDisable(true)
+			.onlyIf(() -> Constants.INTAKE_PIVOT_IGNORE_DISABLE)
+			.schedule();
 	}
 
 	private void setupButtonBindings() {
