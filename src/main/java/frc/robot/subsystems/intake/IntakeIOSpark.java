@@ -214,6 +214,7 @@ public class IntakeIOSpark implements IntakeIO {
 
 	@Override
 	public void setPivotVoltageDirect(Voltage volts) {
+		this.pivotVoltageMode = false;
 		this.pivotMotor.setVoltage(volts);
 	}
 
