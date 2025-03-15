@@ -280,7 +280,8 @@ public class RobotContainer {
 				Commands.sequence(
 					// Commands.runOnce(() -> System.out.println("running intake")),
 					this.intake.setPivotVoltageDirect(() -> Volts.of(0.3)),
-					this.intake.setWheelVoltage(() -> Volts.of(0))
+					this.intake.setWheelVoltage(() -> Volts.of(0)),
+					Commands.waitUntil(() -> false)
 				),
 				() -> DriverStation.isEnabled()
 			).ignoringDisable(true)
