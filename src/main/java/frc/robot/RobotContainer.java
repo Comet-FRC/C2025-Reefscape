@@ -414,6 +414,7 @@ public class RobotContainer {
     }
 
 	public void disabledPeriodic() {
+		System.out.println("working");
 		if (Constants.INTAKE_PIVOT_IGNORE_DISABLE) {
 			this.intake.setPivotVoltageFunctional(() -> Volts.of(0.3));
 		}
