@@ -274,7 +274,7 @@ public class RobotContainer {
 					() -> intake.getPivotPosition().gt(Degrees.of(85))
 				),
 				this.intake.setWheelVoltage(() -> Volts.of(0))
-			).ignoringDisable(true)
+			)
 		);
 	}
 
@@ -412,4 +412,11 @@ public class RobotContainer {
         Logger.recordOutput(
                 "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
     }
+
+	public void disabledPeriodic() {
+		this.intake.setPivotVoltage(() -> Volts.of(0.3))
+			.ignoringDisable(true)
+			.onlyIf(() -> Constants.INTAKE_PIVOT_IGNORE_DISABLE)
+			.schedule();
+	}
 }
