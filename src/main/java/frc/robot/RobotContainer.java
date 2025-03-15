@@ -200,8 +200,8 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1000);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1500);
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1250);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 2000);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
