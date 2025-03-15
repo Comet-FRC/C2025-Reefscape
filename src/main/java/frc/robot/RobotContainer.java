@@ -324,7 +324,7 @@ public class RobotContainer {
 		// intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(3)),
+				this.intake.setWheelVoltage(() -> Volts.of(3.5)),
 				this.intake.setPivotPosition(() -> Degrees.of(35)),
 				Commands.waitUntil(() -> false)
 			)
