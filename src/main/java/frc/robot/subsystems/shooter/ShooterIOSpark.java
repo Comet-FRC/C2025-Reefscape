@@ -183,7 +183,7 @@ public class ShooterIOSpark implements ShooterIO {
 	 
 		config
 			.inverted(true)
-			.idleMode(IdleMode.kCoast)
+			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR)
