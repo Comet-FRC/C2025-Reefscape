@@ -81,6 +81,7 @@ import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
+import frc.robot.util.AllianceColor;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.controller.*;
 
@@ -267,15 +268,20 @@ public class RobotContainer {
 		);
 
 		this.intake.setDefaultCommand(
-			Commands.sequence(
-				Commands.runOnce(() -> System.out.println("running intake")),
-				Commands.either(
-					this.intake.setPivotVoltage(() -> Volts.of(0.3))
-						.ignoringDisable(true),
-					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
-					() -> intake.getPivotPosition().gt(Degrees.of(85))
-				).ignoringDisable(true),
-				this.intake.setWheelVoltage(() -> Volts.of(0))
+			Commands.either(
+				Commands.sequence(
+					Commands.either(
+						this.intake.setPivotVoltage(() -> Volts.of(0.3)),
+						this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
+						() -> intake.getPivotPosition().gt(Degrees.of(85))
+					),
+					this.intake.setWheelVoltage(() -> Volts.of(0))
+				),
+				Commands.sequence(
+					Commands.runOnce(() -> System.out.println("running intake")),
+					this.intake.setPivotVoltageDirect(() -> Volts.of(0.3))
+				),
+				() -> DriverStation.isEnabled()
 			).ignoringDisable(true)
 		);
 	}
