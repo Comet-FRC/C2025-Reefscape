@@ -268,6 +268,7 @@ public class RobotContainer {
 
 		this.intake.setDefaultCommand(
 			Commands.sequence(
+				Commands.runOnce(() -> System.out.println("running intake")),
 				Commands.either(
 					this.intake.setPivotVoltage(() -> Volts.of(0.3)),
 					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
