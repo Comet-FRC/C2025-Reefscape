@@ -270,10 +270,11 @@ public class RobotContainer {
 			Commands.sequence(
 				Commands.runOnce(() -> System.out.println("running intake")),
 				Commands.either(
-					this.intake.setPivotVoltage(() -> Volts.of(0.3)),
+					this.intake.setPivotVoltage(() -> Volts.of(0.3))
+						.ignoringDisable(true),
 					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
 					() -> intake.getPivotPosition().gt(Degrees.of(85))
-				),
+				).ignoringDisable(true),
 				this.intake.setWheelVoltage(() -> Volts.of(0))
 			).ignoringDisable(true)
 		);
