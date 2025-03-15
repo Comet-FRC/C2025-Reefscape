@@ -36,4 +36,6 @@ public final class Constants {
   }
 
   public static final boolean tuningMode = true;
+
+  public static final boolean INTAKE_PIVOT_IGNORE_DISABLE = true;
 }

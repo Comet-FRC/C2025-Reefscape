@@ -274,7 +274,8 @@ public class RobotContainer {
 					() -> intake.getPivotPosition().gt(Degrees.of(85))
 				),
 				this.intake.setWheelVoltage(() -> Volts.of(0))
-			)
+			).ignoringDisable(true)
+			.onlyWhile(() -> Constants.INTAKE_PIVOT_IGNORE_DISABLE)
 		);
 	}
 
