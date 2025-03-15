@@ -415,13 +415,7 @@ public class RobotContainer {
 
 	public void disabledPeriodic() {
 		if (Constants.INTAKE_PIVOT_IGNORE_DISABLE) {
-			Commands.sequence(
-				this.intake.setPivotVoltage(() -> Volts.of(0.3))
-					.ignoringDisable(true),
-				Commands.waitUntil(() -> false)
-					.ignoringDisable(true)
-			).ignoringDisable(true)
-			.schedule();
+			this.intake.setPivotVoltageFunctional(() -> Volts.of(0.3));
 		}
 	}
 }
