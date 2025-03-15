@@ -13,20 +13,20 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
 
-public class AutoDepositCoral extends SequentialCommandGroup {
+public class AutoDepositCoralE extends SequentialCommandGroup {
 
-    public AutoDepositCoral(Drive drive, Intake intake) {
+    public AutoDepositCoralE(Drive drive, Intake intake) {
 
         super(
             drive.moveToPosePID(() -> {
-                    Pose2d pose = new Pose2d(new Translation2d(6.144, 3.738), Rotation2d.fromDegrees(90));
+                    Pose2d pose = new Pose2d(new Translation2d(5.277, 5.221), Rotation2d.fromDegrees(120));
                     return FieldMirroringUtils.toCurrentAlliancePose(pose);
                 }
             ),
-            intake.setPivotPosition(() -> Degrees.of(50)),
-            Commands.waitSeconds(1),
-            intake.setWheelVoltage(() -> Volts.of(-2.5)),
-            Commands.waitSeconds(1)
+            intake.setPivotPosition(() -> Degrees.of(60)),
+            Commands.waitSeconds(2),
+            intake.setWheelVoltage(() -> Volts.of(-7)),
+            Commands.waitSeconds(5)
 
         );
     }

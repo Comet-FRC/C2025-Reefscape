@@ -70,7 +70,7 @@ public class SwerveConstants {
 
     // Drive motor configuration
     public static final Distance WHEEL_RADIUS = Inches.of(2);
-    public static final Current DRIVE_CURRENT_LIMIT = Amps.of(48); // I got this value from pathplanner
+    public static final Current DRIVE_CURRENT_LIMIT = Amps.of(50); // I got this value from pathplanner
     public static final double DRIVE_MOTOR_REDUCTION = (50.0 * 19.0 * 45.0) / (14.0 * 25.0 * 15.0);
 
     // Drive encoder configuration
@@ -104,8 +104,8 @@ public class SwerveConstants {
     public static final double AZIMUTH_SIM_kD = 0.0;
 
     // PathPlanner configuration
-    public static final Mass ROBOT_MASS = Pounds.of(100);
-    public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(8.276);
+    public static final Mass ROBOT_MASS = Pounds.of(105.3);
+    public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(8.7149124654810442678774120317821);
     /** @see https://www.vexrobotics.com/colsonperforma.html */
     public static final double wheelCOF = 1.2;
 
