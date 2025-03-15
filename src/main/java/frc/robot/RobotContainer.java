@@ -419,7 +419,9 @@ public class RobotContainer {
 				this.intake.setPivotVoltage(() -> Volts.of(0.3))
 					.ignoringDisable(true),
 				Commands.waitUntil(() -> false)
-			).schedule();
+					.ignoringDisable(true)
+			).ignoringDisable(true)
+			.schedule();
 		}
 	}
 }
