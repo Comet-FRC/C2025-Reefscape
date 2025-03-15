@@ -54,6 +54,11 @@ public class ApriltagVision extends SubsystemBase {
 			disconnectedAlerts[i] = new Alert(
 					"Vision camera " + Integer.toString(i) + " is disconnected.", AlertType.kWarning);
 		}
+
+		for (int i = 0; i < io.length; i++) {
+			io[i].updateInputs(inputs[i]);
+			Logger.processInputs("ApriltagVision/Camera" + Integer.toString(i), inputs[i]);
+		}
 	}
 
 	/**

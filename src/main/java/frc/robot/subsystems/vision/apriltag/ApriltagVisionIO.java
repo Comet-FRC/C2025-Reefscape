@@ -25,11 +25,11 @@ public interface ApriltagVisionIO {
     public TargetObservation latestTargetObservation =
         new TargetObservation(new Rotation2d(), new Rotation2d());
     public PoseObservation[] poseObservations = { new PoseObservation(1, Pose3d.kZero, 1, 1, 1, PoseObservationType.BRAZIL) };
-    public boolean hasResult;
-    public double timestamp;
+    public boolean hasResult = false;
+    public double timestamp = 0;
     public int[] tagsSeen = new int[0];
     public double[] cameraToTagDist = new double[0];
-    public Pose3d estimatedRobotPose;
+    public Pose3d estimatedRobotPose = Pose3d.kZero;
   }
 
   /** Represents the angle to a simple target, not used for pose estimation. */
