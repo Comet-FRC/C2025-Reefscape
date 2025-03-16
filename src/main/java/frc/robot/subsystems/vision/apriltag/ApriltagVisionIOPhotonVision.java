@@ -18,6 +18,7 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.subsystems.vision.VisionConstants.Camera;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -48,6 +49,9 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
+
+    poseObservations.add(new PoseObservation(1, Pose3d.kZero, 1, 1, 1, PoseObservationType.BRAZIL));
+
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
       if (result.hasTargets()) {
