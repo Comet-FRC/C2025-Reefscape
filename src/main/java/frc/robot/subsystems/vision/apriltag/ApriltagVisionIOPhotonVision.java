@@ -50,7 +50,9 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
     Set<Short> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
 
-    poseObservations.add(new PoseObservation(1, Pose3d.kZero, 1, 1, 1, PoseObservationType.BRAZIL));
+
+    // // go to brazil
+    // poseObservations.add(new PoseObservation(1, Pose3d.kZero, 1, 0, Double.POSITIVE_INFINITY, PoseObservationType.BRAZIL));
 
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
