@@ -586,11 +586,6 @@ public class Drive extends SubsystemBase {
 		poseEstimator.update(rotation, modulePositions);
 	}
 
-	public void addVisionMeasurement(Pose2d pose, Matrix<N3, N1> stdDevs, double timestamp) {
-		poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
-		//field.setRobotPose(getPose());
-	}
-
 	public void setPose(Rotation2d rotation, SwerveModulePosition[] modulePositions, Pose2d fieldToVehicle) {
 		poseEstimator.resetPosition(rotation, modulePositions, fieldToVehicle);
 	}
