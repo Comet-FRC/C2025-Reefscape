@@ -19,7 +19,7 @@ public class AutoDepositCoralE extends SequentialCommandGroup {
 
         super(
             drive.moveToPosePID(() -> {
-                    Pose2d pose = new Pose2d(new Translation2d(5.277, 5.221), Rotation2d.fromDegrees(120));
+                    Pose2d pose = new Pose2d(new Translation2d(7.263, 6.179), Rotation2d.fromDegrees(120));
                     return FieldMirroringUtils.toCurrentAlliancePose(pose);
                 }
             ),
