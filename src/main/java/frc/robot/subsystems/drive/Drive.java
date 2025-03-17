@@ -143,7 +143,8 @@ public class Drive extends SubsystemBase {
 			DriveConstants.TRANSLATION_kD);
 
 	/** true if translation control is overridden */
-	boolean isTranslationPIDEnabled = false;
+	boolean isXPIDEnabled = false;
+	boolean isYPIDEnabled = false;
 	/** true if heading control is overridden */
 	boolean isHeadingPIDEnabled = false;
 
@@ -227,12 +228,15 @@ public class Drive extends SubsystemBase {
 		
 		
 
-		if (isTranslationPIDEnabled) {
+		if (isXPIDEnabled || isYPIDEnabled) {
 			
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
-			targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
-			targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
+			if (isXPIDEnabled)
+				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
+			
+			if (isYPIDEnabled)
+				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
 
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 		
@@ -586,11 +590,6 @@ public class Drive extends SubsystemBase {
 		poseEstimator.update(rotation, modulePositions);
 	}
 
-	public void addVisionMeasurement(Pose2d pose, Matrix<N3, N1> stdDevs, double timestamp) {
-		poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
-		//field.setRobotPose(getPose());
-	}
-
 	public void setPose(Rotation2d rotation, SwerveModulePosition[] modulePositions, Pose2d fieldToVehicle) {
 		poseEstimator.resetPosition(rotation, modulePositions, fieldToVehicle);
 	}
@@ -794,6 +793,63 @@ public class Drive extends SubsystemBase {
 	}
 
 	/**
+	 * Field relative drive command using two joysticks (controlling linear and
+	 * angular velocities).
+	 */
+	public Command driveWithXandAngleSetpoint(
+			DoubleSupplier xSupplier,
+			DoubleSupplier ySupplier,
+			Supplier<Rotation2d> rotation) {
+		return new FunctionalCommand(
+			() -> {
+				this.isHeadingPIDEnabled = true;
+				this.headingPID.reset(this.getPose().getRotation().getRadians());
+				this.xPID.reset();
+			},
+			() -> {
+				this.headingPID.setGoal(rotation.get().getRadians());
+				this.xPID.setSetpoint(xSupplier.getAsDouble());
+
+				// linear
+				double ySpeedScalar;
+
+				ySpeedScalar = ySupplier.getAsDouble();
+				ySpeedScalar = MathUtil.clamp(ySpeedScalar, -1.0, 1.0);
+				ySpeedScalar = MathUtil.applyDeadband(ySpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
+				ySpeedScalar = CometMathUtil.minMaxScale(
+					ySpeedScalar,
+					DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+					1
+				);
+
+				ChassisSpeeds speeds = new ChassisSpeeds(
+					MetersPerSecond.zero(),
+					this.getMaximumSpeed().times(ySpeedScalar),
+					RadiansPerSecond.zero()
+				);
+
+				boolean isFlipped = DriverStation.getAlliance().isPresent()
+						&& DriverStation.getAlliance().get() == Alliance.Red;
+
+				Rotation2d robotAngle = isFlipped
+						? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
+						: this.getRotation();
+
+				speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
+
+				this.runVelocity(speeds);
+			},
+		(interrupted) -> {
+			this.isHeadingPIDEnabled = false;
+			this.isXPIDEnabled = false;
+		},
+		() -> headingPID.atGoal() && xPID.atSetpoint(),
+		this
+		);
+	}
+
+
+	/**
 	 * Turns the robot to a specified angle using PID control.
 	 * To specify both translation and rotation, use
 	 * {@link #moveToPosePID(Supplier)}.
@@ -818,7 +874,8 @@ public class Drive extends SubsystemBase {
 	public Command moveToTranslationPID(Supplier<Translation2d> pose) {
 		return new FunctionalCommand(
 				() -> {
-					this.isTranslationPIDEnabled = true;
+					this.isXPIDEnabled = true;
+					this.isYPIDEnabled = true;
 					this.xPID.reset();
 					this.yPID.reset();
 				},
@@ -826,7 +883,10 @@ public class Drive extends SubsystemBase {
 					this.xPID.setSetpoint(pose.get().getX());
 					this.yPID.setSetpoint(pose.get().getY());
 				},
-				(interrupted) -> this.isTranslationPIDEnabled = false,
+				(interrupted) -> {
+					this.isXPIDEnabled = false;
+					this.isYPIDEnabled = false;
+				},
 				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint(),
 				this);
 	}
@@ -841,7 +901,8 @@ public class Drive extends SubsystemBase {
 		return new FunctionalCommand(
 				() -> {
 					this.isHeadingPIDEnabled = true;
-					this.isTranslationPIDEnabled = true;
+					this.isXPIDEnabled = true;
+					this.isYPIDEnabled = true;
 					// we do this just so that atSetpoint() doesn't return true immediately
 					this.headingPID.reset(this.getPose().getRotation().getRadians());
 					this.xPID.reset();
@@ -854,7 +915,8 @@ public class Drive extends SubsystemBase {
 				},
 				(interrupted) -> {
 					this.isHeadingPIDEnabled = false;
-					this.isTranslationPIDEnabled = false;
+					this.isXPIDEnabled = false;
+					this.isYPIDEnabled = false;
 					this.stop();
 				},
 				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),

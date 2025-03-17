@@ -44,10 +44,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.AutoScoreProcessor;
 import frc.robot.commands.ShootAtTargetFromDistance;
 import frc.robot.commands.ShootOnMove;
-import frc.robot.commands.coral.AutoDepositCoral;
+import frc.robot.commands.coral.AutoDepositCoralD;
+import frc.robot.commands.coral.AutoDepositCoralE;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -80,6 +82,7 @@ import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
+import frc.robot.util.AllianceColor;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.controller.*;
 
@@ -101,10 +104,10 @@ public class RobotContainer {
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
-	private final CometController controller = new CometXboxController(0);
+	private final CometController controller = new CometPS4Controller(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 	private SwerveDriveSimulation swerveDriveSimulation;
 
 
@@ -183,7 +186,7 @@ public class RobotContainer {
 					new ModuleIO() {},
 					new ModuleIO() {}
 				);
-				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {}, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
@@ -198,8 +201,8 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 2000);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 2000);
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 750);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1600);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
@@ -210,7 +213,8 @@ public class RobotContainer {
 
 	private void setupAutoCommands() {
 		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake));
-		NamedCommands.registerCommand("Deposit Coral", new AutoDepositCoral(drive, intake));
+		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
+		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
 	}
 
 	private void setupDefaultCommands() {
@@ -308,9 +312,9 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.x().whileTrue(
-			new ShootAtTargetFromDistance(controller, drive, shooter, hoodtake)
-		);
+		// this.controller.x().whileTrue(
+		// 	new ShootAtTargetFromDistance(controller, drive, shooter, hoodtake)
+		// );
 
 		this.controller.rightTrigger().whileTrue(
 			Commands.sequence(
@@ -322,7 +326,7 @@ public class RobotContainer {
 		// intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(2.5)),
+				this.intake.setWheelVoltage(() -> Volts.of(3.5)),
 				this.intake.setPivotPosition(() -> Degrees.of(35)),
 				Commands.waitUntil(() -> false)
 			)
@@ -360,7 +364,7 @@ public class RobotContainer {
 
 		this.controller.left().whileTrue(
 			Commands.sequence(
-				this.intake.setPivotPosition(() -> Degrees.of(70)),
+				this.intake.setPivotPosition(() -> Degrees.of(60)),
 				Commands.waitUntil(() -> intake.atPosition()),
 				this.intake.setWheelVoltage(() -> Volts.of(-7)),
 				Commands.waitUntil(() -> false)
@@ -371,10 +375,10 @@ public class RobotContainer {
 		// 	new AutoDepositCoral(drive, intake)
 		// );
 
-		this.controller.right().whileTrue(
-			this.indexer.setRightVoltage(() -> Volts.of(3))
-			.andThen(Commands.waitUntil(() -> false))
-		);
+		// this.controller.right().whileTrue(
+		// 	this.indexer.setRightVoltage(() -> Volts.of(3))
+		// 	.andThen(Commands.waitUntil(() -> false))
+		// );
 	}
 
 	/**
@@ -394,6 +398,9 @@ public class RobotContainer {
 	 * This should only be used when vision sim is disabled
 	 */
 	public void updateSimDrivePosition() {
+		if (Constants.simMode == Mode.REPLAY)
+			return;
+			
 		this.drive.addVisionMeasurement(
 			this.swerveDriveSimulation.getSimulatedDriveTrainPose(),
 		 	Timer.getFPGATimestamp(),
