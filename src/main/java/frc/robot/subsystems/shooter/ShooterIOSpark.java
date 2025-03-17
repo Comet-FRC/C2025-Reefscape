@@ -200,7 +200,7 @@ public class ShooterIOSpark implements ShooterIO {
 			ControlType.kVelocity
 		);
 
-		System.out.println("topD: " + topMotor.configAccessor.closedLoop.getD());
+		// System.out.println("topD: " + topMotor.configAccessor.closedLoop.getD());
 
 		this.topWheelDesiredVelocity.mut_replace(velocity);
 	}

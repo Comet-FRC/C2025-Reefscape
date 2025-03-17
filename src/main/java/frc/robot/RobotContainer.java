@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.Constants.Mode;
 import frc.robot.commands.AutoScoreProcessor;
 import frc.robot.commands.ShootAtTargetFromDistance;
 import frc.robot.commands.ShootOnMove;
@@ -185,7 +186,7 @@ public class RobotContainer {
 					new ModuleIO() {},
 					new ModuleIO() {}
 				);
-				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
+				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {}, new ApriltagVisionIO() {});
 				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
@@ -397,6 +398,9 @@ public class RobotContainer {
 	 * This should only be used when vision sim is disabled
 	 */
 	public void updateSimDrivePosition() {
+		if (Constants.simMode == Mode.REPLAY)
+			return;
+			
 		this.drive.addVisionMeasurement(
 			this.swerveDriveSimulation.getSimulatedDriveTrainPose(),
 		 	Timer.getFPGATimestamp(),

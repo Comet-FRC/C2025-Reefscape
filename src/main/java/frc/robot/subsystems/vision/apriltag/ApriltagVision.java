@@ -42,6 +42,8 @@ public class ApriltagVision extends SubsystemBase {
 		this.consumer = consumer;
 		this.io = io;
 
+		// System.out.println("io list length: " + io.length);
+
 		// Initialize inputs
 		this.inputs = new ApriltagVisionIOInputsAutoLogged[io.length];
 		for (int i = 0; i < inputs.length; i++) {
@@ -74,6 +76,7 @@ public class ApriltagVision extends SubsystemBase {
 	@Override
 	public void periodic() {
 		for (int i = 0; i < io.length; i++) {
+			// System.out.println(i);
 			io[i].updateInputs(inputs[i]);
 			Logger.processInputs("ApriltagVision/Camera" + Integer.toString(i), inputs[i]);
 		}
@@ -154,35 +157,35 @@ public class ApriltagVision extends SubsystemBase {
 			}
 
 			// Log camera datadata
-			// Logger.recordOutput(
-			// 		"Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
-			// 		tagPoses.toArray(new Pose3d[tagPoses.size()]));
-			// Logger.recordOutput(
-			// 		"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
-			// 		robotPoses.toArray(new Pose3d[robotPoses.size()]));
-			// Logger.recordOutput(
-			// 		"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
-			// 		robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
-			// Logger.recordOutput(
-			// 		"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
-			// 		robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
-			// allTagPoses.addAll(tagPoses);
-			// allRobotPoses.addAll(robotPoses);
-			// allRobotPosesAccepted.addAll(robotPosesAccepted);
-			// allRobotPosesRejected.addAll(robotPosesRejected);
+			Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/TagPoses",
+					tagPoses.toArray(new Pose3d[tagPoses.size()]));
+			Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPoses",
+					robotPoses.toArray(new Pose3d[robotPoses.size()]));
+			Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesAccepted",
+					robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
+			Logger.recordOutput(
+					"Vision/Camera" + Integer.toString(cameraIndex) + "/RobotPosesRejected",
+					robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+			allTagPoses.addAll(tagPoses);
+			allRobotPoses.addAll(robotPoses);
+			allRobotPosesAccepted.addAll(robotPosesAccepted);
+			allRobotPosesRejected.addAll(robotPosesRejected);
 		}
 
 		// Log summary data
-		// Logger.recordOutput(
-		// 		"Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
-		// Logger.recordOutput(
-		// 		"Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
-		// Logger.recordOutput(
-		// 		"Vision/Summary/RobotPosesAccepted",
-		// 		allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
-		// Logger.recordOutput(
-		// 		"Vision/Summary/RobotPosesRejected",
-		// 		allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
+		Logger.recordOutput(
+				"Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
+		Logger.recordOutput(
+				"Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
+		Logger.recordOutput(
+				"Vision/Summary/RobotPosesAccepted",
+				allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
+		Logger.recordOutput(
+				"Vision/Summary/RobotPosesRejected",
+				allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
 	}
 
 	@FunctionalInterface
