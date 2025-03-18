@@ -43,6 +43,8 @@ public class FieldConstants {
 	}
 
 	public static class Barge {
+		public static final Distance BARGE_X = Inches.of(345.428);
+
 		public static final Translation2d startOfRedBarge = new Translation2d(Inches.of(345.428),
 				Inches.of(10));
 		public static final Translation2d endOfRedBarge = new Translation2d(Inches.of(345.428),

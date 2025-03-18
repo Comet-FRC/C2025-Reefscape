@@ -6,7 +6,9 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Mass;
@@ -22,16 +24,16 @@ public class ShooterConstants {
 	public static final Mass WHEEL_MASS = Pounds.of(0.86);
 	public static final double WHEEL_MOMENT_OF_INERTIA = 0.5 * WHEEL_MASS.in(Kilograms) * Math.pow(WHEEL_RADIUS.in(Meters), 2);
 
-	public static final double TOP_WHEEL_kP = 0.01;
-	public static final double TOP_WHEEL_kI = 0.000004;
-	public static final double TOP_WHEEL_kD = 10;
+	public static final double TOP_WHEEL_kP = 0.015;
+	public static final double TOP_WHEEL_kI = 0.00005;
+	public static final double TOP_WHEEL_kD = 1000;
 	public static final double TOP_WHEEL_kS = 0.048874;
 	public static final double TOP_WHEEL_kV = 0.04;
 	public static final double TOP_WHEEL_kA = 0.011556;
 	
-	public static final double BOT_WHEEL_kP = 0.009;
-	public static final double BOT_WHEEL_kI = 0.000006;
-	public static final double BOT_WHEEL_kD = 100;
+	public static final double BOT_WHEEL_kP = 0.015;
+	public static final double BOT_WHEEL_kI = 0.00005;
+	public static final double BOT_WHEEL_kD = 10;
 	public static final double BOT_WHEEL_kS = 0.048874;
 	public static final double BOT_WHEEL_kV = 0.041276;
 	public static final double BOT_WHEEL_kA = 0.011556;
@@ -43,5 +45,6 @@ public class ShooterConstants {
 	public static final double WHEEL_SIM_kV = 0.1;
 	public static final double WHEEL_SIM_kA = 0.00094517;
 
+	//public static final AngularAcceleration ANGULAR_ACCELERATION = RadiansPerSecondPerSecond.of(50);
 	public static final AngularVelocity ACCEPTABLE_VELOCITY_ERROR = RPM.of(10);	
 }

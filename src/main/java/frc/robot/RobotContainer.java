@@ -46,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.AutoScoreProcessor;
+import frc.robot.commands.RevShooterAndAlignToNet;
 import frc.robot.commands.ShootAtTargetFromDistance;
 import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.coral.AutoDepositCoralD;
@@ -369,6 +370,11 @@ public class RobotContainer {
 				this.intake.setWheelVoltage(() -> Volts.of(-7)),
 				Commands.waitUntil(() -> false)
 			)
+		);
+
+		this.controller.right().whileTrue(
+			new RevShooterAndAlignToNet(controller, hoodtake, shooter, drive)
+			.andThen(Commands.waitUntil(() -> false))
 		);
 
 		// this.controller.left().whileTrue(

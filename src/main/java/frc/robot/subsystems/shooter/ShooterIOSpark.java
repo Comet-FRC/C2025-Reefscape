@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.SparkUtil;
 
 import com.revrobotics.spark.SparkMax;
@@ -28,6 +29,9 @@ import com.revrobotics.spark.SparkMax;
 import static edu.wpi.first.units.Units.*;
 
 public class ShooterIOSpark implements ShooterIO {
+	private final LoggedTunableNumber FLYWHEEL_ANGULAR_ACCELERATION = new LoggedTunableNumber("Shooter/Flywheel Angular Acceleration", 75);
+
+
 	private final SparkMax topMotor = new SparkMax(ShooterConstants.TOP_MOTOR_ID, MotorType.kBrushless);
 	private final SparkMax bottomMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
 
@@ -63,9 +67,7 @@ public class ShooterIOSpark implements ShooterIO {
 				.i(ShooterConstants.TOP_WHEEL_kI)
 				.d(ShooterConstants.TOP_WHEEL_kD)
 			.maxMotion
-				.maxAcceleration(100)
-				.allowedClosedLoopError(3.75);
-
+				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
 
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	
@@ -93,8 +95,7 @@ public class ShooterIOSpark implements ShooterIO {
 				.i(ShooterConstants.BOT_WHEEL_kI)
 				.d(ShooterConstants.BOT_WHEEL_kD)
 			.maxMotion
-				.maxAcceleration(100)
-				.allowedClosedLoopError(3.75);
+				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 	
@@ -160,14 +161,16 @@ public class ShooterIOSpark implements ShooterIO {
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(SmartDashboard.getNumber("Shooter/botP", 0))
 				.i(SmartDashboard.getNumber("Shooter/botI", 0))
-				.d(SmartDashboard.getNumber("Shooter/botD", 0));
+				.d(SmartDashboard.getNumber("Shooter/botD", 0))
+			.maxMotion
+				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
 
 		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 		//double bottomFeedForward = bottomWheelFF.calculate(bottomVelocityRadiansPerSecond);
 	
 		bottomMotor.getClosedLoopController().setReference(
 			bottomVelocityRadiansPerSecond,
-			ControlType.kVelocity
+			ControlType.kMAXMotionVelocityControl
 		);
 
 		this.bottomWheelDesiredVelocity.mut_replace(velocity);	
@@ -192,12 +195,16 @@ public class ShooterIOSpark implements ShooterIO {
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 				.p(SmartDashboard.getNumber("Shooter/topP", 0))
 				.i(SmartDashboard.getNumber("Shooter/topI", 0))
-				.d(SmartDashboard.getNumber("Shooter/topD", 0));
+				.d(SmartDashboard.getNumber("Shooter/topD", 0))
+			.maxMotion
+				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
 		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+
+		System.out.println(FLYWHEEL_ANGULAR_ACCELERATION.get());
 
 		topMotor.getClosedLoopController().setReference(
 			topVelocityRadiansPerSecond,
-			ControlType.kVelocity
+			ControlType.kMAXMotionVelocityControl
 		);
 
 		// System.out.println("topD: " + topMotor.configAccessor.closedLoop.getD());

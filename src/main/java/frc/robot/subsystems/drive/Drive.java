@@ -232,8 +232,9 @@ public class Drive extends SubsystemBase {
 			
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
-			if (isXPIDEnabled)
+			if (isXPIDEnabled) {
 				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
+			}
 			
 			if (isYPIDEnabled)
 				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
@@ -803,6 +804,7 @@ public class Drive extends SubsystemBase {
 		return new FunctionalCommand(
 			() -> {
 				this.isHeadingPIDEnabled = true;
+				this.isXPIDEnabled = true;
 				this.headingPID.reset(this.getPose().getRotation().getRadians());
 				this.xPID.reset();
 			},
@@ -843,7 +845,7 @@ public class Drive extends SubsystemBase {
 			this.isHeadingPIDEnabled = false;
 			this.isXPIDEnabled = false;
 		},
-		() -> headingPID.atGoal() && xPID.atSetpoint(),
+		() -> false,
 		this
 		);
 	}
