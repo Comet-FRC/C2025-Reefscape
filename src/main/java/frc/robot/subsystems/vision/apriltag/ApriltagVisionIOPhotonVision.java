@@ -31,6 +31,8 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
   protected final PhotonCamera camera;
   protected final Transform3d robotToCamera;
 
+  boolean initCompleted = false;
+
   /**
    * Creates a new VisionIOPhotonVision.
    *
@@ -44,16 +46,11 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
 
   @Override
   public void updateInputs(ApriltagVisionIOInputs inputs) {
-    inputs.isConnected = camera.isConnected();
+    inputs.connected = camera.isConnected();
 
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
-
-
-    // // go to brazil
-    // poseObservations.add(new PoseObservation(1, Pose3d.kZero, 1, 0, Double.POSITIVE_INFINITY, PoseObservationType.BRAZIL));
-
     for (var result : camera.getAllUnreadResults()) {
       // Update latest target observation
       if (result.hasTargets()) {
@@ -129,10 +126,27 @@ public class ApriltagVisionIOPhotonVision implements ApriltagVisionIO {
     }
 
     // Save tag IDs to inputs objects
-    inputs.tagsSeen = new int[tagIds.size()];
+    inputs.tagIds = new int[tagIds.size()];
     int i = 0;
     for (int id : tagIds) {
-      inputs.tagsSeen[i++] = id;
+      inputs.tagIds[i++] = id;
     }
+
+
+    if (!initCompleted) {
+
+      inputs.latestTargetObservation =  new TargetObservation(new Rotation2d(), new Rotation2d());
+      
+      PoseObservation[] poseObservationsInit = {new PoseObservation(0, Pose3d.kZero, Double.POSITIVE_INFINITY, 0, Double.POSITIVE_INFINITY, PoseObservationType.INIT)};
+      inputs.poseObservations = poseObservationsInit;
+
+      int[] tagIdsInit = {0};
+      inputs.tagIds = tagIdsInit;
+    }
+  }
+
+  @Override
+  public void initCompleted() {
+      this.initCompleted = true;
   }
 }

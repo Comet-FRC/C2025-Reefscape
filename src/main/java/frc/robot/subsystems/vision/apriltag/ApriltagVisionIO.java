@@ -1,4 +1,4 @@
-// Copyright 2021-2024 FRC 6328
+// Copyright 2021-2025 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
 // This program is free software; you can redistribute it and/or
@@ -15,21 +15,16 @@ package frc.robot.subsystems.vision.apriltag;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ApriltagVisionIO {
   @AutoLog
   public static class ApriltagVisionIOInputs {
-    public boolean isConnected = false;
+    public boolean connected = false;
     public TargetObservation latestTargetObservation =
         new TargetObservation(new Rotation2d(), new Rotation2d());
-    public PoseObservation[] poseObservations = { new PoseObservation(1, Pose3d.kZero, 1, 1, 1, PoseObservationType.BRAZIL) };
-    public boolean hasResult = false;
-    public double timestamp = 0;
-    public int[] tagsSeen = new int[0];
-    public double[] cameraToTagDist = new double[0];
-    public Pose3d estimatedRobotPose = Pose3d.kZero;
+    public PoseObservation[] poseObservations = new PoseObservation[0];
+    public int[] tagIds = new int[0];
   }
 
   /** Represents the angle to a simple target, not used for pose estimation. */
@@ -48,8 +43,10 @@ public interface ApriltagVisionIO {
     MEGATAG_1,
     MEGATAG_2,
     PHOTONVISION,
-    BRAZIL
+    INIT
   }
 
   public default void updateInputs(ApriltagVisionIOInputs inputs) {}
+
+  public default void initCompleted() {}
 }

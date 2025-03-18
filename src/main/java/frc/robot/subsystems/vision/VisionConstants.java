@@ -38,8 +38,8 @@ public class VisionConstants {
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.2; // Meters
-    public static double angularStdDevBaseline = 0.1; // Radians
+    public static double linearStdDevBaseline = 0.1; // Meters
+    public static double angularStdDevBaseline = 0.08; // Radians
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)
@@ -59,12 +59,12 @@ public class VisionConstants {
                 5,
                 new Transform3d(
                         new Translation3d(
-                                Inches.of(+13.75),
-                                Inches.of(-1),
-                                Inches.of(+21)),
+                                Inches.of(+13.6),
+                                Inches.of(0.25),
+                                Inches.of(+20.875)),
                         new Rotation3d(
-                                Degrees.of(-19),
                                 Degrees.of(0),
+                                Degrees.of(-20),
                                 Degrees.of(0)))),
         BackApriltag(
                 "Back OV9281",
@@ -72,9 +72,9 @@ public class VisionConstants {
                 4,
                 new Transform3d(
                         new Translation3d(
-                                Inches.of(-13.25),
-                                Inches.of(-4.8),
-                                Inches.of(+20.25)),
+                                Inches.of(-13.663),
+                                Inches.of(-4.75),
+                                Inches.of(19.625)),
                         new Rotation3d(
                                 Degrees.of(0),
                                 Degrees.of(0),

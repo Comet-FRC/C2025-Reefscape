@@ -132,15 +132,19 @@ public class Drive extends SubsystemBase {
 			new TrapezoidProfile.Constraints(Math.PI, Math.PI)
 	);
 
-	private PIDController xPID = new PIDController(
+	private ProfiledPIDController xPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
-			DriveConstants.TRANSLATION_kD);
+			DriveConstants.TRANSLATION_kD,
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), 1)
+			);
 
-	private PIDController yPID = new PIDController(
+	private ProfiledPIDController yPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
-			DriveConstants.TRANSLATION_kD);
+			DriveConstants.TRANSLATION_kD,
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), 1)
+			);
 
 	/** true if translation control is overridden */
 	boolean isXPIDEnabled = false;
@@ -216,39 +220,40 @@ public class Drive extends SubsystemBase {
 	public void setupLoopControllers() {
 		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
 		this.headingCorrectionPID.enableContinuousInput(-Math.PI, Math.PI);
-		this.xPID.setTolerance(0.1);
-		this.yPID.setTolerance(0.1);
-		this.headingPID.setTolerance(Units.degreesToRadians(4));
+		this.xPID.setTolerance(0.02);
+		this.yPID.setTolerance(0.02);
+		this.headingPID.setTolerance(Units.degreesToRadians(1));
+		this.xPID.reset(this.getPose().getX());
+		this.yPID.reset(this.getPose().getY());
 		this.headingPID.reset(this.getPose().getRotation().getRadians());
 		this.headingCorrectionPID.reset(this.getPose().getRotation().getRadians());
 	}
 
 	@Override
 	public void periodic() {
-		
-		
-
 		if (isXPIDEnabled || isYPIDEnabled) {
 			
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
 			if (isXPIDEnabled) {
 				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
+				Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
 			}
 			
-			if (isYPIDEnabled)
+			if (isYPIDEnabled) {
 				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
-
+				Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+			}
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 		
-			// Logger.recordOutput("Drive/xPID Error", this.xPID.getError());
-			// Logger.recordOutput("Drive/yPID Error", this.yPID.getError());
+			
+			
 		
 		}
 
 		if (isHeadingPIDEnabled) {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
-			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+			Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
 		// HEADING CORRECION
@@ -806,11 +811,11 @@ public class Drive extends SubsystemBase {
 				this.isHeadingPIDEnabled = true;
 				this.isXPIDEnabled = true;
 				this.headingPID.reset(this.getPose().getRotation().getRadians());
-				this.xPID.reset();
+				this.xPID.reset(this.getPose().getX());
 			},
 			() -> {
 				this.headingPID.setGoal(rotation.get().getRadians());
-				this.xPID.setSetpoint(xSupplier.getAsDouble());
+				this.xPID.setGoal(xSupplier.getAsDouble());
 
 				// linear
 				double ySpeedScalar;
@@ -864,7 +869,7 @@ public class Drive extends SubsystemBase {
 				},
 				() -> this.headingPID.setGoal(rotation.get().getRadians()),
 				(interrupted) -> this.isHeadingPIDEnabled = false,
-				this.headingPID::atSetpoint,
+				this.headingPID::atGoal,
 				this);
 	}
 
@@ -878,18 +883,18 @@ public class Drive extends SubsystemBase {
 				() -> {
 					this.isXPIDEnabled = true;
 					this.isYPIDEnabled = true;
-					this.xPID.reset();
-					this.yPID.reset();
+					this.xPID.reset(this.getPose().getX());
+					this.yPID.reset(this.getPose().getY());
 				},
 				() -> {
-					this.xPID.setSetpoint(pose.get().getX());
-					this.yPID.setSetpoint(pose.get().getY());
+					this.xPID.setGoal(pose.get().getX());
+					this.yPID.setGoal(pose.get().getY());
 				},
 				(interrupted) -> {
 					this.isXPIDEnabled = false;
 					this.isYPIDEnabled = false;
 				},
-				() -> this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				() -> this.xPID.atGoal() && this.yPID.atGoal(),
 				this);
 	}
 
@@ -905,15 +910,18 @@ public class Drive extends SubsystemBase {
 					this.isHeadingPIDEnabled = true;
 					this.isXPIDEnabled = true;
 					this.isYPIDEnabled = true;
-					// we do this just so that atSetpoint() doesn't return true immediately
-					this.headingPID.reset(this.getPose().getRotation().getRadians());
-					this.xPID.reset();
-					this.yPID.reset();
+					// we do this just so that atGoal() doesn't return true immediately
+					this.headingPID.reset(
+						this.getPose().getRotation().getRadians(),
+						this.getFieldOrientedChassisSpeeds().omegaRadiansPerSecond
+					);
+					this.xPID.reset(this.getPose().getX(), this.getFieldOrientedChassisSpeeds().vxMetersPerSecond);
+					this.yPID.reset(this.getPose().getY(), this.getFieldOrientedChassisSpeeds().vyMetersPerSecond);
 				},
 				() -> {
 					this.headingPID.setGoal(pose.get().getRotation().getRadians());
-					this.xPID.setSetpoint(pose.get().getX());
-					this.yPID.setSetpoint(pose.get().getY());
+					this.xPID.setGoal(pose.get().getX());
+					this.yPID.setGoal(pose.get().getY());
 				},
 				(interrupted) -> {
 					this.isHeadingPIDEnabled = false;
@@ -921,7 +929,7 @@ public class Drive extends SubsystemBase {
 					this.isYPIDEnabled = false;
 					this.stop();
 				},
-				() -> this.headingPID.atSetpoint() && this.xPID.atSetpoint() && this.yPID.atSetpoint(),
+				() -> this.headingPID.atGoal() && this.xPID.atGoal() && this.yPID.atGoal(),
 				this);
 	}
 

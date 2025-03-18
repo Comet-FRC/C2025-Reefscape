@@ -12,10 +12,10 @@ import frc.robot.subsystems.intake.Intake;
 public class ScoreProcessor extends SequentialCommandGroup {
     public ScoreProcessor(Intake intake, Indexer indexer) {
         super(
-            intake.setWheelVoltage(() -> Volts.of(-3)),
+            intake.setWheelVoltage(() -> Volts.of(-2)),
             intake.setPivotPosition(() -> Degrees.of(85)),
-            indexer.setRightVoltage(() -> Volts.of(3)),
-            Commands.waitUntil(() -> indexer.getRightSupplyCurrent().gt(Amps.of(80)))
+            indexer.setRightVoltage(() -> Volts.of(2)),
+            Commands.waitUntil(() -> indexer.getRightSupplyCurrent().gt(Amps.of(80)) || indexer.getRightPosition().gt(Degrees.of(145)))
         );
     }
 }
