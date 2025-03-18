@@ -23,7 +23,7 @@ import frc.robot.util.controller.CometController;
 public class RevShooterAndAlignToNet extends SequentialCommandGroup {
 
     private static final Distance BARGE_X = FieldConstants.Barge.BARGE_X;
-    private static final LoggedTunableNumber SHOOTER_DISTANCE = new LoggedTunableNumber("Shooter/Net Distance", 1.9);
+    private static final LoggedTunableNumber SHOOTER_DISTANCE = new LoggedTunableNumber("Shooter/Net Distance", 1.85);
 
     public RevShooterAndAlignToNet(CometController controller, Hoodtake hoodtake, Shooter shooter, Drive drive) {
         super(
