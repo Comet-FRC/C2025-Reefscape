@@ -14,6 +14,7 @@ import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.AllianceColor;
 
 public class AutonCommandBuilder {
@@ -25,12 +26,11 @@ public class AutonCommandBuilder {
         Command command = Commands.none();
         String input = strategyInput.get();
 
+        System.out.println(input);
+
         for (int i=0; i<input.length(); ++i) {
             int algaeId = (input.toUpperCase().charAt(i) - 'A') % 6;
             Pose2d targetPose = FieldConstants.Reef.getTeamAlgaePoses()[algaeId];
-
-            // System.out.println(targetPose);
-
 
             TargetAlgae targetAlgae = new TargetAlgae(targetPose, algaeId, AllianceColor.isRed());
             command = command.andThen(new HoodtakeFromReef(drive, hoodtake, () -> targetAlgae));

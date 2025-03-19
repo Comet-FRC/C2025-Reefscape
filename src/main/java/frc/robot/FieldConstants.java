@@ -103,7 +103,7 @@ public class FieldConstants {
 				Translation2d relativeTranslation;
 				relativeTranslation = centerFaces[i].getTranslation().minus(center);
 				relativeTranslation = relativeTranslation.div(relativeTranslation.getNorm());
-				relativeTranslation = relativeTranslation.times(1);
+				relativeTranslation = relativeTranslation.times(1.2);
 
 				// System.out.println("Relative Translation: " + relativeTranslation);
 

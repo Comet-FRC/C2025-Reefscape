@@ -6,10 +6,12 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
+import frc.robot.subsystems.shooter.Shooter;
 
 public class HoodtakeFromL2Auto extends SequentialCommandGroup {
     
@@ -18,8 +20,10 @@ public class HoodtakeFromL2Auto extends SequentialCommandGroup {
             drive.pathfindToPose(targetAlgae.get()::pose, 0),
             drive.driveToTargetAlgaePID(() -> Meters.of(0.65), targetAlgae),
             hoodtake.setPivotPosition(() -> Degrees.of(45)),
-            hoodtake.setWheelVoltage(() -> Volts.of(5))
-            // drive.driveToClosestAlgaePID(() -> Meters.of(0.6))
+            hoodtake.setWheelVoltage(() -> Volts.of(5)),
+            Commands.waitUntil(hoodtake::atPosition),
+            Commands.waitSeconds(0.5)
+            
         );
     }
 

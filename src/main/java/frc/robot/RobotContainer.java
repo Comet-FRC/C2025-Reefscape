@@ -247,15 +247,7 @@ public class RobotContainer {
 		);
 
 		this.hoodtake.setDefaultCommand(
-			Commands.sequence(
-				this.hoodtake.setPivotPositionSetpoint(() -> HoodtakeConstants.STARTING_ANGLE),
-				Commands.either(
-					this.hoodtake.setPivotVoltage(() -> Volts.of(0)),
-					this.hoodtake.setPivotPosition(() -> HoodtakeConstants.STARTING_ANGLE),
-					this.hoodtake::atPosition
-				),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(0))
-			)
+			this.hoodtake.defaultCommand()
 		);
 
 		this.indexer.setDefaultCommand(

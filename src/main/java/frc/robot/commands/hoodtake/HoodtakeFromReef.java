@@ -16,6 +16,8 @@ public class HoodtakeFromReef extends WrapperCommand {
                 new HoodtakeFromL3Auto(drive, hoodtake, targetAlgae),
                 new HoodtakeFromL2Auto(drive, hoodtake, targetAlgae),
                 () -> targetAlgae.get().id() % 2 == 0
+            ).andThen(
+                hoodtake.defaultCommand()
             )
         );
     }

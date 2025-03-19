@@ -21,8 +21,8 @@ public class DriveConstants {
     public static final double TRANSLATION_kI = 0;
     public static final double TRANSLATION_kD = 0;
 
-    public static final LinearAcceleration MAX_LINEAR_ACCELERATION_PID = MetersPerSecondPerSecond.of(2);
-    public static final AngularAcceleration MAX_ANGULAR_ACCELERATION_PID = RadiansPerSecondPerSecond.of(Math.PI);
+    public static final LinearAcceleration MAX_LINEAR_ACCELERATION_PID = MetersPerSecondPerSecond.of(0.5);
+    public static final AngularAcceleration MAX_ANGULAR_ACCELERATION_PID = RadiansPerSecondPerSecond.of(Math.PI / 4.0);
 
     public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
 
