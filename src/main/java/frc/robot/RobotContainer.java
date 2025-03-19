@@ -218,7 +218,7 @@ public class RobotContainer {
 	}
 
 	private void setupAutoCommands() {
-		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae));
+		// NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae));
 		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
 		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
 		

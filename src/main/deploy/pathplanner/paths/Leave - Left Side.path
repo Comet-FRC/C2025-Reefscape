@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.16,
-        "y": 4.055
+        "x": 7.223564189189189,
+        "y": 7.295861486486485
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.41,
-        "y": 4.055
+        "x": 6.809792313578492,
+        "y": 7.295861486486485
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Leave - Left Side Start"
     },
     {
       "anchor": {
-        "x": 6.5911317567567576,
-        "y": 4.05464527027027
+        "x": 6.660304054054055,
+        "y": 7.295861486486485
       },
       "prevControl": {
-        "x": 6.219528721970342,
-        "y": 4.05464527027027
+        "x": 6.909001351781514,
+        "y": 7.321349799554626
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,11 +41,11 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 0,
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Leave",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
