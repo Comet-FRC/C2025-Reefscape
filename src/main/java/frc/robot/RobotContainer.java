@@ -48,6 +48,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.Mode;
 import frc.robot.commands.AutoScoreProcessor;
+import frc.robot.commands.AutonCommandBuilder;
 import frc.robot.commands.RevShooterAndAlignToNet;
 import frc.robot.commands.ScoreProcessor;
 import frc.robot.commands.ShootAtTargetFromDistance;
@@ -220,6 +221,10 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae));
 		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
 		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
+		
+		
+		new AutonCommandBuilder();
+		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> AutonCommandBuilder.getCommand(drive, hoodtake), Set.of(drive, hoodtake)));
 	}
 
 	private void setupDefaultCommands() {

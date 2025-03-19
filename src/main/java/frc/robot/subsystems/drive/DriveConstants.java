@@ -1,5 +1,10 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+
+import edu.wpi.first.units.measure.AngularAcceleration;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
@@ -15,6 +20,9 @@ public class DriveConstants {
     public static final double TRANSLATION_kP = 2;
     public static final double TRANSLATION_kI = 0;
     public static final double TRANSLATION_kD = 0;
+
+    public static final LinearAcceleration MAX_LINEAR_ACCELERATION_PID = MetersPerSecondPerSecond.of(2);
+    public static final AngularAcceleration MAX_ANGULAR_ACCELERATION_PID = RadiansPerSecondPerSecond.of(Math.PI);
 
     public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
 
