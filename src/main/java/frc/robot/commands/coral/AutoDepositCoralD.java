@@ -24,10 +24,10 @@ public class AutoDepositCoralD extends SequentialCommandGroup {
                 }
             ),
             intake.setPivotPosition(() -> Degrees.of(55)),
-            Commands.waitSeconds(2),
+            Commands.waitUntil(intake::atPosition),
+            Commands.waitSeconds(0.5),
             intake.setWheelVoltage(() -> Volts.of(-7)),
-            Commands.waitSeconds(3)
-
+            Commands.waitSeconds(2)
         );
     }
 }

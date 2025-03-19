@@ -20,8 +20,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
+
+import com.pathplanner.lib.util.FlippingUtil;
 
 //Generously Borrowed from FRC-6328
 
@@ -78,8 +81,8 @@ public class FieldConstants {
 
 		public static final Pose2d[] centerFaces = new Pose2d[6]; // Starting facing the driver station in clockwise
 																	// order
-		public static final Pose2d[] reefAlgaeTargetPoses = new Pose2d[6];
-		public static final Pose2d[] reefAlgaeTargetPosesOpposingSide = new Pose2d[6];
+		public static final Pose2d[] reefAlgaeTargetPosesBlue = new Pose2d[6];
+		public static final Pose2d[] reefAlgaeTargetPosesRed = new Pose2d[6];
 
 		public static final List<Map<ReefHeight, Pose3d>> branchPositions = new ArrayList<>(); // Starting at the right
 																								// branch facing the
@@ -89,27 +92,33 @@ public class FieldConstants {
 		static {
 			// Initialize faces
 			centerFaces[0] = new Pose2d(Inches.of(144.003), Inches.of(158.500), Rotation2d.fromDegrees(180));
-			centerFaces[1] = new Pose2d(Inches.of(160.373), Inches.of(186.857), Rotation2d.fromDegrees(120));
-			centerFaces[2] = new Pose2d(Inches.of(193.116), Inches.of(186.858), Rotation2d.fromDegrees(60));
+			centerFaces[1] = new Pose2d(Inches.of(160.375), Inches.of(130.144), Rotation2d.fromDegrees(-120));
+			centerFaces[2] = new Pose2d(Inches.of(193.118), Inches.of(130.145), Rotation2d.fromDegrees(-60));
 			centerFaces[3] = new Pose2d(Inches.of(209.489), Inches.of(158.502), Rotation2d.fromDegrees(0));
-			centerFaces[4] = new Pose2d(Inches.of(193.118), Inches.of(130.145), Rotation2d.fromDegrees(-60));
-			centerFaces[5] = new Pose2d(Inches.of(160.375), Inches.of(130.144), Rotation2d.fromDegrees(-120));
-
+			centerFaces[4] = new Pose2d(Inches.of(193.116), Inches.of(186.858), Rotation2d.fromDegrees(60));
+			centerFaces[5] = new Pose2d(Inches.of(160.373), Inches.of(186.857), Rotation2d.fromDegrees(120));
+			
 			for (int i = 0; i < 6; ++i) {
 
-				Translation2d relativeTranslation = centerFaces[i].getTranslation().minus(center).times(1.5);
+				Translation2d relativeTranslation;
+				relativeTranslation = centerFaces[i].getTranslation().minus(center);
+				relativeTranslation = relativeTranslation.div(relativeTranslation.getNorm());
+				relativeTranslation = relativeTranslation.times(1.2);
 
-				System.out.println("Relative Translation: " + relativeTranslation);
+				// System.out.println("Relative Translation: " + relativeTranslation);
 
-				reefAlgaeTargetPoses[i] = new Pose2d(
+				reefAlgaeTargetPosesBlue[i] = new Pose2d(
 						centerFaces[i].getX() + relativeTranslation.getX(),
 						centerFaces[i].getY() + relativeTranslation.getY(),
 						centerFaces[i].getRotation());
 
-				reefAlgaeTargetPosesOpposingSide[i] = new Pose2d(
-						FieldConstants.fieldLength - reefAlgaeTargetPoses[i].getX(),
-						reefAlgaeTargetPoses[i].getY(),
-						reefAlgaeTargetPoses[i].getRotation().times(-1).plus(Rotation2d.fromDegrees(180)));
+						
+				reefAlgaeTargetPosesRed[i] = new Pose2d(
+						FieldConstants.fieldLength - reefAlgaeTargetPosesBlue[i].getX(),
+						FieldConstants.fieldWidth -  reefAlgaeTargetPosesBlue[i].getY(),
+						reefAlgaeTargetPosesBlue[i].getRotation().times(1).plus(Rotation2d.fromDegrees(180)));
+
+				// System.out.println(reefAlgaeTargetPosesRed[i]);	
 			}
 
 			// Initialize branch positions
@@ -157,8 +166,8 @@ public class FieldConstants {
 			}
 		}
 
-		public static Pose2d[] getTeamAlgaePoses(boolean isOnOpposingAllianceField) {
-			return isOnOpposingAllianceField ? reefAlgaeTargetPosesOpposingSide : reefAlgaeTargetPoses;
+		public static Pose2d[] getTeamAlgaePoses() {
+			return AllianceColor.isRed() ? reefAlgaeTargetPosesRed : reefAlgaeTargetPosesBlue;
 		}
 
 		/**
@@ -169,9 +178,9 @@ public class FieldConstants {
 		 * @param d     The distance from the center.
 		 * @return The computed Pose2d.
 		 */
-		public static Pose2d getTranslatedPose(TargetAlgae target, Distance d) {
-			int index = target.id();
-			boolean isOpposingReef = target.isOpposingReef();
+		public static Pose2d getTranslatedPose(Supplier<TargetAlgae> target, Distance d) {
+			int index = target.get().id();
+			boolean isRed = target.get().isRed();
 
 			if (index < 0 || index >= centerFaces.length) {
 				throw new IllegalArgumentException("Index out of bounds: " + index);
@@ -190,11 +199,12 @@ public class FieldConstants {
 					face.getY() + relativeTranslation.getY(),
 					face.getRotation());
 
-			if (isOpposingReef) {
-				translatedPose = new Pose2d(
-						FieldConstants.fieldLength - translatedPose.getX(),
-						translatedPose.getY(),
-						translatedPose.getRotation().times(-1).plus(Rotation2d.fromDegrees(180)));
+			if (isRed) {
+				translatedPose = FlippingUtil.flipFieldPose(translatedPose);
+				// translatedPose = new Pose2d(
+				// 		FieldConstants.fieldLength - translatedPose.getX(),
+				// 		translatedPose.getY(),
+				// 		translatedPose.getRotation().times(-1).plus(Rotation2d.fromDegrees(180)));
 			}
 
 			Logger.recordOutput("Automation/translatedPose", translatedPose);

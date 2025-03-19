@@ -45,7 +45,7 @@ public class RevShooterAndAlignToNet extends SequentialCommandGroup {
                 },
                 () -> -controller.getLeftX(),
                 () -> {
-                    if (drive.isOnOpposingSide()) 
+                    if (drive.isOnRedSide()) 
                         return Rotation2d.fromDegrees(180);
                     else
                         return Rotation2d.kZero;

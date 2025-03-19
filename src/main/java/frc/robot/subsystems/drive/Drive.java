@@ -19,6 +19,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.SwerveConstants.DRIVE_BASE_RADIUS;
@@ -40,6 +41,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.FlippingUtil;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.MathUtil;
@@ -116,7 +118,7 @@ public class Drive extends SubsystemBase {
 	private Field2d field = new Field2d();
 		
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
-			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(3, 3, new Rotation2d()));
+			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(7.579, 3.995, new Rotation2d()));
 
 	private ProfiledPIDController headingPID = new ProfiledPIDController(
 			DriveConstants.HEADING_kP,
@@ -129,21 +131,21 @@ public class Drive extends SubsystemBase {
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
 			DriveConstants.HEADING_kD,
-			new TrapezoidProfile.Constraints(Math.PI, Math.PI)
+			new TrapezoidProfile.Constraints(Math.PI, DriveConstants.MAX_ANGULAR_ACCELERATION_PID.in(RadiansPerSecondPerSecond))
 	);
 
 	private ProfiledPIDController xPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
 			DriveConstants.TRANSLATION_kD,
-			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), 1)
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond))
 			);
 
 	private ProfiledPIDController yPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
 			DriveConstants.TRANSLATION_kD,
-			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), 1)
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond))
 			);
 
 	/** true if translation control is overridden */
@@ -154,7 +156,7 @@ public class Drive extends SubsystemBase {
 
 	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
 
-	TargetAlgae targetAlgae = null;
+	TargetAlgae targetAlgae = new TargetAlgae(new Pose2d(), 0, false);
 	Angle lastHeadingRadians = Angle.ofBaseUnits(0, Radians);
 
 	public Drive(
@@ -237,12 +239,12 @@ public class Drive extends SubsystemBase {
 
 			if (isXPIDEnabled) {
 				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
-				Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
+				// Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
 			}
 			
 			if (isYPIDEnabled) {
 				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
-				Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+				// Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
 			}
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 		
@@ -253,7 +255,7 @@ public class Drive extends SubsystemBase {
 
 		if (isHeadingPIDEnabled) {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
-			Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
 		// HEADING CORRECION
@@ -606,7 +608,7 @@ public class Drive extends SubsystemBase {
 	// 	field.setRobotPose(pose);
 	// }
 
-	public boolean isOnOpposingSide() {
+	public boolean isOnRedSide() {
 		return this.getPose().getX() > FieldConstants.fieldLength / 2.0;
 	}
 
@@ -687,10 +689,10 @@ public class Drive extends SubsystemBase {
 	}
 
 	public void updateTargetAlgae() {
-		boolean isOpposingReef = this.isOnOpposingSide();
+		boolean isOpposingReef = this.isOnRedSide();
 		Pose2d[] algaeLocations = isOpposingReef 
-			? FieldConstants.Reef.reefAlgaeTargetPosesOpposingSide 
-			: FieldConstants.Reef.reefAlgaeTargetPoses;
+			? FieldConstants.Reef.reefAlgaeTargetPosesRed 
+			: FieldConstants.Reef.reefAlgaeTargetPosesBlue;
 
 		Pose2d closestPose = algaeLocations[0];
 		int closestAlgaeIndex = 0;
@@ -717,24 +719,26 @@ public class Drive extends SubsystemBase {
 	}
 
 	public Command pathfindToPose(Supplier<Pose2d> pose, double goalEndVelocity) {
-		return Commands.defer(
-			() -> AutoBuilder.pathfindToPose(
-					pose.get(),
-					new PathConstraints(
-							this.getMaximumSpeed(),
-							MetersPerSecondPerSecond.of(4),
-							this.getMaximumAngularSpeed(),
-							DegreesPerSecondPerSecond.of(720)),
-							goalEndVelocity),
-			Set.of(this))
-			.andThen(() -> this.stop());
+		return Commands.sequence(
+			AutoBuilder.pathfindToPose(
+				pose.get(),
+				new PathConstraints(
+						this.getMaximumSpeed(),
+						DriveConstants.MAX_LINEAR_ACCELERATION_PID,
+						this.getMaximumAngularSpeed(),
+						DriveConstants.MAX_ANGULAR_ACCELERATION_PID
+				),
+				goalEndVelocity
+				),
+			Commands.runOnce(() -> this.stop())
+		);
 	}
 
-	public Command driveToClosestAlgaePID(Supplier<Distance> distance) {
+	public Command driveToTargetAlgaePID(Supplier<Distance> distance, Supplier<TargetAlgae> targetAlgae) {
 		return
 			Commands.defer(
 				() -> this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
-					this.getTargetAlgae(),
+					targetAlgae,
 					distance.get())),
 				Set.of(this));
 	}
@@ -912,11 +916,10 @@ public class Drive extends SubsystemBase {
 					this.isYPIDEnabled = true;
 					// we do this just so that atGoal() doesn't return true immediately
 					this.headingPID.reset(
-						this.getPose().getRotation().getRadians(),
-						this.getFieldOrientedChassisSpeeds().omegaRadiansPerSecond
+						this.getPose().getRotation().getRadians()
 					);
-					this.xPID.reset(this.getPose().getX(), this.getFieldOrientedChassisSpeeds().vxMetersPerSecond);
-					this.yPID.reset(this.getPose().getY(), this.getFieldOrientedChassisSpeeds().vyMetersPerSecond);
+					this.xPID.reset(this.getPose().getX());
+					this.yPID.reset(this.getPose().getY());
 				},
 				() -> {
 					this.headingPID.setGoal(pose.get().getRotation().getRadians());

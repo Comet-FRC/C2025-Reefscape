@@ -135,7 +135,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
-			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, 0);
+			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, pivotPID.getSetpoint().velocity);
 			double volts;
 			volts = pid + ff;
 			volts = MathUtil.clamp(volts, -12, 12);
