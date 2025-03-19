@@ -154,7 +154,7 @@ public class Drive extends SubsystemBase {
 
 	ChassisSpeeds targetChassisSpeeds = new ChassisSpeeds();
 
-	TargetAlgae targetAlgae = null;
+	TargetAlgae targetAlgae = new TargetAlgae(new Pose2d(), 0, false);
 	Angle lastHeadingRadians = Angle.ofBaseUnits(0, Radians);
 
 	public Drive(
@@ -722,9 +722,9 @@ public class Drive extends SubsystemBase {
 					pose.get(),
 					new PathConstraints(
 							this.getMaximumSpeed(),
-							MetersPerSecondPerSecond.of(4),
+							MetersPerSecondPerSecond.of(1),
 							this.getMaximumAngularSpeed(),
-							DegreesPerSecondPerSecond.of(720)),
+							DegreesPerSecondPerSecond.of(180)),
 							goalEndVelocity),
 			Set.of(this))
 			.andThen(() -> this.stop());

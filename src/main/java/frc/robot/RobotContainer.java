@@ -217,7 +217,7 @@ public class RobotContainer {
 	}
 
 	private void setupAutoCommands() {
-		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake));
+		NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae));
 		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
 		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
 	}
@@ -381,7 +381,7 @@ public class RobotContainer {
 
 		this.controller.right().whileTrue(
 			Commands.defer(
-				() -> new HoodtakeFromL3Auto(drive, hoodtake),
+				() -> new HoodtakeFromL3Auto(drive, hoodtake, drive::getTargetAlgae),
 				Set.of(drive, hoodtake)
 			)
 			.andThen(Commands.waitUntil(() -> false))
