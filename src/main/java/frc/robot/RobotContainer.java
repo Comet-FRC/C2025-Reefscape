@@ -111,10 +111,13 @@ public class RobotContainer {
 	private final Indexer indexer;
 
 	private final CometController controller = new CometXboxController(0);
+	private final CometController backupController = new CometLogitechController(1);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 	private SwerveDriveSimulation swerveDriveSimulation;
+
+	private AutonCommandBuilder autonCommandBuilder = new AutonCommandBuilder();
 
 
 
@@ -222,9 +225,8 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
 		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
 		
-		
-		new AutonCommandBuilder();
-		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> AutonCommandBuilder.getCommand(drive, hoodtake), Set.of(drive, hoodtake)));
+	
+		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> autonCommandBuilder.getCommand(drive, hoodtake, shooter), Set.of(drive, hoodtake, shooter)));
 	}
 
 	private void setupDefaultCommands() {
@@ -378,16 +380,84 @@ public class RobotContainer {
 
 		this.controller.right().whileTrue(
 			Commands.defer(
-				() -> new HoodtakeFromL3Auto(drive, hoodtake, drive::getTargetAlgae),
+				() -> new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae),
 				Set.of(drive, hoodtake)
 			)
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
-		// this.controller.right().whileTrue(
-		// 	this.indexer.setRightVoltage(() -> Volts.of(3))
-		// 	.andThen(Commands.waitUntil(() -> false))
+		// Reset gyro to 0° when A button is pressed
+		backupController.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
+			.ignoringDisable(true));
+
+		this.backupController.leftTrigger().whileTrue(
+			Commands.sequence(
+				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
+				this.shooter.setFlywheelVelocities(
+					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
+					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
+				),
+				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// this.backupcontroller.x().whileTrue(
+		// 	new ShootAtTargetFromDistance(backupcontroller, drive, shooter, hoodtake)
 		// );
+
+		this.backupController.rightTrigger().whileTrue(
+			Commands.sequence(
+				this.indexer.shoot()
+				// Commands.waitUntil(() -> false)
+			)
+		);
+
+		// intake
+		this.backupController.leftBumper().whileTrue(
+			Commands.sequence(
+				this.intake.setWheelVoltage(() -> Volts.of(3.5)),
+				this.intake.setPivotPosition(() -> Degrees.of(35)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// processor
+		this.backupController.rightBumper().whileTrue(
+			Commands.sequence(
+				new ScoreProcessor(intake, indexer),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// L3 Hoodtake
+
+		this.backupController.y().whileTrue(
+			Commands.sequence(
+				this.hoodtake.setPivotPosition(() -> Degrees.of(55)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(-5)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		//L2
+
+		this.backupController.b().whileTrue(
+			Commands.sequence(
+				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		this.backupController.left().whileTrue(
+			Commands.sequence(
+				this.intake.setPivotPosition(() -> Degrees.of(60)),
+				Commands.waitUntil(() -> intake.atPosition()),
+				this.intake.setWheelVoltage(() -> Volts.of(-7)),
+				Commands.waitUntil(() -> false)
+			)
+		);
 	}
 
 	/**

@@ -12,6 +12,7 @@
 // GNU General Public License for more details.
 
 package frc.robot.subsystems.drive;
+
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Meters;
@@ -37,6 +38,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
@@ -116,7 +118,7 @@ public class Drive extends SubsystemBase {
 			};
 
 	private Field2d field = new Field2d();
-		
+
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
 			kinematics, rawGyroRotation, lastModulePositions, new Pose2d(7.579, 3.995, new Rotation2d()));
 
@@ -124,29 +126,28 @@ public class Drive extends SubsystemBase {
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
 			DriveConstants.HEADING_kD,
-			new TrapezoidProfile.Constraints(Math.PI, Math.PI)
-	);
+			new TrapezoidProfile.Constraints(Math.PI, Math.PI));
 
 	private ProfiledPIDController headingCorrectionPID = new ProfiledPIDController(
 			DriveConstants.HEADING_kP,
 			DriveConstants.HEADING_kI,
 			DriveConstants.HEADING_kD,
-			new TrapezoidProfile.Constraints(Math.PI, DriveConstants.MAX_ANGULAR_ACCELERATION_PID.in(RadiansPerSecondPerSecond))
-	);
+			new TrapezoidProfile.Constraints(Math.PI,
+					DriveConstants.MAX_ANGULAR_ACCELERATION_PID.in(RadiansPerSecondPerSecond)));
 
 	private ProfiledPIDController xPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
 			DriveConstants.TRANSLATION_kD,
-			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond))
-			);
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond),
+					DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond)));
 
 	private ProfiledPIDController yPID = new ProfiledPIDController(
 			DriveConstants.TRANSLATION_kP,
 			DriveConstants.TRANSLATION_kI,
 			DriveConstants.TRANSLATION_kD,
-			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond), DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond))
-			);
+			new TrapezoidProfile.Constraints(this.getMaximumSpeed().in(MetersPerSecond),
+					DriveConstants.MAX_LINEAR_ACCELERATION_PID.in(MetersPerSecondPerSecond)));
 
 	/** true if translation control is overridden */
 	boolean isXPIDEnabled = false;
@@ -204,6 +205,8 @@ public class Drive extends SubsystemBase {
 				(targetPose) -> {
 					Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
 				});
+		
+		PathfindingCommand.warmupCommand().schedule();
 
 		// Configure SysId
 		sysId = new SysIdRoutine(
@@ -213,9 +216,9 @@ public class Drive extends SubsystemBase {
 						null,
 						(state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
 				new SysIdRoutine.Mechanism((voltage) -> runCharacterizationLinear(voltage), null, this));
-	
-		this.setupLoopControllers();		
-		
+
+		this.setupLoopControllers();
+
 		SmartDashboard.putData(field);
 	}
 
@@ -234,28 +237,25 @@ public class Drive extends SubsystemBase {
 	@Override
 	public void periodic() {
 		if (isXPIDEnabled || isYPIDEnabled) {
-			
+
 			targetChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
 			if (isXPIDEnabled) {
 				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
-				// Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
+				Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
 			}
-			
+
 			if (isYPIDEnabled) {
 				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
-				// Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+				Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
 			}
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
-		
-			
-			
-		
+
 		}
 
 		if (isHeadingPIDEnabled) {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
-			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+			Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
 		// HEADING CORRECION
@@ -371,7 +371,8 @@ public class Drive extends SubsystemBase {
 	/** Runs the drive in a straight line with the specified drive output. */
 	public void runDriveVoltage(Voltage output) {
 		for (int i = 0; i < 4; i++) {
-			modules[i].setDriveVoltage(output);;
+			modules[i].setDriveVoltage(output);
+			;
 		}
 	}
 
@@ -380,8 +381,7 @@ public class Drive extends SubsystemBase {
 			modules[i].setTurnPosition(angle);
 		}
 	};
-	
-	
+
 	public void setDriveAngleSetpointToRotationPattern() {
 		for (int i = 0; i < 4; i++) {
 			modules[i].setTurnPosition(MODULE_TRANSLATIONS[i].getAngle().plus(Rotation2d.fromDegrees(90)));
@@ -524,8 +524,7 @@ public class Drive extends SubsystemBase {
 		poseEstimator.resetPosition(
 				rawGyroRotation.plus(pose.getRotation()),
 				getModulePositions(),
-				pose
-		);
+				pose);
 	}
 
 	/** Adds a new timestamped vision measurement. */
@@ -565,33 +564,29 @@ public class Drive extends SubsystemBase {
 
 	public AngularVelocity getAverageDriveAngularVelocity() {
 		double velocity = 0.0;
-		for (int i=0; i< 4; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			velocity += modules[i].getFFCharacterizationVelocity().in(RadiansPerSecond);
 		}
-		return RadiansPerSecond.of(velocity/4.0);
+		return RadiansPerSecond.of(velocity / 4.0);
 	}
 
 	public Distance getDistanceFrom(Translation2d other) {
 		return Meters.of(this.getPose().getTranslation().getDistance(other));
 	}
 
-
-
 	public Distance getDistanceFrom(Pose2d other) {
 		return this.getDistanceFrom(other.getTranslation());
 	}
 
-	
-
-
 	// public void initializePoseEstimator(
-	// 		SwerveDriveKinematics kinematics,
-	// 		Rotation2d gyroAngle,
-	// 		SwerveModulePosition[] modulePositions,
-	// 		Pose2d initialPoseMeters) {
-	// 	poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
-	// 	SmartDashboard.putData("field", field);
-	// 	logOdometry();
+	// SwerveDriveKinematics kinematics,
+	// Rotation2d gyroAngle,
+	// SwerveModulePosition[] modulePositions,
+	// Pose2d initialPoseMeters) {
+	// poseEstimator = new SwerveDrivePoseEstimator(kinematics, gyroAngle,
+	// modulePositions, initialPoseMeters);
+	// SmartDashboard.putData("field", field);
+	// logOdometry();
 	// }
 
 	public void addDriveMeasurement(Rotation2d rotation, SwerveModulePosition[] modulePositions) {
@@ -603,9 +598,9 @@ public class Drive extends SubsystemBase {
 	}
 
 	// public void logOdometry() {
-	// 	Pose2d pose = getPose();
-	// 	Logger.recordOutput("Odometry/Robot", pose);
-	// 	field.setRobotPose(pose);
+	// Pose2d pose = getPose();
+	// Logger.recordOutput("Odometry/Robot", pose);
+	// field.setRobotPose(pose);
 	// }
 
 	public boolean isOnRedSide() {
@@ -626,22 +621,20 @@ public class Drive extends SubsystemBase {
 					double y = ySupplier.getAsDouble();
 
 					x = MathUtil.clamp(x, -1.0, 1.0);
-					y= MathUtil.clamp(y, -1.0, 1.0);
-
+					y = MathUtil.clamp(y, -1.0, 1.0);
 
 					// linear
 					double linearSpeedScalar;
 					linearSpeedScalar = Math.hypot(x, y);
 
 					linearSpeedScalar = MathUtil.clamp(linearSpeedScalar, -1.0, 1.0);
-					linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
-
+					linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_LINEAR);
 
 					linearSpeedScalar = CometMathUtil.minMaxScale(
-						linearSpeedScalar,
-						DriveConstants.JOYSTICK_DEADBAND_LINEAR,
-						1
-					);
+							linearSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+							1);
 
 					Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
 					Translation2d linearTranslation = new Translation2d(linearSpeedScalar, linearDirection);
@@ -650,15 +643,13 @@ public class Drive extends SubsystemBase {
 					double omegaSpeedScalar;
 					omegaSpeedScalar = omegaSupplier.getAsDouble();
 					omegaSpeedScalar = MathUtil.clamp(omegaSpeedScalar, -1.0, 1.0);
-					omegaSpeedScalar = MathUtil.applyDeadband(omegaSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_ANGULAR);
+					omegaSpeedScalar = MathUtil.applyDeadband(omegaSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_ANGULAR);
 					omegaSpeedScalar = CometMathUtil.minMaxScale(
-						omegaSpeedScalar,
-						DriveConstants.JOYSTICK_DEADBAND_ANGULAR,
-						1
-					);
+							omegaSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_ANGULAR,
+							1);
 
-
-					
 					omegaSpeedScalar = Math.signum(omegaSpeedScalar) * Math.pow(omegaSpeedScalar, 2);
 					// omegaSpeedScalar = Math.pow(omegaSpeedScalar, 3);
 					// omegaSpeedScalar *= -1;
@@ -667,7 +658,6 @@ public class Drive extends SubsystemBase {
 							this.getMaximumSpeed().times(linearTranslation.getX()),
 							this.getMaximumSpeed().times(linearTranslation.getY()),
 							this.getMaximumAngularSpeed().times(omegaSpeedScalar));
-
 
 					boolean isFlipped = DriverStation.getAlliance().isPresent()
 							&& DriverStation.getAlliance().get() == Alliance.Red;
@@ -690,9 +680,9 @@ public class Drive extends SubsystemBase {
 
 	public void updateTargetAlgae() {
 		boolean isOpposingReef = this.isOnRedSide();
-		Pose2d[] algaeLocations = isOpposingReef 
-			? FieldConstants.Reef.reefAlgaeTargetPosesRed 
-			: FieldConstants.Reef.reefAlgaeTargetPosesBlue;
+		Pose2d[] algaeLocations = isOpposingReef
+				? FieldConstants.Reef.reefAlgaeTargetPosesRed
+				: FieldConstants.Reef.reefAlgaeTargetPosesBlue;
 
 		Pose2d closestPose = algaeLocations[0];
 		int closestAlgaeIndex = 0;
@@ -719,28 +709,20 @@ public class Drive extends SubsystemBase {
 	}
 
 	public Command pathfindToPose(Supplier<Pose2d> pose, double goalEndVelocity) {
-		return Commands.sequence(
-			AutoBuilder.pathfindToPose(
-				pose.get(),
-				new PathConstraints(
-						this.getMaximumSpeed(),
-						DriveConstants.MAX_LINEAR_ACCELERATION_PID,
-						this.getMaximumAngularSpeed(),
-						DriveConstants.MAX_ANGULAR_ACCELERATION_PID
-				),
-				goalEndVelocity
-				),
-			Commands.runOnce(() -> this.stop())
-		);
+		return AutoBuilder.pathfindToPose(
+			pose.get(),
+			new PathConstraints(
+					this.getMaximumSpeed(),
+					DriveConstants.MAX_LINEAR_ACCELERATION_PID,
+					this.getMaximumAngularSpeed(),
+					DriveConstants.MAX_ANGULAR_ACCELERATION_PID),
+			goalEndVelocity);
 	}
 
 	public Command driveToTargetAlgaePID(Supplier<Distance> distance, Supplier<TargetAlgae> targetAlgae) {
-		return
-			Commands.defer(
-				() -> this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
-					targetAlgae,
-					distance.get())),
-				Set.of(this));
+		return this.moveToPosePID(() -> FieldConstants.Reef.getTranslatedPose(
+						targetAlgae,
+						distance.get()));
 	}
 
 	/**
@@ -752,54 +734,50 @@ public class Drive extends SubsystemBase {
 			DoubleSupplier ySupplier,
 			Supplier<Rotation2d> rotation) {
 		return new FunctionalCommand(
-			() -> {
-				this.isHeadingPIDEnabled = true;
-				this.headingPID.reset(this.getPose().getRotation().getRadians());
-			},
-			() -> {
-				this.headingPID.setGoal(rotation.get().getRadians());
-				double x = xSupplier.getAsDouble();
-				double y = ySupplier.getAsDouble();
+				() -> {
+					this.isHeadingPIDEnabled = true;
+					this.headingPID.reset(this.getPose().getRotation().getRadians());
+				},
+				() -> {
+					this.headingPID.setGoal(rotation.get().getRadians());
+					double x = xSupplier.getAsDouble();
+					double y = ySupplier.getAsDouble();
 
-				// linear
-				double linearSpeedScalar;
-				linearSpeedScalar = Math.hypot(x, y);
+					// linear
+					double linearSpeedScalar;
+					linearSpeedScalar = Math.hypot(x, y);
 
-				linearSpeedScalar = MathUtil.clamp(linearSpeedScalar, -1.0, 1.0);
-				linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
+					linearSpeedScalar = MathUtil.clamp(linearSpeedScalar, -1.0, 1.0);
+					linearSpeedScalar = MathUtil.applyDeadband(linearSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_LINEAR);
 
+					linearSpeedScalar = CometMathUtil.minMaxScale(
+							linearSpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+							1);
 
-				linearSpeedScalar = CometMathUtil.minMaxScale(
-					linearSpeedScalar,
-					DriveConstants.JOYSTICK_DEADBAND_LINEAR,
-					1
-				);
+					Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
+					Translation2d linearTranslation = new Translation2d(linearSpeedScalar, linearDirection);
 
-				Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
-				Translation2d linearTranslation = new Translation2d(linearSpeedScalar, linearDirection);
-				
+					ChassisSpeeds speeds = new ChassisSpeeds(
+							this.getMaximumSpeed().times(linearTranslation.getX()),
+							this.getMaximumSpeed().times(linearTranslation.getY()),
+							RadiansPerSecond.of(0));
 
+					boolean isFlipped = DriverStation.getAlliance().isPresent()
+							&& DriverStation.getAlliance().get() == Alliance.Red;
 
-				ChassisSpeeds speeds = new ChassisSpeeds(
-						this.getMaximumSpeed().times(linearTranslation.getX()),
-						this.getMaximumSpeed().times(linearTranslation.getY()),
-						RadiansPerSecond.of(0));
+					Rotation2d robotAngle = isFlipped
+							? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
+							: this.getRotation();
 
-				boolean isFlipped = DriverStation.getAlliance().isPresent()
-						&& DriverStation.getAlliance().get() == Alliance.Red;
+					speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
 
-				Rotation2d robotAngle = isFlipped
-						? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
-						: this.getRotation();
-
-				speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
-
-				this.runVelocity(speeds);
-			},
-		(interrupted) -> this.isHeadingPIDEnabled = false,
-		() -> false,
-		this
-		);
+					this.runVelocity(speeds);
+				},
+				(interrupted) -> this.isHeadingPIDEnabled = false,
+				() -> false,
+				this);
 	}
 
 	/**
@@ -811,54 +789,50 @@ public class Drive extends SubsystemBase {
 			DoubleSupplier ySupplier,
 			Supplier<Rotation2d> rotation) {
 		return new FunctionalCommand(
-			() -> {
-				this.isHeadingPIDEnabled = true;
-				this.isXPIDEnabled = true;
-				this.headingPID.reset(this.getPose().getRotation().getRadians());
-				this.xPID.reset(this.getPose().getX());
-			},
-			() -> {
-				this.headingPID.setGoal(rotation.get().getRadians());
-				this.xPID.setGoal(xSupplier.getAsDouble());
+				() -> {
+					this.isHeadingPIDEnabled = true;
+					this.isXPIDEnabled = true;
+					this.headingPID.reset(this.getPose().getRotation().getRadians());
+					this.xPID.reset(this.getPose().getX());
+				},
+				() -> {
+					this.headingPID.setGoal(rotation.get().getRadians());
+					this.xPID.setGoal(xSupplier.getAsDouble());
 
-				// linear
-				double ySpeedScalar;
+					// linear
+					double ySpeedScalar;
 
-				ySpeedScalar = ySupplier.getAsDouble();
-				ySpeedScalar = MathUtil.clamp(ySpeedScalar, -1.0, 1.0);
-				ySpeedScalar = MathUtil.applyDeadband(ySpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
-				ySpeedScalar = CometMathUtil.minMaxScale(
-					ySpeedScalar,
-					DriveConstants.JOYSTICK_DEADBAND_LINEAR,
-					1
-				);
+					ySpeedScalar = ySupplier.getAsDouble();
+					ySpeedScalar = MathUtil.clamp(ySpeedScalar, -1.0, 1.0);
+					ySpeedScalar = MathUtil.applyDeadband(ySpeedScalar, DriveConstants.JOYSTICK_DEADBAND_LINEAR);
+					ySpeedScalar = CometMathUtil.minMaxScale(
+							ySpeedScalar,
+							DriveConstants.JOYSTICK_DEADBAND_LINEAR,
+							1);
 
-				ChassisSpeeds speeds = new ChassisSpeeds(
-					MetersPerSecond.zero(),
-					this.getMaximumSpeed().times(ySpeedScalar),
-					RadiansPerSecond.zero()
-				);
+					ChassisSpeeds speeds = new ChassisSpeeds(
+							MetersPerSecond.zero(),
+							this.getMaximumSpeed().times(ySpeedScalar),
+							RadiansPerSecond.zero());
 
-				boolean isFlipped = DriverStation.getAlliance().isPresent()
-						&& DriverStation.getAlliance().get() == Alliance.Red;
+					boolean isFlipped = DriverStation.getAlliance().isPresent()
+							&& DriverStation.getAlliance().get() == Alliance.Red;
 
-				Rotation2d robotAngle = isFlipped
-						? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
-						: this.getRotation();
+					Rotation2d robotAngle = isFlipped
+							? this.getRotation().plus(new Rotation2d(Degrees.of(180)))
+							: this.getRotation();
 
-				speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
+					speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotAngle);
 
-				this.runVelocity(speeds);
-			},
-		(interrupted) -> {
-			this.isHeadingPIDEnabled = false;
-			this.isXPIDEnabled = false;
-		},
-		() -> false,
-		this
-		);
+					this.runVelocity(speeds);
+				},
+				(interrupted) -> {
+					this.isHeadingPIDEnabled = false;
+					this.isXPIDEnabled = false;
+				},
+				() -> false,
+				this);
 	}
-
 
 	/**
 	 * Turns the robot to a specified angle using PID control.
@@ -916,8 +890,7 @@ public class Drive extends SubsystemBase {
 					this.isYPIDEnabled = true;
 					// we do this just so that atGoal() doesn't return true immediately
 					this.headingPID.reset(
-						this.getPose().getRotation().getRadians()
-					);
+							this.getPose().getRotation().getRadians());
 					this.xPID.reset(this.getPose().getX());
 					this.yPID.reset(this.getPose().getY());
 				},
@@ -938,84 +911,73 @@ public class Drive extends SubsystemBase {
 
 	public Command sysIdLinear() {
 		SysIdRoutine routine = new SysIdRoutine(
-			new SysIdRoutine.Config(
-				Volts.per(Second).of(0.5),
-				Volts.of(2),
-				null,
-				(state) -> Logger.recordOutput(
-					"SysId/drive-linear", state.toString()
-				)
-			),
-			new SysIdRoutine.Mechanism(
-				this::runDriveVoltage,
-				log -> {
-					Logger.recordOutput("SysId/drive-linear/Voltage", this.getAverageModuleDriveAppliedVoltage());
-					Logger.recordOutput("SysId/drive-linear/Position", this.getAverageDriveAngularPosition());
-					Logger.recordOutput("SysId/drive-linear/Velocity", this.getAverageDriveAngularVelocity());
-					log.motor("drive-linear")
-						.voltage(this.getAverageModuleDriveAppliedVoltage())
-						.angularPosition(this.getAverageDriveAngularPosition())
-						.angularVelocity(this.getAverageDriveAngularVelocity());
-				}, 
-				this)
-		);
+				new SysIdRoutine.Config(
+						Volts.per(Second).of(0.5),
+						Volts.of(2),
+						null,
+						(state) -> Logger.recordOutput(
+								"SysId/drive-linear", state.toString())),
+				new SysIdRoutine.Mechanism(
+						this::runDriveVoltage,
+						log -> {
+							Logger.recordOutput("SysId/drive-linear/Voltage",
+									this.getAverageModuleDriveAppliedVoltage());
+							Logger.recordOutput("SysId/drive-linear/Position", this.getAverageDriveAngularPosition());
+							Logger.recordOutput("SysId/drive-linear/Velocity", this.getAverageDriveAngularVelocity());
+							log.motor("drive-linear")
+									.voltage(this.getAverageModuleDriveAppliedVoltage())
+									.angularPosition(this.getAverageDriveAngularPosition())
+									.angularVelocity(this.getAverageDriveAngularVelocity());
+						},
+						this));
 
-
-		Command routineCommand =
-			Commands.parallel(
+		Command routineCommand = Commands.parallel(
 				Commands.run(() -> this.setDriveAngleSetpoints(new Rotation2d())),
 				Commands.sequence(
-					routine.dynamic(Direction.kForward),
-					Commands.waitSeconds(2),
-					routine.dynamic(Direction.kReverse),
-					Commands.waitSeconds(2),
-					routine.quasistatic(Direction.kForward),
-					Commands.waitSeconds(2),
-					routine.quasistatic(Direction.kReverse)
-				)
-			);
+						routine.dynamic(Direction.kForward),
+						Commands.waitSeconds(2),
+						routine.dynamic(Direction.kReverse),
+						Commands.waitSeconds(2),
+						routine.quasistatic(Direction.kForward),
+						Commands.waitSeconds(2),
+						routine.quasistatic(Direction.kReverse)));
 		return routineCommand;
 	}
 
-
 	public Command sysIdAngular() {
 		SysIdRoutine routine = new SysIdRoutine(
-			new SysIdRoutine.Config(
-				Volts.per(Second).of(0.5),
-				Volts.of(3),
-				null,
-				(state) -> Logger.recordOutput(
-					"SysId/drive-rotational", state.toString()
-				)
-			),
-			new SysIdRoutine.Mechanism(
-				this::runDriveVoltage,
-				log -> {
-					Logger.recordOutput("SysId/drive-rotational/Voltage", this.getAverageModuleDriveAppliedVoltage());
-					Logger.recordOutput("SysId/drive-rotational/Position", this.getAverageDriveAngularPosition());
-					Logger.recordOutput("SysId/drive-rotational/Velocity", this.getAverageDriveAngularVelocity());
-					log.motor("drive-rotational")
-						.voltage(this.getAverageModuleDriveAppliedVoltage())
-						.angularPosition(this.getAverageDriveAngularPosition())
-						.angularVelocity(this.getAverageDriveAngularVelocity());
-				}, 
-				this)
-		);
+				new SysIdRoutine.Config(
+						Volts.per(Second).of(0.5),
+						Volts.of(3),
+						null,
+						(state) -> Logger.recordOutput(
+								"SysId/drive-rotational", state.toString())),
+				new SysIdRoutine.Mechanism(
+						this::runDriveVoltage,
+						log -> {
+							Logger.recordOutput("SysId/drive-rotational/Voltage",
+									this.getAverageModuleDriveAppliedVoltage());
+							Logger.recordOutput("SysId/drive-rotational/Position",
+									this.getAverageDriveAngularPosition());
+							Logger.recordOutput("SysId/drive-rotational/Velocity",
+									this.getAverageDriveAngularVelocity());
+							log.motor("drive-rotational")
+									.voltage(this.getAverageModuleDriveAppliedVoltage())
+									.angularPosition(this.getAverageDriveAngularPosition())
+									.angularVelocity(this.getAverageDriveAngularVelocity());
+						},
+						this));
 
-
-		Command routineCommand =
-			Commands.parallel(
+		Command routineCommand = Commands.parallel(
 				Commands.run(() -> this.setDriveAngleSetpointToRotationPattern()),
 				Commands.sequence(
-					routine.dynamic(Direction.kForward),
-					Commands.waitSeconds(2),
-					routine.dynamic(Direction.kReverse),
-					Commands.waitSeconds(2),
-					routine.quasistatic(Direction.kReverse),
-					Commands.waitSeconds(2),
-					routine.quasistatic(Direction.kForward)
-				)
-			);
+						routine.dynamic(Direction.kForward),
+						Commands.waitSeconds(2),
+						routine.dynamic(Direction.kReverse),
+						Commands.waitSeconds(2),
+						routine.quasistatic(Direction.kReverse),
+						Commands.waitSeconds(2),
+						routine.quasistatic(Direction.kForward)));
 		return routineCommand;
 	}
 }

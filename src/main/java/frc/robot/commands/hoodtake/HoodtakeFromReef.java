@@ -12,11 +12,12 @@ import frc.robot.subsystems.hoodtake.Hoodtake;
 public class HoodtakeFromReef extends WrapperCommand {
     public HoodtakeFromReef(Drive drive, Hoodtake hoodtake, Supplier<TargetAlgae> targetAlgae) {
         super(
-            Commands.either(
-                new HoodtakeFromL3Auto(drive, hoodtake, targetAlgae),
-                new HoodtakeFromL2Auto(drive, hoodtake, targetAlgae),
-                () -> targetAlgae.get().id() % 2 == 0
-            ).andThen(
+            Commands.sequence(
+                Commands.either(
+                    new HoodtakeFromL3Auto(drive, hoodtake, targetAlgae),
+                    new HoodtakeFromL2Auto(drive, hoodtake, targetAlgae),
+                    () -> targetAlgae.get().id() % 2 == 0
+                ),
                 hoodtake.defaultCommand()
             )
         );

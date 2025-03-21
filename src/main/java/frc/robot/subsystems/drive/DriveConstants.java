@@ -17,12 +17,12 @@ public class DriveConstants {
     public static final double HEADING_kI = 0;
     public static final double HEADING_kD = 0.18657275;
 
-    public static final double TRANSLATION_kP = 2;
-    public static final double TRANSLATION_kI = 0;
+    public static final double TRANSLATION_kP = 6;
+    public static final double TRANSLATION_kI = 0.0001;
     public static final double TRANSLATION_kD = 0;
 
-    public static final LinearAcceleration MAX_LINEAR_ACCELERATION_PID = MetersPerSecondPerSecond.of(0.5);
-    public static final AngularAcceleration MAX_ANGULAR_ACCELERATION_PID = RadiansPerSecondPerSecond.of(Math.PI / 4.0);
+    public static final LinearAcceleration MAX_LINEAR_ACCELERATION_PID = MetersPerSecondPerSecond.of(1);
+    public static final AngularAcceleration MAX_ANGULAR_ACCELERATION_PID = RadiansPerSecondPerSecond.of(Math.PI / 2);
 
     public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
 
