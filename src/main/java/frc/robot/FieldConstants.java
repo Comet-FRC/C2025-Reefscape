@@ -10,7 +10,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.subsystems.drive.TargetAlgae;
+import frc.robot.subsystems.objectivetracker.TargetAlgae;
 import frc.robot.util.AllianceColor;
 
 import static edu.wpi.first.units.Units.Inches;
