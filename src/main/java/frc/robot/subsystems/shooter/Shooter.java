@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -33,6 +34,7 @@ public class Shooter extends SubsystemBase {
 	}
 
 
+	@AutoLogOutput(key = "Shooter/Is Ready?")
 	public boolean isReadyToShoot(){
 		if (inputs.topWheelDesiredVelocity.minus(inputs.topWheelVelocity).abs(RPM) > ShooterConstants.ACCEPTABLE_VELOCITY_ERROR.in(RPM))
 			return false;

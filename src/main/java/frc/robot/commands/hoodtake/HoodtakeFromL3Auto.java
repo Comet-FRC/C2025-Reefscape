@@ -21,12 +21,13 @@ public class HoodtakeFromL3Auto extends SequentialCommandGroup {
             // Commands.runOnce(() -> System.out.println("pose: " + targetAlgaeSupplier.get().pose())),
             // Commands.runOnce(() -> System.out.println("isRed: " + targetAlgaeSupplier.get().isRed())),
             drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0),
-            drive.driveToTargetAlgaePID(() -> Meters.of(0.6), targetAlgaeSupplier),
+            drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
+                .withTimeout(5),
             hoodtake.setPivotPosition(() -> Degrees.of(55)),
             hoodtake.setWheelVoltage(() -> Volts.of(-5)),
             Commands.waitUntil(hoodtake::atPosition)
                 .withTimeout(4),
-            Commands.waitSeconds(0.5),
+            Commands.waitSeconds(0.4),
             drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0)
             // hoodtake.setPivotPosition(() -> Degrees.of(80))
             //     .andThen(Commands.waitUntil(hoodtake::atPosition))
