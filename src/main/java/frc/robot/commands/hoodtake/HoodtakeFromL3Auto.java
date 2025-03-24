@@ -20,7 +20,8 @@ public class HoodtakeFromL3Auto extends SequentialCommandGroup {
             // Commands.runOnce(() -> System.out.println("id: " + targetAlgaeSupplier.get().id())),
             // Commands.runOnce(() -> System.out.println("pose: " + targetAlgaeSupplier.get().pose())),
             // Commands.runOnce(() -> System.out.println("isRed: " + targetAlgaeSupplier.get().isRed())),
-            drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0),
+            drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0)
+                .onlyWhile(() -> drive.getDistanceFrom(targetAlgaeSupplier.get().pose()).gt(Meters.of(0.5))),
             drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
                 .withTimeout(5),
             hoodtake.setPivotPosition(() -> Degrees.of(55)),
@@ -29,6 +30,7 @@ public class HoodtakeFromL3Auto extends SequentialCommandGroup {
                 .withTimeout(4),
             Commands.waitSeconds(0.4),
             drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0)
+                .onlyWhile(() -> drive.getDistanceFrom(targetAlgaeSupplier.get().pose()).gt(Meters.of(0.1)))
             // hoodtake.setPivotPosition(() -> Degrees.of(80))
             //     .andThen(Commands.waitUntil(hoodtake::atPosition))
             //drive.driveToClosestAlgaePID(() -> Meters.of(0.51))

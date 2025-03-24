@@ -890,9 +890,9 @@ public class Drive extends SubsystemBase {
 					this.isYPIDEnabled = true;
 					// we do this just so that atGoal() doesn't return true immediately
 					this.headingPID.reset(
-							this.getPose().getRotation().getRadians());
-					this.xPID.reset(this.getPose().getX());
-					this.yPID.reset(this.getPose().getY());
+							this.getPose().getRotation().getRadians(), this.getFieldOrientedChassisSpeeds().omegaRadiansPerSecond);
+					this.xPID.reset(this.getPose().getX(), this.getFieldOrientedChassisSpeeds().vxMetersPerSecond);
+					this.yPID.reset(this.getPose().getY(), this.getFieldOrientedChassisSpeeds().vyMetersPerSecond);
 				},
 				() -> {
 					this.headingPID.setGoal(pose.get().getRotation().getRadians());
