@@ -59,6 +59,7 @@ import frc.robot.commands.coral.AutoDepositCoralE;
 import frc.robot.commands.hoodtake.HoodtakeFromL3Auto;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.SwerveConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.gyro.GyroIOSim;
@@ -147,12 +148,12 @@ public class RobotContainer {
 						.withGyro(COTS.ofPigeon2())
 						.withSwerveModule(
 								COTS.ofMark4i(DCMotor.getNEO(1), DCMotor.getNEO(1), COTS.WHEELS.COLSONS.cof, 1))
-						.withTrackLengthTrackWidth(Meters.of(0.3429), Meters.of(0.4953))
-						.withBumperSize(Meters.of(0.84), Meters.of(0.87));
+						.withTrackLengthTrackWidth(SwerveConstants.WHEELBASE, SwerveConstants.TRACK_WIDTH)
+						.withBumperSize(Meters.of(0.876), Meters.of(0.876));
 
 				this.swerveDriveSimulation = new SwerveDriveSimulation(
 						driveTrainSimulationConfig, // Specify Configuration
-						new Pose2d(0, 0, new Rotation2d(0)) // Specify starting pose
+						Pose2d.kZero // Specify starting pose
 				);
 
 				this.drive = new Drive(

@@ -91,14 +91,6 @@ import frc.robot.util.CometMathUtil;
 import frc.robot.util.LocalADStarAK;
 
 public class Drive extends SubsystemBase {
-	private static Drive instance;
-
-	public static Drive getInstance() {
-		if (instance == null) {
-			throw new java.lang.RuntimeException("Drive subsystem not instantiated");
-		}
-		return instance;
-	}
 
 	public static final Lock odometryLock = new ReentrantLock();
 
@@ -166,8 +158,6 @@ public class Drive extends SubsystemBase {
 			ModuleIO frModuleIO,
 			ModuleIO blModuleIO,
 			ModuleIO brModuleIO) {
-
-		instance = this;
 
 		this.gyroIO = gyroIO;
 		this.modules[0] = new Module(flModuleIO, 0);
