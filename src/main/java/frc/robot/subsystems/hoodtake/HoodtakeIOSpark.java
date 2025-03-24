@@ -151,7 +151,7 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 			this.wheelMotor.setVoltage(wheelDesiredVoltage.copy());
 		} else {
 			double pid = wheelPID.calculate(wheelMotor.getEncoder().getVelocity());
-			double ff = wheelFF.calculate(wheelPID.getSetpoint(), 0);
+			double ff = wheelFF.calculate(wheelPID.getSetpoint());
 			double volts = pid+ff;
 			this.wheelMotor.setVoltage(Volts.of(volts));
 		}
