@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.Mode;
+import frc.robot.commands.AlignToNet;
 import frc.robot.commands.AutoScoreProcessor;
 import frc.robot.commands.AutonCommandBuilder;
 import frc.robot.commands.RevShooterAndAlignToNet;
@@ -111,7 +112,7 @@ public class RobotContainer {
 	private final Indexer indexer;
 
 	private final CometController controller = new CometXboxController(0);
-	private final CometController backupController = new CometLogitechController(1);
+	private final CometController backupController = new CometPS4Controller(1);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
@@ -210,8 +211,9 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1000);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 2000);
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 725);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1800);
+		SmartDashboard.putNumber("Intake/IntakingVolts", 3.5);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
@@ -330,7 +332,7 @@ public class RobotContainer {
 		// intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(3.5)),
+				this.intake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 3.5))),
 				this.intake.setPivotPosition(() -> Degrees.of(35)),
 				Commands.waitUntil(() -> false)
 			)
@@ -374,7 +376,7 @@ public class RobotContainer {
 		);
 
 		this.controller.x().whileTrue(
-			new RevShooterAndAlignToNet(controller, hoodtake, shooter, drive)
+			new AlignToNet(controller, drive)
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
@@ -382,6 +384,13 @@ public class RobotContainer {
 			Commands.defer(
 				() -> new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae),
 				Set.of(drive, hoodtake)
+			)
+			.andThen(Commands.waitUntil(() -> false))
+		);
+
+		this.controller.up().whileTrue(
+			Commands.sequence(
+				this.indexer.setRightVoltage(() -> Volts.of(-1))
 			)
 			.andThen(Commands.waitUntil(() -> false))
 		);
@@ -435,7 +444,7 @@ public class RobotContainer {
 		this.backupController.y().whileTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(55)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(-5)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(-6)),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -445,7 +454,7 @@ public class RobotContainer {
 		this.backupController.b().whileTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(6)),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -457,6 +466,13 @@ public class RobotContainer {
 				this.intake.setWheelVoltage(() -> Volts.of(-7)),
 				Commands.waitUntil(() -> false)
 			)
+		);
+
+		this.backupController.up().whileTrue(
+			Commands.sequence(
+				this.indexer.setRightVoltage(() -> Volts.of(-1))
+			)
+			.andThen(Commands.waitUntil(() -> false))
 		);
 	}
 
