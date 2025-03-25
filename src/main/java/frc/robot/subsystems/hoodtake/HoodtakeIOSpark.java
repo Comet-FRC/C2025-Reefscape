@@ -174,16 +174,6 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 	}
 
 	@Override
-	public void stopWheel() {
-		wheelMotor.setVoltage(0);
-	}
-
-	@Override
-	public void stopPivot() {
-		this.setPivotVoltage(Volts.of(0));
-	}
-
-	@Override
 	public void setWheelVoltage(Voltage voltage) {
 		this.wheelVoltageMode = true;
 		this.wheelDesiredVoltage.mut_replace(voltage);

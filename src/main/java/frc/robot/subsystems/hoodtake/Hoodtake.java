@@ -41,15 +41,6 @@ public class Hoodtake extends SubsystemBase {
 		armVisualizer.publish();
 	}
 
-	public Command stop() {
-		return Commands.run(
-				() -> {
-					io.stopPivot();
-					io.stopWheel();
-				},
-				this);
-	}
-
 	public boolean atPosition() {
 		return inputs.pivotPosition.minus(inputs.pivotDesiredPosition).abs(Degrees) < 2;
 	}
@@ -90,7 +81,7 @@ public class Hoodtake extends SubsystemBase {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
 				Volts.per(Second).of(0.25),
-				Volts.of(1),
+				Volts.of(5),
 				null,
 				(state) -> Logger.recordOutput(
 					"SysId/hoodtake-pivot", state.toString()
@@ -112,13 +103,13 @@ public class Hoodtake extends SubsystemBase {
 
 
 		Command routineCommand = new SequentialCommandGroup(
-			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20))),
-			Commands.waitSeconds(5),
 			routine.dynamic(Direction.kForward).until(() -> inputs.pivotPosition.gt(Degrees.of(100))),
 			Commands.waitSeconds(5),
-			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20))),
+			routine.dynamic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20))),
 			Commands.waitSeconds(5),
-			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gt(Degrees.of(100)))
+			routine.quasistatic(Direction.kForward).until(() -> inputs.pivotPosition.gt(Degrees.of(100))),
+			Commands.waitSeconds(5),
+			routine.quasistatic(Direction.kReverse).until(() -> inputs.pivotPosition.lt(Degrees.of(-20)))
 		);
 		
 

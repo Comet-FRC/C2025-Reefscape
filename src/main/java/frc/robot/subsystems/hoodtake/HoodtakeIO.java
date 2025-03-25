@@ -32,12 +32,6 @@ public interface HoodtakeIO {
 	public default void updateInputs(HoodtakeIOInputs inputs) {
 	}
 
-	public default void stopWheel() {
-	}
-
-	public default void stopPivot() {
-	}
-
 	public default void setWheelVelocitySetpoint(AngularVelocity velocity) {
 	}
 

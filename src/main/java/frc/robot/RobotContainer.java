@@ -390,10 +390,7 @@ public class RobotContainer {
 		);
 
 		this.controller.up().whileTrue(
-			Commands.sequence(
-				this.indexer.setRightVoltage(() -> Volts.of(-1))
-			)
-			.andThen(Commands.waitUntil(() -> false))
+			this.hoodtake.sysIdRoutinePivot()
 		);
 
 		// Reset gyro to 0° when A button is pressed
