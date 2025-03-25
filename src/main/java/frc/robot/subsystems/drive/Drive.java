@@ -215,13 +215,17 @@ public class Drive extends SubsystemBase {
 	public void setupLoopControllers() {
 		this.headingPID.enableContinuousInput(-Math.PI, Math.PI);
 		this.headingCorrectionPID.enableContinuousInput(-Math.PI, Math.PI);
+
 		this.xPID.setTolerance(0.02);
 		this.yPID.setTolerance(0.02);
 		this.headingPID.setTolerance(Units.degreesToRadians(1));
+		this.headingCorrectionPID.setTolerance(Units.degreesToRadians(1));
+
 		this.xPID.reset(this.getPose().getX());
 		this.yPID.reset(this.getPose().getY());
 		this.headingPID.reset(this.getPose().getRotation().getRadians());
 		this.headingCorrectionPID.reset(this.getPose().getRotation().getRadians());
+
 	}
 
 	@Override
@@ -232,12 +236,12 @@ public class Drive extends SubsystemBase {
 
 			if (isXPIDEnabled) {
 				targetChassisSpeeds.vxMetersPerSecond = this.xPID.calculate(getPose().getX());
-				Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
+				// Logger.recordOutput("Drive/xPID Error", this.xPID.getPositionError());
 			}
 
 			if (isYPIDEnabled) {
 				targetChassisSpeeds.vyMetersPerSecond = this.yPID.calculate(getPose().getY());
-				Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
+				// Logger.recordOutput("Drive/yPID Error", this.yPID.getPositionError());
 			}
 			targetChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(targetChassisSpeeds, this.getRotation());
 
@@ -245,7 +249,7 @@ public class Drive extends SubsystemBase {
 
 		if (isHeadingPIDEnabled) {
 			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
-			Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
+			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
 		// HEADING CORRECION

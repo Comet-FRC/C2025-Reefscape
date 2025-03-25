@@ -23,14 +23,14 @@ public class HoodtakeFromL3Auto extends SequentialCommandGroup {
             drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0)
                 .onlyWhile(() -> drive.getDistanceFrom(targetAlgaeSupplier.get().pose()).gt(Meters.of(0.5))),
             drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
-                .withTimeout(5),
+                .withTimeout(2),
             hoodtake.setPivotPosition(() -> Degrees.of(55)),
             hoodtake.setWheelVoltage(() -> Volts.of(-5)),
             Commands.waitUntil(hoodtake::atPosition)
-                .withTimeout(4),
+                .withTimeout(1),
             Commands.waitSeconds(0.4),
             drive.pathfindToPose(targetAlgaeSupplier.get()::pose, 0)
-                .onlyWhile(() -> drive.getDistanceFrom(targetAlgaeSupplier.get().pose()).gt(Meters.of(0.1)))
+                .onlyWhile(() -> drive.getDistanceFrom(targetAlgaeSupplier.get().pose()).gt(Meters.of(0.2)))
             // hoodtake.setPivotPosition(() -> Degrees.of(80))
             //     .andThen(Commands.waitUntil(hoodtake::atPosition))
             //drive.driveToClosestAlgaePID(() -> Meters.of(0.51))
