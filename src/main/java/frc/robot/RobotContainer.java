@@ -214,7 +214,7 @@ public class RobotContainer {
 
 		SmartDashboard.putNumber("Shooter/topSpeedRPM", 725);
 		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1800);
-		SmartDashboard.putNumber("Intake/IntakingVolts", 3.5);
+		SmartDashboard.putNumber("Intake/IntakingVolts", 4);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
@@ -307,7 +307,7 @@ public class RobotContainer {
 		controller.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
 			.ignoringDisable(true));
 
-		this.controller.leftTrigger().whileTrue(
+		this.controller.leftTrigger().toggleOnTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
 				this.shooter.setFlywheelVelocities(
@@ -333,7 +333,7 @@ public class RobotContainer {
 		// intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 3.5))),
+				this.intake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
 				this.intake.setPivotPosition(() -> Degrees.of(35)),
 				Commands.waitUntil(() -> false)
 			)
