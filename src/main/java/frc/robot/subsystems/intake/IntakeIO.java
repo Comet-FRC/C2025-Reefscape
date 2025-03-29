@@ -16,6 +16,7 @@ public interface IntakeIO {
 		public Angle wheelPosition = Radians.of(0);
 		public AngularVelocity wheelVelocity = RadiansPerSecond.of(0);
 		public AngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0);
+		public AngularVelocity wheelVelocitySetpoint = RadiansPerSecond.of(0);
 		public Voltage wheelAppliedVolts = Volts.of(0);
 		public Current wheelSupplyCurrent = Amps.of(0);
 		public Temperature wheelMotorTemperature = Celsius.of(0);

@@ -52,10 +52,11 @@ public class IntakeIOSpark implements IntakeIO {
 		new TrapezoidProfile.Constraints(3,10)
 	);
 
-	private final PIDController wheelPID = new PIDController(
+	private final ProfiledPIDController wheelPID = new ProfiledPIDController(
 		IntakeConstants.WHEEL_kP,
 		IntakeConstants.WHEEL_kI,
-		IntakeConstants.WHEEL_kD
+		IntakeConstants.WHEEL_kD,
+		new TrapezoidProfile.Constraints(2*Math.PI, Math.PI)
 	);
 
 	public IntakeIOSpark() {
@@ -135,7 +136,7 @@ public class IntakeIOSpark implements IntakeIO {
 			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
-			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, 0);
+			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, pivotPID.getSetpoint().velocity);
 			double volts;
 			volts = pid + ff;
 			volts = MathUtil.clamp(volts, -12, 12);
@@ -151,14 +152,16 @@ public class IntakeIOSpark implements IntakeIO {
 			this.wheelMotor.setVoltage(wheelDesiredVoltage.copy());
 		} else {
 			double pid = wheelPID.calculate(wheelMotor.getEncoder().getVelocity());
-			double ff = wheelFF.calculate(wheelPID.getSetpoint());
+			double ff = wheelFF.calculate(wheelPID.getSetpoint().velocity);
 			double volts = pid+ff;
+			volts = MathUtil.clamp(volts, -12, 12);
 			this.wheelMotor.setVoltage(Volts.of(volts));
 		}
 
 		inputs.wheelPosition = Radians.of(wheelMotor.getEncoder().getPosition());
 		inputs.wheelVelocity = RadiansPerSecond.of(wheelMotor.getEncoder().getVelocity());
-		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getSetpoint());
+		inputs.wheelDesiredVelocity = RadiansPerSecond.of(wheelPID.getGoal().velocity);
+		inputs.wheelVelocitySetpoint = RadiansPerSecond.of(wheelPID.getSetpoint().velocity);
 		inputs.wheelAppliedVolts = Volts.of(wheelMotor.getAppliedOutput() * wheelMotor.getBusVoltage());
 		inputs.wheelSupplyCurrent = Amps.of(wheelMotor.getOutputCurrent());
 		inputs.wheelMotorTemperature = Celsius.of(wheelMotor.getMotorTemperature());
@@ -192,7 +195,11 @@ public class IntakeIOSpark implements IntakeIO {
 	@Override
 	public void setWheelVelocitySetpoint(AngularVelocity velocity) {
 		this.wheelVoltageMode = false;
-		this.wheelPID.setSetpoint(velocity.in(RadiansPerSecond));
+		this.wheelPID.reset(
+			wheelMotor.getEncoder().getPosition(),
+			wheelMotor.getEncoder().getVelocity()
+		);
+		this.wheelPID.setGoal(velocity.in(RadiansPerSecond));
 	}
 
 	@Override

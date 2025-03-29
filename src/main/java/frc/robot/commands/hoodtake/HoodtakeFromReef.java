@@ -1,5 +1,7 @@
 package frc.robot.commands.hoodtake;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -10,15 +12,12 @@ import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
 
 public class HoodtakeFromReef extends WrapperCommand {
-    public HoodtakeFromReef(Drive drive, Hoodtake hoodtake, Supplier<TargetAlgae> targetAlgae) {
+    public HoodtakeFromReef(Drive drive, Hoodtake hoodtake, Supplier<TargetAlgae> targetAlgaeSupplier) {
         super(
-            Commands.sequence(
-                Commands.either(
-                    new HoodtakeFromL3Auto(drive, hoodtake, targetAlgae),
-                    new HoodtakeFromL2Auto(drive, hoodtake, targetAlgae),
-                    () -> targetAlgae.get().id() % 2 == 0
-                ),
-                hoodtake.defaultCommand()
+            Commands.either(
+                new HoodtakeFromL3Auto(drive, hoodtake, targetAlgaeSupplier),
+                new HoodtakeFromL2Auto(drive, hoodtake, targetAlgaeSupplier),
+                () -> targetAlgaeSupplier.get().id() % 2 == 0
             )
         );
     }

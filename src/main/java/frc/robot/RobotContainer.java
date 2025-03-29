@@ -58,6 +58,7 @@ import frc.robot.commands.coral.AutoDepositCoralD;
 import frc.robot.commands.coral.AutoDepositCoralE;
 import frc.robot.commands.hoodtake.HoodtakeFromL3Auto;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
+import frc.robot.commands.hoodtake.HoodtakeFromReefAuto;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.SwerveConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -367,6 +368,7 @@ public class RobotContainer {
 			)
 		);
 
+		// score l1 coral
 		this.controller.left().whileTrue(
 			Commands.sequence(
 				this.intake.setPivotPosition(() -> Degrees.of(60)),
@@ -390,7 +392,11 @@ public class RobotContainer {
 		);
 
 		this.controller.up().whileTrue(
-			this.hoodtake.sysIdRoutinePivot()
+			Commands.sequence(
+				this.intake.setPivotPosition(() -> Degrees.of(50)),
+				this.intake.sysIdRoutineWheel()
+			)
+			
 		);
 
 		// Reset gyro to 0° when A button is pressed
