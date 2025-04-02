@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -215,7 +216,7 @@ public class RobotContainer {
 
 		SmartDashboard.putNumber("Shooter/topSpeedRPM", 725);
 		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1800);
-		SmartDashboard.putNumber("Intake/IntakingVolts", 4);
+		SmartDashboard.putNumber("Intake/IntakingVolts", 4.5);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
@@ -279,7 +280,7 @@ public class RobotContainer {
 		this.intake.setDefaultCommand(
 			Commands.sequence(
 				Commands.either(
-					this.intake.setPivotVoltage(() -> Volts.of(0.1)),
+					this.intake.setPivotVoltage(() -> Volts.of(0.2)),
 					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
 					() -> intake.getPivotPosition().gt(Degrees.of(85))
 				),
@@ -335,7 +336,8 @@ public class RobotContainer {
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
 				this.intake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
-				this.intake.setPivotPosition(() -> Degrees.of(35)),
+				// this.intake.setWheelVelocity(() -> RPM.of(500)),
+				this.intake.setPivotPosition(() -> Degrees.of(30)),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -394,14 +396,15 @@ public class RobotContainer {
 		this.controller.up().whileTrue(
 			Commands.sequence(
 				this.intake.setPivotPosition(() -> Degrees.of(50)),
+				Commands.waitSeconds(2),
 				this.intake.sysIdRoutineWheel()
 			)
 			
 		);
 
-		this.controller.down().whileTrue(
-			this.intake.sysIdRoutinePivot()
-		);
+		// this.controller.down().whileTrue(
+		// 	this.intake.sysIdRoutinePivot()
+		// );
 
 		// Reset gyro to 0° when A button is pressed
 		backupController.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)

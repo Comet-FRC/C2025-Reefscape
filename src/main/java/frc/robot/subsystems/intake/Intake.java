@@ -116,7 +116,7 @@ public class Intake extends SubsystemBase {
 	public Command sysIdRoutineWheel() {
 		SysIdRoutine routine = new SysIdRoutine(
 			new SysIdRoutine.Config(
-				null,
+				Volts.of(0.2).per(Second),
 				Volts.of(1),
 				null,
 				(state) -> Logger.recordOutput(

@@ -17,6 +17,10 @@ public class DriveConstants {
     public static final double HEADING_kI = 0;
     public static final double HEADING_kD = 0.18657275;
 
+    public static final double HEADING_CORRECTION_kP = 0.5;
+    public static final double HEADING_CORRECTION_kI = 0;
+    public static final double HEADING_CORRECTION_kD = 0;
+
     public static final double TRANSLATION_kP = 6;
     public static final double TRANSLATION_kI = 0.0001;
     public static final double TRANSLATION_kD = 0;
@@ -26,7 +30,7 @@ public class DriveConstants {
 
     public static final boolean IS_COSINE_COMPENSATION_ENABLED = true;
 
-    public static final double angularVelocityCoefficient = 0.0;
+    public static final double angularVelocityCoefficient = 0.1;
     public static final boolean IS_ANGULAR_VELOCITY_CORRECTION_ENABLED = true;
 
     public static final boolean IS_HEADING_CORRECTION_ENABLED = true;

@@ -121,9 +121,9 @@ public class Drive extends SubsystemBase {
 			new TrapezoidProfile.Constraints(Math.PI, Math.PI));
 
 	private ProfiledPIDController headingCorrectionPID = new ProfiledPIDController(
-			DriveConstants.HEADING_kP,
-			DriveConstants.HEADING_kI,
-			DriveConstants.HEADING_kD,
+			DriveConstants.HEADING_CORRECTION_kP,
+			DriveConstants.HEADING_CORRECTION_kI,
+			DriveConstants.HEADING_CORRECTION_kD,
 			new TrapezoidProfile.Constraints(Math.PI,
 					DriveConstants.MAX_ANGULAR_ACCELERATION_PID.in(RadiansPerSecondPerSecond)));
 

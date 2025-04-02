@@ -78,7 +78,7 @@ public class SwerveConstants {
     public static final double DRIVE_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / 60.0 / DRIVE_MOTOR_REDUCTION; // Rotor RPM -> Wheel Rad/Sec
 
     // Drive PID configuration
-    public static final double DRIVE_kP = 0.0;
+    public static final double DRIVE_kP = 0.01;
     public static final double DRIVE_kD = 0.0;
     public static final double DRIVE_kS = 0.06674;
     public static final double DRIVE_kV = 0.15844;
@@ -98,7 +98,7 @@ public class SwerveConstants {
     public static final double AZIMUTH_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / 60.0 / AZIMUTH_REDUCTION; // RPM -> Rad/Sec
 
     // Turn PID configuration
-    public static final double AZIMUTH_kP = 0.4;
+    public static final double AZIMUTH_kP = 0.9;
     public static final double AZIMUTH_kD = 0.0;
     public static final double AZIMUTH_SIM_kP = 8.0;
     public static final double AZIMUTH_SIM_kD = 0.0;
