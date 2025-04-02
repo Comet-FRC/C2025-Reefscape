@@ -152,4 +152,8 @@ public class Hoodtake extends SubsystemBase {
 		);
 		return routineCommand;
 	}
+
+	public void enabledInit() {
+		this.io.enabledInit();
+	}
 }

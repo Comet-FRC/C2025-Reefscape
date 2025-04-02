@@ -49,7 +49,7 @@ public class IntakeIOSpark implements IntakeIO {
 		IntakeConstants.PIVOT_kP,
 		IntakeConstants.PIVOT_kI,
 		IntakeConstants.PIVOT_kD,
-		new TrapezoidProfile.Constraints(3,10)
+		new TrapezoidProfile.Constraints(2,5)
 	);
 
 	private final ProfiledPIDController wheelPID = new ProfiledPIDController(
@@ -133,7 +133,10 @@ public class IntakeIOSpark implements IntakeIO {
 	public void updateInputs(IntakeIOInputs inputs) {
 		if (pivotVoltageMode) {
 			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
-			this.pivotPID.setGoal(pivotMotor.getEncoder().getPosition());
+			this.pivotPID.reset(
+				pivotMotor.getEncoder().getPosition(),
+				pivotMotor.getEncoder().getVelocity()
+			);
 		} else {
 			double pid = pivotPID.calculate(pivotMotor.getEncoder().getPosition());
 			double ff = pivotFF.calculate(pivotPID.getSetpoint().position, pivotPID.getSetpoint().velocity);
@@ -223,6 +226,14 @@ public class IntakeIOSpark implements IntakeIO {
 	public void setPivotVoltageDirect(Voltage volts) {
 		this.pivotVoltageMode = false;
 		this.pivotMotor.setVoltage(volts);
+	}
+
+	@Override
+	public void enabledInit() {
+		this.pivotPID.reset(
+			this.pivotMotor.getEncoder().getPosition(),
+			this.pivotMotor.getEncoder().getVelocity()
+		);
 	}
 
 }

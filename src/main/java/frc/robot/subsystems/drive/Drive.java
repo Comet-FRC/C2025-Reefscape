@@ -436,6 +436,19 @@ public class Drive extends SubsystemBase {
 		return states;
 	}
 
+	@AutoLogOutput(key = "Swerve/ClosedLoop/isXPIDEnabled")
+	private boolean isXPIDEnabled() {
+		return isXPIDEnabled;
+	}
+	@AutoLogOutput(key = "Swerve/ClosedLoop/isYPIDEnabled")
+	private boolean isYPIDEnabled() {
+		return isYPIDEnabled;
+	}
+	@AutoLogOutput(key = "Swerve/ClosedLoop/isHeadingPIDEnabled")
+	private boolean isHeadingPIDEnabled() {
+		return isHeadingPIDEnabled;
+	}
+
 	/**
 	 * Returns the module positions (turn angles and drive positions) for all of the
 	 * modules.
@@ -719,6 +732,18 @@ public class Drive extends SubsystemBase {
 						distance.get()));
 	}
 
+	// public void enableXPID(boolean enabled) {
+	// 	this.isXPIDEnabled = enabled;
+	// }
+
+	// public void enableYPID(boolean enabled) {
+	// 	this.isYPIDEnabled = enabled;
+	// }
+
+	// public void enableHeadingPID(boolean enabled) {
+	// 	this.isHeadingPIDEnabled = enabled;
+	// }
+
 	/**
 	 * Field relative drive command using two joysticks (controlling linear and
 	 * angular velocities).
@@ -873,26 +898,26 @@ public class Drive extends SubsystemBase {
 	/**
 	 * Moves the robot to a specified pose using PID control.
 	 * 
-	 * @param pose the target pose
+	 * @param targetPose the target pose
 	 * @return the command
 	 */
-	public Command moveToPosePID(Supplier<Pose2d> pose) {
+	public Command moveToPosePID(Supplier<Pose2d> targetPose) {
 		return new FunctionalCommand(
 				() -> {
 					this.isHeadingPIDEnabled = true;
 					this.isXPIDEnabled = true;
 					this.isYPIDEnabled = true;
-					// we do this just so that atGoal() doesn't return true immediately
 					this.headingPID.reset(
-							this.getPose().getRotation().getRadians(), this.getFieldOrientedChassisSpeeds().omegaRadiansPerSecond);
+							this.getPose().getRotation().getRadians(),
+							this.getChassisSpeeds().omegaRadiansPerSecond
+					);
 					this.xPID.reset(this.getPose().getX(), this.getFieldOrientedChassisSpeeds().vxMetersPerSecond);
 					this.yPID.reset(this.getPose().getY(), this.getFieldOrientedChassisSpeeds().vyMetersPerSecond);
+					this.headingPID.setGoal(targetPose.get().getRotation().getRadians());
+					this.xPID.setGoal(targetPose.get().getX());
+					this.yPID.setGoal(targetPose.get().getY());
 				},
-				() -> {
-					this.headingPID.setGoal(pose.get().getRotation().getRadians());
-					this.xPID.setGoal(pose.get().getX());
-					this.yPID.setGoal(pose.get().getY());
-				},
+				() -> {},
 				(interrupted) -> {
 					this.isHeadingPIDEnabled = false;
 					this.isXPIDEnabled = false;

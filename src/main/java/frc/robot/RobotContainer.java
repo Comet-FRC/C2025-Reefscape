@@ -279,7 +279,7 @@ public class RobotContainer {
 		this.intake.setDefaultCommand(
 			Commands.sequence(
 				Commands.either(
-					this.intake.setPivotVoltage(() -> Volts.of(0.3)),
+					this.intake.setPivotVoltage(() -> Volts.of(0.1)),
 					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
 					() -> intake.getPivotPosition().gt(Degrees.of(85))
 				),
@@ -399,6 +399,10 @@ public class RobotContainer {
 			
 		);
 
+		this.controller.down().whileTrue(
+			this.intake.sysIdRoutinePivot()
+		);
+
 		// Reset gyro to 0° when A button is pressed
 		backupController.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
 			.ignoringDisable(true));
@@ -516,4 +520,9 @@ public class RobotContainer {
         Logger.recordOutput(
                 "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
     }
+
+	public void enabledInit() {
+		this.intake.enabledInit();
+		this.hoodtake.enabledInit();
+	}
 }

@@ -150,5 +150,8 @@ public class Intake extends SubsystemBase {
 		return routineCommand;
 	}
 
+	public void enabledInit() {
+		this.io.enabledInit();
+	}
 
 }

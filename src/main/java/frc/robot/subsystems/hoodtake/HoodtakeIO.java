@@ -47,4 +47,6 @@ public interface HoodtakeIO {
 	public default void setPivotVoltage(Voltage volts) {
 	}
 
+	public default void enabledInit() {}
+
 }

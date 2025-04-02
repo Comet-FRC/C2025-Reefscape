@@ -201,4 +201,12 @@ public class HoodtakeIOSpark implements HoodtakeIO {
 		this.pivotVoltageMode = true;
 		this.pivotDesiredVoltage.mut_replace(volts);
 	}
+
+	@Override
+	public void enabledInit() {
+		this.pivotPID.reset(
+			this.pivotMotor.getEncoder().getPosition(),
+			this.pivotMotor.getEncoder().getVelocity()
+		);
+	}
 }

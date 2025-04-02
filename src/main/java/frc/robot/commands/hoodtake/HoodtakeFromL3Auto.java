@@ -17,20 +17,15 @@ public class HoodtakeFromL3Auto extends SequentialCommandGroup {
     
     public HoodtakeFromL3Auto(Drive drive, Hoodtake hoodtake, Supplier<TargetAlgae> targetAlgaeSupplier) {
         super(
-            // Commands.runOnce(() -> System.out.println("id: " + targetAlgaeSupplier.get().id())),
-            // Commands.runOnce(() -> System.out.println("pose: " + targetAlgaeSupplier.get().pose())),
-            // Commands.runOnce(() -> System.out.println("isRed: " + targetAlgaeSupplier.get().isRed())),
-            hoodtake.setPivotPosition(() -> Degrees.of(100)),
-            hoodtake.setWheelVoltage(() -> Volts.of(-5)),
-            drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
-                .withTimeout(2),
+            Commands.deadline(
+                drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
+                    .withTimeout(2),
+                hoodtake.setPivotPosition(() -> Degrees.of(100))
+                    .andThen(hoodtake.setWheelVoltage(() -> Volts.of(-5)))
+            ),
             hoodtake.setPivotPosition(() -> Degrees.of(55)),
             Commands.waitUntil(hoodtake::atPosition)
                 .withTimeout(1)
-            
-            // hoodtake.setPivotPosition(() -> Degrees.of(80))
-            //     .andThen(Commands.waitUntil(hoodtake::atPosition))
-            //drive.driveToClosestAlgaePID(() -> Meters.of(0.51))
         );
     }
 

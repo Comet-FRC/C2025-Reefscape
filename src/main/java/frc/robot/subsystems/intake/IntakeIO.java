@@ -57,4 +57,6 @@ public interface IntakeIO {
 	public default void setPivotVoltageDirect(Voltage volts) {
 	}
 
+	public default void enabledInit() {}
+
 }
