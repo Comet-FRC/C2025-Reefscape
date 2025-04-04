@@ -28,6 +28,8 @@ import com.revrobotics.spark.SparkMax;
 
 import static edu.wpi.first.units.Units.*;
 
+import org.littletonrobotics.junction.Logger;
+
 public class ShooterIOSpark implements ShooterIO {
 	private final LoggedTunableNumber FLYWHEEL_ANGULAR_ACCELERATION = new LoggedTunableNumber("Shooter/Flywheel Angular Acceleration", 100);
 
@@ -85,7 +87,7 @@ public class ShooterIOSpark implements ShooterIO {
 	 
 		config
 			.inverted(false)
-			.idleMode(IdleMode.kCoast)
+			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR)
@@ -128,6 +130,8 @@ public class ShooterIOSpark implements ShooterIO {
 		if (bottomVoltageMode) {
 			this.bottomMotor.setVoltage(bottomDesiredVoltage.in(Volts));
 		}
+
+		// Logger.recordOutput("Shooter/topDesiredVoltage",;
 
 		inputs.topWheelPosition = Radians.of(topMotor.getEncoder().getPosition());
 		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());

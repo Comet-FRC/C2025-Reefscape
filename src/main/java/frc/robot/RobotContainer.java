@@ -316,6 +316,7 @@ public class RobotContainer {
 					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
 					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
 				),
+				// this.shooter.setTopVoltage(() -> Volts.of(6)),
 				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
 				Commands.waitUntil(() -> false)
 			)
@@ -326,10 +327,7 @@ public class RobotContainer {
 		// );
 
 		this.controller.rightTrigger().whileTrue(
-			Commands.sequence(
-				this.indexer.shoot()
-				// Commands.waitUntil(() -> false)
-			)
+			this.indexer.shoot()
 		);
 
 		// intake

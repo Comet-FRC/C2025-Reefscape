@@ -110,7 +110,12 @@ public class Indexer extends SubsystemBase {
 		return Commands.sequence(
 			this.setRightVoltage(() -> Volts.of(3.25)),
 			this.setLeftVoltage(() -> Volts.of(3.25)),
-			Commands.waitUntil(() -> (inputs.leftSupplyCurrent.gt(Amps.of(80)) || inputs.rightSupplyCurrent.gt(Amps.of(80))))
+			Commands.waitUntil(
+				() -> {
+					boolean left = inputs.leftSupplyCurrent.gt(Amps.of(59.9)) && inputs.leftPosition.gt(Degrees.of(45));
+					boolean right = inputs.rightSupplyCurrent.gt(Amps.of(59.9)) && inputs.rightPosition.gt(Degrees.of(45));
+					return left && right;
+				})
 		);
 	}
 
