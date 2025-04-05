@@ -49,7 +49,7 @@ public class IntakeIOSpark implements IntakeIO {
 		IntakeConstants.PIVOT_kP,
 		IntakeConstants.PIVOT_kI,
 		IntakeConstants.PIVOT_kD,
-		new TrapezoidProfile.Constraints(2.5,4)
+		new TrapezoidProfile.Constraints(2.5,5)
 	);
 
 	private final ProfiledPIDController wheelPID = new ProfiledPIDController(
