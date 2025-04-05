@@ -158,8 +158,8 @@ public class IntakeIOSpark implements IntakeIO {
 			this.wheelPID.reset(wheelMotor.getEncoder().getVelocity());
 		} else {
 			double pid = wheelPID.calculate(wheelMotor.getEncoder().getVelocity());
-			double ff = wheelFF.calculate(wheelPID.getSetpoint().position);
-			double volts = pid+ff;
+			// double ff = wheelFF.calculate(wheelPID.getSetpoint().position);
+			double volts = pid;
 			volts = MathUtil.clamp(volts, -12, 12);
 			this.wheelMotor.setVoltage(Volts.of(volts));
 		}
