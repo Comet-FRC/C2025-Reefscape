@@ -23,7 +23,7 @@ import frc.robot.util.controller.CometController;
 public class AlignToNet extends SequentialCommandGroup {
 
     private static final Distance BARGE_X = FieldConstants.Barge.BARGE_X;
-    private static final LoggedTunableNumber SHOOTER_DISTANCE = new LoggedTunableNumber("Shooter/Net Distance", 1.85);
+    private static final LoggedTunableNumber SHOOTER_DISTANCE = new LoggedTunableNumber("Shooter/Net Distance", 1.8);
 
     public AlignToNet(CometController controller, Drive drive) {
         super(
