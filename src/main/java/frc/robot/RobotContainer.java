@@ -353,7 +353,7 @@ public class RobotContainer {
 		this.controller.y().whileTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(55)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(-5)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(-6)),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -362,8 +362,8 @@ public class RobotContainer {
 
 		this.controller.b().whileTrue(
 			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
+				this.hoodtake.setPivotPosition(() -> Degrees.of(44)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(6)),
 				Commands.waitUntil(() -> false)
 			)
 		);
