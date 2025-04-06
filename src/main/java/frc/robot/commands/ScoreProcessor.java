@@ -13,7 +13,7 @@ public class ScoreProcessor extends SequentialCommandGroup {
     public ScoreProcessor(Intake intake, Indexer indexer) {
         super(
             intake.setWheelVoltage(() -> Volts.of(-2)),
-            intake.setPivotPosition(() -> Degrees.of(90)),
+            intake.setPivotPosition(() -> Degrees.of(93)),
             indexer.setRightVoltage(() -> Volts.of(2)),
             Commands.waitUntil(() -> indexer.getRightPosition().gt(Degrees.of(150))),
             Commands.waitSeconds(0.2),
