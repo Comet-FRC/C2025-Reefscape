@@ -19,12 +19,12 @@ public class HoodtakeFromL2Auto extends SequentialCommandGroup {
     public HoodtakeFromL2Auto(Drive drive, Hoodtake hoodtake, Supplier<TargetAlgae> targetAlgaeSupplier) {
         super(
             Commands.deadline(
-                drive.driveToTargetAlgaePID(() -> Meters.of(0.65), targetAlgaeSupplier)
+                drive.driveToTargetAlgaePID(() -> Meters.of(0.59), targetAlgaeSupplier)
                     .withTimeout(2),
                 hoodtake.setPivotPosition(() -> Degrees.of(100))
                     .andThen(hoodtake.setWheelVoltage(() -> Volts.of(5)))
             ),
-            hoodtake.setPivotPosition(() -> Degrees.of(45)),
+            hoodtake.setPivotPosition(() -> Degrees.of(60)),
             Commands.waitUntil(hoodtake::atPosition)
                 .withTimeout(1)
         );

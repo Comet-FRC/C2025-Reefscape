@@ -15,8 +15,8 @@ public final class IntakeConstants {
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
 	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/25.0) * (9.0/12.0); // 16:1 gear ratio, 18/12 sprocket ratio
 
-	public static final double PIVOT_kP = 30;
-	public static final double PIVOT_kI = 1;
+	public static final double PIVOT_kP = 10;
+	public static final double PIVOT_kI = 0;
 	public static final double PIVOT_kD = 0;
 	public static final double PIVOT_SIM_kP = 88.636;
 	public static final double PIVOT_SIM_kI = 0;

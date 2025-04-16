@@ -214,8 +214,8 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 725);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1800);
+		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1150);
+		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1250);
 		SmartDashboard.putNumber("Intake/IntakingVolts", 4.5);
 		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
 		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
@@ -316,6 +316,7 @@ public class RobotContainer {
 					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
 					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
 				),
+				// this.shooter.setTopVoltage(() -> Volts.of(6)),
 				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
 				Commands.waitUntil(() -> false)
 			)
@@ -326,10 +327,7 @@ public class RobotContainer {
 		// );
 
 		this.controller.rightTrigger().whileTrue(
-			Commands.sequence(
-				this.indexer.shoot()
-				// Commands.waitUntil(() -> false)
-			)
+			this.indexer.shoot()
 		);
 
 		// intake
@@ -355,7 +353,7 @@ public class RobotContainer {
 		this.controller.y().whileTrue(
 			Commands.sequence(
 				this.hoodtake.setPivotPosition(() -> Degrees.of(55)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(-5)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(-6)),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -364,8 +362,8 @@ public class RobotContainer {
 
 		this.controller.b().whileTrue(
 			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(45)),
-				this.hoodtake.setWheelVoltage(() -> Volts.of(5)),
+				this.hoodtake.setPivotPosition(() -> Degrees.of(44)),
+				this.hoodtake.setWheelVoltage(() -> Volts.of(6)),
 				Commands.waitUntil(() -> false)
 			)
 		);

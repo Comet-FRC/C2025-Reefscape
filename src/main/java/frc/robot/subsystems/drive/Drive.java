@@ -248,7 +248,12 @@ public class Drive extends SubsystemBase {
 		}
 
 		if (isHeadingPIDEnabled) {
-			targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
+			if (!headingPID.atGoal()) {
+				targetChassisSpeeds.omegaRadiansPerSecond = this.headingPID.calculate(this.getRotation().getRadians());
+			} else {
+				targetChassisSpeeds.omegaRadiansPerSecond = 0;
+			}
+			
 			// Logger.recordOutput("Drive/headingPID Error", this.headingPID.getPositionError());
 		}
 
