@@ -19,8 +19,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.intake.IntakeConstants;
+import edu.wpi.first.wpilibj.Notifier;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.SparkUtil;
 
@@ -29,6 +28,8 @@ import com.revrobotics.spark.SparkMax;
 import static edu.wpi.first.units.Units.*;
 
 public class ShooterIOSpark implements ShooterIO, Runnable {
+
+	private final Notifier notifier = new Notifier(this::run);
 
 	private final LoggedTunableNumber FLYWHEEL_ANGULAR_ACCELERATION = new LoggedTunableNumber("Shooter/Flywheel Angular Acceleration", 100);
 
@@ -51,8 +52,7 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 		this.configureTopMotor();
 		this.configureBottomMotor();
 
-		Thread t = new Thread(this);
-		t.start();
+		notifier.startPeriodic(0.02);
 	}
 
 	private void configureTopMotor() {
