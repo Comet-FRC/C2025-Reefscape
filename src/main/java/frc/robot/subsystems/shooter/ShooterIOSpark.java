@@ -28,7 +28,8 @@ import com.revrobotics.spark.SparkMax;
 
 import static edu.wpi.first.units.Units.*;
 
-public class ShooterIOSpark implements ShooterIO {
+public class ShooterIOSpark implements ShooterIO, Runnable {
+
 	private final LoggedTunableNumber FLYWHEEL_ANGULAR_ACCELERATION = new LoggedTunableNumber("Shooter/Flywheel Angular Acceleration", 100);
 
 
@@ -49,6 +50,9 @@ public class ShooterIOSpark implements ShooterIO {
 	public ShooterIOSpark() {
 		this.configureTopMotor();
 		this.configureBottomMotor();
+
+		Thread t = new Thread(this);
+		t.start();
 	}
 
 	private void configureTopMotor() {
@@ -121,14 +125,6 @@ public class ShooterIOSpark implements ShooterIO {
 
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
-		if (topVoltageMode) {
-			this.topMotor.setVoltage(topDesiredVoltage.in(Volts));
-		}
-
-		if (bottomVoltageMode) {
-			this.bottomMotor.setVoltage(bottomDesiredVoltage.in(Volts));
-		}
-
 		inputs.topWheelPosition = Radians.of(topMotor.getEncoder().getPosition());
 		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
 		inputs.topWheelAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
@@ -234,5 +230,16 @@ public class ShooterIOSpark implements ShooterIO {
 	public void setBottomVoltage(Voltage volts) {
 		this.bottomVoltageMode = true;
 		this.bottomDesiredVoltage.mut_replace(volts);
+	}
+
+	@Override
+	public void run() {
+		if (topVoltageMode) {
+			this.topMotor.setVoltage(topDesiredVoltage.in(Volts));
+		}
+
+		if (bottomVoltageMode) {
+			this.bottomMotor.setVoltage(bottomDesiredVoltage.in(Volts));
+		}
 	}
 }
