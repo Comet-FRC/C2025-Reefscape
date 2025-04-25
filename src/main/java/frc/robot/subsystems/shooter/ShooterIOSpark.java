@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems.shooter;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -13,8 +15,10 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
@@ -28,16 +32,26 @@ import com.revrobotics.spark.SparkMax;
 import static edu.wpi.first.units.Units.*;
 
 public class ShooterIOSpark implements ShooterIO, Runnable {
-
+	private final LoggedTunableNumber TOP_WHEEL_kP = new LoggedTunableNumber("Shooter/Top Wheel kP", ShooterConstants.TOP_WHEEL_kP);
+	private final LoggedTunableNumber TOP_WHEEL_kI = new LoggedTunableNumber("Shooter/Top Wheel kI", ShooterConstants.TOP_WHEEL_kI);
+	private final LoggedTunableNumber TOP_WHEEL_kD = new LoggedTunableNumber("Shooter/Top Wheel kD", ShooterConstants.TOP_WHEEL_kD);
+	private final LoggedTunableNumber BOT_WHEEL_kP = new LoggedTunableNumber("Shooter/Bot Wheel kP", ShooterConstants.BOT_WHEEL_kP);
+	private final LoggedTunableNumber BOT_WHEEL_kI = new LoggedTunableNumber("Shooter/Bot Wheel kI", ShooterConstants.BOT_WHEEL_kI);
+	private final LoggedTunableNumber BOT_WHEEL_kD = new LoggedTunableNumber("Shooter/Bot Wheel kD", ShooterConstants.BOT_WHEEL_kD);
+	
 	private final Notifier notifier = new Notifier(this::run);
 
 	private final LoggedTunableNumber FLYWHEEL_ANGULAR_ACCELERATION = new LoggedTunableNumber("Shooter/Flywheel Angular Acceleration", 100);
 
 
 	private final SparkMax topMotor = new SparkMax(ShooterConstants.TOP_MOTOR_ID, MotorType.kBrushless);
-	private final SparkMax bottomMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
+	private final SparkMax botMotor = new SparkMax(ShooterConstants.BOTTOM_MOTOR_ID, MotorType.kBrushless);
+	private final RelativeEncoder topEncoder = topMotor.getEncoder();
+	private final RelativeEncoder botEncoder = botMotor.getEncoder();
+	private final SparkClosedLoopController topPID = topMotor.getClosedLoopController();
+	private final SparkClosedLoopController botPID = botMotor.getClosedLoopController();
 
-		private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
+	private final SimpleMotorFeedforward topWheelFF = new SimpleMotorFeedforward(
 		ShooterConstants.TOP_WHEEL_kS,
 		ShooterConstants.TOP_WHEEL_kV,
 		ShooterConstants.TOP_WHEEL_kA
@@ -48,9 +62,43 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 		ShooterConstants.BOT_WHEEL_kA
 	);
 
+
+
+	private final TrapezoidProfile topProfile = new TrapezoidProfile(
+		/*
+		 * Since we're using velocity control, maxVelocity is really
+		 * angular acceleration, and maxAcceleration is really
+		 * jerk.
+		 */
+		new TrapezoidProfile.Constraints(250, 2400)
+	);
+
+	private final TrapezoidProfile bottomProfile = new TrapezoidProfile(
+		/*
+		 * Since we're using velocity control, maxVelocity is really
+		 * angular acceleration, and maxAcceleration is really
+		 * jerk.
+		 */
+		new TrapezoidProfile.Constraints(400, 3800)
+	);
+
 	public ShooterIOSpark() {
 		this.configureTopMotor();
 		this.configureBottomMotor();
+		SparkUtil.tryUntilOk(
+			topMotor,
+			5,
+			() -> topEncoder.setPosition(
+				0
+			)
+		);
+		SparkUtil.tryUntilOk(
+			botMotor,
+			5,
+			() -> botEncoder.setPosition(
+				0
+			)
+		);
 
 		notifier.startPeriodic(0.02);
 	}
@@ -64,26 +112,29 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / 60.0);
+			.velocityConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / 60.0)
+			.uvwAverageDepth(2)
+			.uvwMeasurementPeriod(10);
+		config.signals
+			.primaryEncoderPositionAlwaysOn(true)
+			.primaryEncoderPositionPeriodMs(20)
+			.primaryEncoderVelocityAlwaysOn(true)
+			.primaryEncoderVelocityPeriodMs(20)
+			.appliedOutputPeriodMs(20)
+			.busVoltagePeriodMs(20)
+			.outputCurrentPeriodMs(20);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.TOP_WHEEL_kP)
-				.i(ShooterConstants.TOP_WHEEL_kI)
-				.d(ShooterConstants.TOP_WHEEL_kD)
-				.velocityFF(1.0/473.0 * (2 * Math.PI / 60))
-			.maxMotion
-				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
+				.p(TOP_WHEEL_kP.get())
+				.i(TOP_WHEEL_kI.get())
+				.d(TOP_WHEEL_kD.get());
 
-		topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-	
 		SparkUtil.tryUntilOk(
-			topMotor,
-			5,
-			() -> topMotor.getEncoder().setPosition(
-				0
-			)
+			topMotor, 5,
+			() -> topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)
 		);
 	}
+
 	private void configureBottomMotor() {
 		SparkMaxConfig config = new SparkMaxConfig();
 	 
@@ -93,24 +144,26 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 			.smartCurrentLimit(30);
 		config.encoder
 			.positionConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR)
-			.velocityConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR / 60.0);
+			.velocityConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR / 60.0)
+			.uvwAverageDepth(2)
+			.uvwMeasurementPeriod(10);
+		config.signals
+			.primaryEncoderPositionAlwaysOn(true)
+			.primaryEncoderPositionPeriodMs(20)
+			.primaryEncoderVelocityAlwaysOn(true)
+			.primaryEncoderVelocityPeriodMs(20)
+			.appliedOutputPeriodMs(20)
+			.busVoltagePeriodMs(20)
+			.outputCurrentPeriodMs(20);
 		config.closedLoop
 			.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-				.p(ShooterConstants.BOT_WHEEL_kP)
-				.i(ShooterConstants.BOT_WHEEL_kI)
-				.d(ShooterConstants.BOT_WHEEL_kD)
-				.velocityFF(1.0/473.0 * (2 * Math.PI / 60))
-			.maxMotion
-				.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
+				.p(BOT_WHEEL_kP.get())
+				.i(BOT_WHEEL_kI.get())
+				.d(BOT_WHEEL_kD.get());
 
-		bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-	
 		SparkUtil.tryUntilOk(
-			bottomMotor,
-			5,
-			() -> bottomMotor.getEncoder().setPosition(
-				0
-			)
+			botMotor, 5,
+			() -> botMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)
 		);
 	}
 
@@ -127,92 +180,31 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 	public void updateInputs(ShooterIOInputs inputs) {
 		inputs.topWheelPosition = Radians.of(topMotor.getEncoder().getPosition());
 		inputs.topWheelVelocity = RadiansPerSecond.of(topMotor.getEncoder().getVelocity());
+		inputs.topWheelDesiredVelocity = this.topWheelDesiredVelocity.copy();
 		inputs.topWheelAppliedVoltage = Volts.of(topMotor.getAppliedOutput() * topMotor.getBusVoltage());
 		inputs.topWheelSupplyCurrent = Amps.of(topMotor.getOutputCurrent());
 		inputs.topTemperature = Celsius.of(topMotor.getMotorTemperature());
-		inputs.topWheelDesiredVelocity = this.topWheelDesiredVelocity.copy();
 		
-		inputs.bottomWheelPosition = Radians.of(bottomMotor.getEncoder().getPosition());
-		inputs.bottomWheelVelocity = RadiansPerSecond.of(bottomMotor.getEncoder().getVelocity());
-		inputs.bottomWheelAppliedVoltage = Volts.of(bottomMotor.getAppliedOutput() * bottomMotor.getBusVoltage());
-		inputs.bottomWheelSupplyCurrent = Amps.of(bottomMotor.getOutputCurrent());
-		inputs.bottomWheelTemperature= Celsius.of(bottomMotor.getMotorTemperature());
+		inputs.bottomWheelPosition = Radians.of(botMotor.getEncoder().getPosition());
+		inputs.bottomWheelVelocity = RadiansPerSecond.of(botMotor.getEncoder().getVelocity());
 		inputs.bottomWheelDesiredVelocity = this.bottomWheelDesiredVelocity.copy();
-	}
-
-	@Override
-	public void setBottomVelocitySetpoint(AngularVelocity velocity) {
-		this.bottomVoltageMode = false;
-
-		double bottomVelocityRadiansPerSecond = velocity.in(RadiansPerSecond);
-
-		// SparkMaxConfig config = new SparkMaxConfig();
-
-		// config
-		// 	.inverted(false)
-		// 	.idleMode(IdleMode.kBrake)
-		// 	.smartCurrentLimit(30);
-		// config.encoder
-		// 	.positionConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR)
-		// 	.velocityConversionFactor(ShooterConstants.BOTTOM_WHEEL_CONVERSION_FACTOR / 60.0);
-		// config.closedLoop
-		// 	.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-		// 		.p(SmartDashboard.getNumber("Shooter/botP", 0))
-		// 		.i(SmartDashboard.getNumber("Shooter/botI", 0))
-		// 		.d(SmartDashboard.getNumber("Shooter/botD", 0))
-		// 		.velocityFF(1.0/473.0 * (2 * Math.PI / 60))
-		// 	.maxMotion
-		// 		.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
-
-		// bottomMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-		//double bottomFeedForward = bottomWheelFF.calculate(bottomVelocityRadiansPerSecond);
-
-
-		bottomMotor.getClosedLoopController().setReference(
-			bottomVelocityRadiansPerSecond,
-			ControlType.kMAXMotionVelocityControl
-		);
-
-		this.bottomWheelDesiredVelocity.mut_replace(velocity);	
+		inputs.bottomWheelAppliedVoltage = Volts.of(botMotor.getAppliedOutput() * botMotor.getBusVoltage());
+		inputs.bottomWheelSupplyCurrent = Amps.of(botMotor.getOutputCurrent());
+		inputs.bottomWheelTemperature= Celsius.of(botMotor.getMotorTemperature());
 	}
 
 	@Override
 	public void setTopVelocitySetpoint(AngularVelocity velocity) {
 		this.topVoltageMode = false;
-		double topVelocityRadiansPerSecond = velocity.in(RadiansPerSecond);
-		//double topFeedForward = topWheelFF.calculate(topVelocityRadiansPerSecond);
-
-		// SparkMaxConfig config = new SparkMaxConfig();
-	 
-		// config
-		// 	.inverted(true)
-		// 	.idleMode(IdleMode.kBrake)
-		// 	.smartCurrentLimit(30);
-		// config.encoder
-		// 	.positionConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR)
-		// 	.velocityConversionFactor(ShooterConstants.TOP_WHEEL_CONVERSION_FACTOR / 60.0);
-		// config.closedLoop
-		// 	.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-		// 		.p(SmartDashboard.getNumber("Shooter/topP", 0))
-		// 		.i(SmartDashboard.getNumber("Shooter/topI", 0))
-		// 		.d(SmartDashboard.getNumber("Shooter/topD", 0))
-		// 		.velocityFF(1.0/473.0 * (2 * Math.PI / 60))
-		// 	.maxMotion
-		// 		.maxAcceleration(FLYWHEEL_ANGULAR_ACCELERATION.get());
-		// topMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-
-		// System.out.println(FLYWHEEL_ANGULAR_ACCELERATION.get());
-
-		topMotor.getClosedLoopController().setReference(
-			topVelocityRadiansPerSecond,
-			ControlType.kMAXMotionVelocityControl
-		);
-
-		// System.out.println("topD: " + topMotor.configAccessor.closedLoop.getD());
-
-
-
 		this.topWheelDesiredVelocity.mut_replace(velocity);
+		this.configureTopMotor();
+	}
+
+	@Override
+	public void setBottomVelocitySetpoint(AngularVelocity velocity) {
+		this.bottomVoltageMode = false;
+		this.bottomWheelDesiredVelocity.mut_replace(velocity);
+		this.configureBottomMotor();
 	}
 
 	@Override
@@ -236,10 +228,54 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 	public void run() {
 		if (topVoltageMode) {
 			this.topMotor.setVoltage(topDesiredVoltage.in(Volts));
+		} else {
+			TrapezoidProfile.State currentState =
+				new TrapezoidProfile.State(
+					topMotor.getEncoder().getVelocity(),
+					0
+				);
+
+			TrapezoidProfile.State goalState =
+				new TrapezoidProfile.State(
+					topWheelDesiredVelocity.in(RadiansPerSecond),
+					0
+				);
+			
+			TrapezoidProfile.State velocitySetpoint = topProfile.calculate(0.02, currentState, goalState);
+			
+			this.topMotor.getClosedLoopController().setReference(
+				velocitySetpoint.position,
+				ControlType.kVelocity,
+				ClosedLoopSlot.kSlot0,
+				topWheelFF.calculate(velocitySetpoint.position, velocitySetpoint.velocity),
+				ArbFFUnits.kVoltage
+			);
 		}
 
 		if (bottomVoltageMode) {
-			this.bottomMotor.setVoltage(bottomDesiredVoltage.in(Volts));
+			this.botMotor.setVoltage(bottomDesiredVoltage.in(Volts));
+		} else {
+			TrapezoidProfile.State currentState =
+				new TrapezoidProfile.State(
+					botEncoder.getVelocity(),
+					0
+				);
+
+			TrapezoidProfile.State goalState =
+				new TrapezoidProfile.State(
+					bottomWheelDesiredVelocity.in(RadiansPerSecond),
+					0
+				);
+			
+			TrapezoidProfile.State velocitySetpoint = bottomProfile.calculate(0.02, currentState, goalState);
+			
+			this.botPID.setReference(
+				velocitySetpoint.position,
+				ControlType.kVelocity,
+				ClosedLoopSlot.kSlot0,
+				bottomWheelFF.calculate(velocitySetpoint.position, velocitySetpoint.velocity),
+				ArbFFUnits.kVoltage
+			);
 		}
 	}
 }

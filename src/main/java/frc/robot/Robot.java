@@ -94,7 +94,7 @@ public class Robot extends LoggedRobot {
     // Switch thread to high priority to improve loop timing
     Threads.setCurrentThreadPriority(true, 99);
 
-    VirtualSubsystem.periodicAll();
+    // VirtualSubsystem.periodicAll();
     CommandScheduler.getInstance().run();
 
     // Return to normal thread priority
