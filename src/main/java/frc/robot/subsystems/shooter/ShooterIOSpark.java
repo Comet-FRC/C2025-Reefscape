@@ -17,6 +17,8 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -24,6 +26,7 @@ import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
+import frc.robot.Constants;
 import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.SparkUtil;
 
@@ -197,14 +200,18 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 	public void setTopVelocitySetpoint(AngularVelocity velocity) {
 		this.topVoltageMode = false;
 		this.topWheelDesiredVelocity.mut_replace(velocity);
-		this.configureTopMotor();
+
+		if (Constants.tuningMode)
+			this.configureTopMotor();
 	}
 
 	@Override
 	public void setBottomVelocitySetpoint(AngularVelocity velocity) {
 		this.bottomVoltageMode = false;
 		this.bottomWheelDesiredVelocity.mut_replace(velocity);
-		this.configureBottomMotor();
+
+		if (Constants.tuningMode)
+			this.configureBottomMotor();
 	}
 
 	@Override
@@ -243,7 +250,7 @@ public class ShooterIOSpark implements ShooterIO, Runnable {
 			
 			TrapezoidProfile.State velocitySetpoint = topProfile.calculate(0.02, currentState, goalState);
 			
-			this.topMotor.getClosedLoopController().setReference(
+			this.topPID.setReference(
 				velocitySetpoint.position,
 				ControlType.kVelocity,
 				ClosedLoopSlot.kSlot0,
