@@ -46,16 +46,12 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.Mode;
-import frc.robot.commands.AutoScoreProcessor;
 import frc.robot.commands.AutonCommandBuilder;
 import frc.robot.commands.ScoreProcessor;
 import frc.robot.commands.coral.AutoDepositCoralD;
 import frc.robot.commands.coral.AutoDepositCoralE;
-import frc.robot.commands.hoodtake.HoodtakeFromL3Auto;
 import frc.robot.commands.hoodtake.HoodtakeFromReef;
-import frc.robot.commands.hoodtake.HoodtakeFromReefAuto;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.SwerveConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -65,7 +61,6 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOMapleSim;
 import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.hoodtake.Hoodtake;
-import frc.robot.subsystems.hoodtake.HoodtakeConstants;
 import frc.robot.subsystems.hoodtake.HoodtakeIO;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSim;
 import frc.robot.subsystems.hoodtake.HoodtakeIOSpark;
@@ -73,17 +68,20 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.indexer.IndexerIOSpark;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSpark;
+import frc.robot.subsystems.intakeLeft.LeftIntake;
+import frc.robot.subsystems.intakeLeft.*;
+import frc.robot.subsystems.intakeLeft.LeftIntakeIO;
+import frc.robot.subsystems.intakeLeft.LeftIntakeIOSim;
+import frc.robot.subsystems.intakeLeft.LeftIntakeIOSpark;
+import frc.robot.subsystems.intakeRight.RightIntake;
+import frc.robot.subsystems.intakeRight.RightIntakeConstants;
+import frc.robot.subsystems.intakeRight.RightIntakeIO;
+import frc.robot.subsystems.intakeRight.RightIntakeIOSim;
+import frc.robot.subsystems.intakeRight.RightIntakeIOSpark;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIOPhotonVision;
-import frc.robot.util.AllianceColor;
-import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.controller.*;
 
 /**
@@ -99,7 +97,8 @@ public class RobotContainer {
 	// Subsystems
 	private final Drive drive;
 	private final ApriltagVision vision;
-	private final Intake intake;
+	private final LeftIntake leftIntake;
+	private final RightIntake rightIntake;
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
 
@@ -128,7 +127,8 @@ public class RobotContainer {
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
-				this.intake = new Intake(new IntakeIOSpark());
+				this.leftIntake = new LeftIntake(new LeftIntakeIOSpark());
+				this.rightIntake = new RightIntake(new RightIntakeIOSpark());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
 				this.indexer = new Indexer(new IndexerIOSpark());
 				break;
@@ -173,7 +173,8 @@ public class RobotContainer {
 								robotToCamera0,
 								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
-				this.intake = new Intake(new IntakeIOSim());
+				this.leftIntake = new LeftIntake(new LeftIntakeIOSim());
+				this.rightIntake = new RightIntake(new RightIntakeIOSim());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
 				this.indexer = new Indexer(new IndexerIOSim());
 				break;
@@ -187,7 +188,8 @@ public class RobotContainer {
 					new ModuleIO() {}
 				);
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {}, new ApriltagVisionIO() {});
-				this.intake = new Intake(new IntakeIO() {});
+				this.leftIntake = new LeftIntake(new LeftIntakeIO() {});
+				this.rightIntake = new RightIntake(new RightIntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
 				this.indexer = new Indexer(new IndexerIO() {});
 				break;
@@ -206,8 +208,8 @@ public class RobotContainer {
 
 	private void setupAutoCommands() {
 		// NamedCommands.registerCommand("Hoodtake From Reef", new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae));
-		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, intake));
-		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
+		NamedCommands.registerCommand("Deposit Coral E", new AutoDepositCoralE(drive, leftIntake));
+		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, leftIntake));
 		
 	
 		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> autonCommandBuilder.getCommand(drive, hoodtake), Set.of(drive, hoodtake)));
@@ -252,14 +254,25 @@ public class RobotContainer {
 			)
 		);
 
-		this.intake.setDefaultCommand(
+		this.leftIntake.setDefaultCommand(
 			Commands.sequence(
 				Commands.either(
-					this.intake.setPivotVoltage(() -> Volts.of(0.2)),
-					this.intake.setPivotPosition(() -> IntakeConstants.STARTING_ANGLE),
-					() -> intake.getPivotPosition().gt(Degrees.of(85))
+					this.leftIntake.setPivotVoltage(() -> Volts.of(0.2)),
+					this.leftIntake.setPivotPosition(() -> LeftIntakeConstants.STARTING_ANGLE),
+					() -> leftIntake.getPivotPosition().gt(Degrees.of(85))
 				),
-				this.intake.setWheelVoltage(() -> Volts.of(0))
+				this.leftIntake.setWheelVoltage(() -> Volts.of(0))
+			)
+		);
+
+		this.rightIntake.setDefaultCommand(
+			Commands.sequence(
+				Commands.either(
+					this.rightIntake.setPivotVoltage(() -> Volts.of(0.2)),
+					this.rightIntake.setPivotPosition(() -> RightIntakeConstants.STARTING_ANGLE),
+					() -> rightIntake.getPivotPosition().gt(Degrees.of(85))
+				),
+				this.rightIntake.setWheelVoltage(() -> Volts.of(0))
 			)
 		);
 	}
@@ -295,25 +308,38 @@ public class RobotContainer {
 		// 	)
 		// );
 
-
-		this.controller.rightTrigger().whileTrue(
-			this.indexer.shoot()
-		);
-
-		// intake
+		// left intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
+				this.leftIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
 				// this.intake.setWheelVelocity(() -> RPM.of(500)),
-				this.intake.setPivotPosition(() -> Degrees.of(30)),
+				this.leftIntake.setPivotPosition(() -> Degrees.of(30)),
 				Commands.waitUntil(() -> false)
 			)
 		);
 
-		// processor
+		// left processor
+		this.controller.leftTrigger().whileTrue(
+			Commands.sequence(
+				new ScoreProcessor(leftIntake, indexer),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// right intake
 		this.controller.rightBumper().whileTrue(
 			Commands.sequence(
-				new ScoreProcessor(intake, indexer),
+				this.rightIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
+				// this.intake.setWheelVelocity(() -> RPM.of(500)),
+				this.rightIntake.setPivotPosition(() -> Degrees.of(30)),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// right processor
+		this.controller.rightTrigger().whileTrue(
+			Commands.sequence(
+				new ScoreProcessor(rightIntake, indexer),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -338,15 +364,15 @@ public class RobotContainer {
 			)
 		);
 
-		// score l1 coral
-		this.controller.left().whileTrue(
-			Commands.sequence(
-				this.intake.setPivotPosition(() -> Degrees.of(60)),
-				Commands.waitUntil(() -> intake.atPosition()),
-				this.intake.setWheelVoltage(() -> Volts.of(-7)),
-				Commands.waitUntil(() -> false)
-			)
-		);
+		// // score l1 coral
+		// this.controller.left().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setPivotPosition(() -> Degrees.of(60)),
+		// 		Commands.waitUntil(() -> intake.atPosition()),
+		// 		this.intake.setWheelVoltage(() -> Volts.of(-7)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
 		this.controller.right().whileTrue(
 			Commands.defer(
@@ -356,14 +382,14 @@ public class RobotContainer {
 			.andThen(Commands.waitUntil(() -> false))
 		);
 
-		this.controller.up().whileTrue(
-			Commands.sequence(
-				this.intake.setPivotPosition(() -> Degrees.of(50)),
-				Commands.waitSeconds(2),
-				this.intake.sysIdRoutineWheel()
-			)
+		// this.controller.up().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setPivotPosition(() -> Degrees.of(50)),
+		// 		Commands.waitSeconds(2),
+		// 		this.intake.sysIdRoutineWheel()
+		// 	)
 			
-		);
+		// );
 
 		// this.controller.down().whileTrue(
 		// 	this.intake.sysIdRoutinePivot()
@@ -396,22 +422,22 @@ public class RobotContainer {
 			)
 		);
 
-		// intake
-		this.backupController.leftBumper().whileTrue(
-			Commands.sequence(
-				this.intake.setWheelVoltage(() -> Volts.of(3.5)),
-				this.intake.setPivotPosition(() -> Degrees.of(35)),
-				Commands.waitUntil(() -> false)
-			)
-		);
+		// // intake
+		// this.backupController.leftBumper().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setWheelVoltage(() -> Volts.of(3.5)),
+		// 		this.intake.setPivotPosition(() -> Degrees.of(35)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
-		// processor
-		this.backupController.rightBumper().whileTrue(
-			Commands.sequence(
-				new ScoreProcessor(intake, indexer),
-				Commands.waitUntil(() -> false)
-			)
-		);
+		// // processor
+		// this.backupController.rightBumper().whileTrue(
+		// 	Commands.sequence(
+		// 		new ScoreProcessor(intake, indexer),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
 		// L3 Hoodtake
 
@@ -433,14 +459,14 @@ public class RobotContainer {
 			)
 		);
 
-		this.backupController.left().whileTrue(
-			Commands.sequence(
-				this.intake.setPivotPosition(() -> Degrees.of(60)),
-				Commands.waitUntil(() -> intake.atPosition()),
-				this.intake.setWheelVoltage(() -> Volts.of(-7)),
-				Commands.waitUntil(() -> false)
-			)
-		);
+		// this.backupController.left().whileTrue(
+		// 	Commands.sequence(
+		// 		this.intake.setPivotPosition(() -> Degrees.of(60)),
+		// 		Commands.waitUntil(() -> intake.atPosition()),
+		// 		this.intake.setWheelVoltage(() -> Volts.of(-7)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
 		this.backupController.up().whileTrue(
 			Commands.sequence(
@@ -488,7 +514,8 @@ public class RobotContainer {
     }
 
 	public void enabledInit() {
-		this.intake.enabledInit();
+		this.leftIntake.enabledInit();
+		this.rightIntake.enabledInit();
 		this.hoodtake.enabledInit();
 	}
 }

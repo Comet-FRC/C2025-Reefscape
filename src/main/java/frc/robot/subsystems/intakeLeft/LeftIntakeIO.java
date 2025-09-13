@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeLeft;
 
 import org.littletonrobotics.junction.AutoLog;
 
@@ -10,9 +10,9 @@ import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
 
-public interface IntakeIO {
+public interface LeftIntakeIO {
 	@AutoLog
-	public static class IntakeIOInputs {
+	public static class LeftIntakeIOInputs {
 		public Angle wheelPosition = Radians.of(0);
 		public AngularVelocity wheelVelocity = RadiansPerSecond.of(0);
 		public AngularVelocity wheelDesiredVelocity = RadiansPerSecond.of(0);
@@ -30,7 +30,7 @@ public interface IntakeIO {
 		public Temperature pivotTemperature = Celsius.of(0);
 	}
 
-	public default void updateInputs(IntakeIOInputs inputs) {
+	public default void updateInputs(LeftIntakeIOInputs inputs) {
 	}
 
 	public default void stopWheel() {

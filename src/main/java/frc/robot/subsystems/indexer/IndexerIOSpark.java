@@ -21,7 +21,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.hoodtake.HoodtakeConstants;
-import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.intakeLeft.LeftIntake;
 import frc.robot.util.SparkUtil;
 
 import static edu.wpi.first.units.Units.*;

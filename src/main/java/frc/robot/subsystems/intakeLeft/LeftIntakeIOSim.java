@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeLeft;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -26,7 +26,7 @@ import frc.robot.subsystems.hoodtake.HoodtakeConstants;
 import static edu.wpi.first.units.Units.*;
 
 
-public class IntakeIOSim implements IntakeIO {
+public class LeftIntakeIOSim implements LeftIntakeIO {
 	private final DCMotorSim wheelMotor = configureWheelMotor();
 	private final SingleJointedArmSim pivotMotor = configurePivotMotor();
 
@@ -36,8 +36,8 @@ public class IntakeIOSim implements IntakeIO {
 		DCMotor wheelGearbox = DCMotor.getNEO(1);
 		LinearSystem<N2, N1, N2> wheelPlant = LinearSystemId.createDCMotorSystem(
 			wheelGearbox,
-			IntakeConstants.WHEEL_MOI,
-			IntakeConstants.WHEEL_CONVERSION_FACTOR
+			LeftIntakeConstants.WHEEL_MOI,
+			LeftIntakeConstants.WHEEL_CONVERSION_FACTOR
 		);
 		return new DCMotorSim(wheelPlant, wheelGearbox);
 	}
@@ -45,44 +45,44 @@ public class IntakeIOSim implements IntakeIO {
 	private static SingleJointedArmSim configurePivotMotor() {
 		return new SingleJointedArmSim(
 			DCMotor.getNEO(1),
-			IntakeConstants.PIVOT_CONVERSION_FACTOR,
-			SingleJointedArmSim.estimateMOI(IntakeConstants.LENGTH.in(Meters), IntakeConstants.MASS.in(Kilograms)),
-			IntakeConstants.LENGTH.in(Meters),
+			LeftIntakeConstants.PIVOT_CONVERSION_FACTOR,
+			SingleJointedArmSim.estimateMOI(LeftIntakeConstants.LENGTH.in(Meters), LeftIntakeConstants.MASS.in(Kilograms)),
+			LeftIntakeConstants.LENGTH.in(Meters),
 			-0.5,
-			IntakeConstants.STARTING_ANGLE.in(Radians)+0.5,
+			LeftIntakeConstants.STARTING_ANGLE.in(Radians)+0.5,
 			true,
-			IntakeConstants.STARTING_ANGLE.in(Radians),
-			IntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
+			LeftIntakeConstants.STARTING_ANGLE.in(Radians),
+			LeftIntakeConstants.PIVOT_ENCODER_DISTANCE_PER_PULSE,
 			0
 		);
 	}
 
 	private final PIDController wheelPID =
 		new PIDController(
-			IntakeConstants.WHEEL_SIM_kP,
-			IntakeConstants.WHEEL_SIM_kI,
-			IntakeConstants.WHEEL_SIM_kD
+			LeftIntakeConstants.WHEEL_SIM_kP,
+			LeftIntakeConstants.WHEEL_SIM_kI,
+			LeftIntakeConstants.WHEEL_SIM_kD
 		);
 
 	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
-		IntakeConstants.WHEEL_SIM_kS,
-		IntakeConstants.WHEEL_SIM_kV,
-		IntakeConstants.WHEEL_SIM_kA
+		LeftIntakeConstants.WHEEL_SIM_kS,
+		LeftIntakeConstants.WHEEL_SIM_kV,
+		LeftIntakeConstants.WHEEL_SIM_kA
 	);
 
 	private final PIDController pivotPID = 
 		new PIDController(
-			IntakeConstants.PIVOT_SIM_kP,
-			IntakeConstants.PIVOT_SIM_kI,
-			IntakeConstants.PIVOT_SIM_kD
+			LeftIntakeConstants.PIVOT_SIM_kP,
+			LeftIntakeConstants.PIVOT_SIM_kI,
+			LeftIntakeConstants.PIVOT_SIM_kD
 		);
 
 	private final ArmFeedforward pivotFF =
 		new ArmFeedforward(
-			IntakeConstants.PIVOT_SIM_kS,
-			IntakeConstants.PIVOT_SIM_kG,
-			IntakeConstants.PIVOT_SIM_kV,
-			IntakeConstants.PIVOT_SIM_kA
+			LeftIntakeConstants.PIVOT_SIM_kS,
+			LeftIntakeConstants.PIVOT_SIM_kG,
+			LeftIntakeConstants.PIVOT_SIM_kV,
+			LeftIntakeConstants.PIVOT_SIM_kA
 		);
 
 	/** true = controlled by voltage, false = controled by PID + FF */
@@ -91,12 +91,12 @@ public class IntakeIOSim implements IntakeIO {
 	/** true = controlled by voltage, false = controled by PID + FF */
 	private boolean wheelVoltageMode = false;
 	
-	public IntakeIOSim(){
+	public LeftIntakeIOSim(){
 		this.setPivotPositionSetpoint(HoodtakeConstants.STARTING_ANGLE);
 	}
 
 	@Override
-	public void updateInputs(IntakeIOInputs inputs) {
+	public void updateInputs(LeftIntakeIOInputs inputs) {
 		wheelMotor.update(0.02);
 		pivotMotor.update(0.02);
 

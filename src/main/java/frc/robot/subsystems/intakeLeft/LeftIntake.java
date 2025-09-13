@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeLeft;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.subsystems.intakeLeft.LeftIntakeIOInputsAutoLogged;
 import frc.robot.util.ArmVisualizer3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -21,14 +22,14 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-public class Intake extends SubsystemBase {
-	private final IntakeIO io;
-	private final IntakeIOInputsAutoLogged inputs;
+public class LeftIntake extends SubsystemBase {
+	private final LeftIntakeIO io;
+	private final LeftIntakeIOInputsAutoLogged inputs;
 	private final ArmVisualizer3d armVisualizer;
 
-	public Intake(IntakeIO io) {
+	public LeftIntake(LeftIntakeIO io) {
 		this.io = io;
-		this.inputs = new IntakeIOInputsAutoLogged();
+		this.inputs = new LeftIntakeIOInputsAutoLogged();
 		//this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.378-0.044,0.184), Rotation2d.fromDegrees(0));
 		this.armVisualizer = new ArmVisualizer3d(getName(), new Translation3d(0,0.333375,0.196815), Rotation2d.fromDegrees(0));
 	}

@@ -13,11 +13,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intakeLeft.LeftIntake;
 import frc.robot.util.AllianceColor;
 
 public class AutoScoreProcessor extends WrapperCommand {
-    public AutoScoreProcessor(Drive drive, Intake intake, Indexer indexer) {
+    public AutoScoreProcessor(Drive drive, LeftIntake intake, Indexer indexer) {
         super(
             Commands.sequence(
                 drive.moveToPosePID(() -> {

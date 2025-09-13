@@ -11,11 +11,11 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intakeLeft.LeftIntake;
 
 public class AutoDepositCoralE extends SequentialCommandGroup {
 
-    public AutoDepositCoralE(Drive drive, Intake intake) {
+    public AutoDepositCoralE(Drive drive, LeftIntake intake) {
 
         super(
             drive.moveToPosePID(() -> {

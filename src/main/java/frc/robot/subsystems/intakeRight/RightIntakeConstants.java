@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeRight;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -6,7 +6,7 @@ import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
-public final class IntakeConstants {
+public final class RightIntakeConstants {
 	public static final int INTAKE_MOTOR_ID = 15;
 	public static final int PIVOT_MOTOR_ID = 16;
 

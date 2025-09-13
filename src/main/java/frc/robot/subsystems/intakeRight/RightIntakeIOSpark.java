@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakeRight;
 
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -29,41 +29,41 @@ import static edu.wpi.first.units.Units.*;
 
 import org.littletonrobotics.junction.Logger;
 
-public class IntakeIOSpark implements IntakeIO {
+public class RightIntakeIOSpark implements RightIntakeIO {
 
-	private final SparkMax wheelMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
-	private final SparkMax pivotMotor = new SparkMax(IntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
+	private final SparkMax wheelMotor = new SparkMax(RightIntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
+	private final SparkMax pivotMotor = new SparkMax(RightIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
 
 	private final ArmFeedforward pivotFF = new ArmFeedforward(
-			IntakeConstants.PIVOT_kS,
-			IntakeConstants.PIVOT_kG,
-			IntakeConstants.PIVOT_kV,
-			IntakeConstants.PIVOT_kA);
+			RightIntakeConstants.PIVOT_kS,
+			RightIntakeConstants.PIVOT_kG,
+			RightIntakeConstants.PIVOT_kV,
+			RightIntakeConstants.PIVOT_kA);
 
 	private final SimpleMotorFeedforward wheelFF = new SimpleMotorFeedforward(
-			IntakeConstants.WHEEL_kS,
-			IntakeConstants.WHEEL_kV,
-			IntakeConstants.WHEEL_kA);
+			RightIntakeConstants.WHEEL_kS,
+			RightIntakeConstants.WHEEL_kV,
+			RightIntakeConstants.WHEEL_kA);
 
 	private final ProfiledPIDController pivotPID = new ProfiledPIDController(
-		IntakeConstants.PIVOT_kP,
-		IntakeConstants.PIVOT_kI,
-		IntakeConstants.PIVOT_kD,
+		RightIntakeConstants.PIVOT_kP,
+		RightIntakeConstants.PIVOT_kI,
+		RightIntakeConstants.PIVOT_kD,
 		new TrapezoidProfile.Constraints(2.5,5)
 	);
 
 	private final ProfiledPIDController wheelPID = new ProfiledPIDController(
-		IntakeConstants.WHEEL_kP,
-		IntakeConstants.WHEEL_kI,
-		IntakeConstants.WHEEL_kD,
+		RightIntakeConstants.WHEEL_kP,
+		RightIntakeConstants.WHEEL_kI,
+		RightIntakeConstants.WHEEL_kD,
 		new TrapezoidProfile.Constraints(2*Math.PI, Math.PI)
 	);
 
-	public IntakeIOSpark() {
+	public RightIntakeIOSpark() {
 		this.configureWheelMotor();
 		this.configurePivotMotor();
-		this.pivotPID.reset(IntakeConstants.STARTING_ANGLE.in(Radians));
-		this.pivotPID.setGoal(IntakeConstants.STARTING_ANGLE.in(Radians));
+		this.pivotPID.reset(RightIntakeConstants.STARTING_ANGLE.in(Radians));
+		this.pivotPID.setGoal(RightIntakeConstants.STARTING_ANGLE.in(Radians));
 
 		this.wheelPID.reset(0);
 	}
@@ -76,8 +76,8 @@ public class IntakeIOSpark implements IntakeIO {
 				.idleMode(IdleMode.kCoast)
 				.smartCurrentLimit(30);
 		config.encoder
-				.positionConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR)
-				.velocityConversionFactor(IntakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
+				.positionConversionFactor(RightIntakeConstants.WHEEL_CONVERSION_FACTOR)
+				.velocityConversionFactor(RightIntakeConstants.WHEEL_CONVERSION_FACTOR / 60.0);
 		// config.closedLoop
 		// 		.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 		// 		.p(IntakeConstants.WHEEL_kP)
@@ -96,8 +96,8 @@ public class IntakeIOSpark implements IntakeIO {
 			.idleMode(IdleMode.kBrake)
 			.smartCurrentLimit(40); // TODO: Check if this is enough current
 		config.encoder
-			.positionConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR)
-			.velocityConversionFactor(IntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
+			.positionConversionFactor(RightIntakeConstants.PIVOT_CONVERSION_FACTOR)
+			.velocityConversionFactor(RightIntakeConstants.PIVOT_CONVERSION_FACTOR / 60.0);
 		// config.closedLoop
 		// 		.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
 		// 		.p(IntakeConstants.PIVOT_kP)
@@ -119,7 +119,7 @@ public class IntakeIOSpark implements IntakeIO {
 			pivotMotor,
 			5,
 			() -> pivotMotor.getEncoder().setPosition(
-				IntakeConstants.STARTING_ANGLE.in(Radians)
+				RightIntakeConstants.STARTING_ANGLE.in(Radians)
 			)
 		);
 	}
@@ -132,7 +132,7 @@ public class IntakeIOSpark implements IntakeIO {
 	private boolean pivotVoltageMode = false;
 
 	@Override
-	public void updateInputs(IntakeIOInputs inputs) {
+	public void updateInputs(RightIntakeIOInputs inputs) {
 		if (pivotVoltageMode) {
 			this.pivotMotor.setVoltage(pivotDesiredVoltage.copy());
 			this.pivotPID.reset(
