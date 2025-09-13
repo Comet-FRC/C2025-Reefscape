@@ -48,13 +48,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.Mode;
-import frc.robot.commands.AlignToNet;
 import frc.robot.commands.AutoScoreProcessor;
 import frc.robot.commands.AutonCommandBuilder;
-import frc.robot.commands.RevShooterAndAlignToNet;
 import frc.robot.commands.ScoreProcessor;
-import frc.robot.commands.ShootAtTargetFromDistance;
-import frc.robot.commands.ShootOnMove;
 import frc.robot.commands.coral.AutoDepositCoralD;
 import frc.robot.commands.coral.AutoDepositCoralE;
 import frc.robot.commands.hoodtake.HoodtakeFromL3Auto;
@@ -82,12 +78,6 @@ import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSpark;
-import frc.robot.subsystems.shooter.NetTargetSelector;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSpark;
 import frc.robot.subsystems.vision.VisionConstants.Camera;
 import frc.robot.subsystems.vision.apriltag.ApriltagVision;
 import frc.robot.subsystems.vision.apriltag.ApriltagVisionIO;
@@ -109,7 +99,6 @@ public class RobotContainer {
 	// Subsystems
 	private final Drive drive;
 	private final ApriltagVision vision;
-	private final Shooter shooter;
 	private final Intake intake;
 	private final Hoodtake hoodtake;
 	private final Indexer indexer;
@@ -139,7 +128,6 @@ public class RobotContainer {
 						new ModuleIOSpark(3));
 				this.vision = new ApriltagVision(drive::addVisionMeasurement,
 						new ApriltagVisionIOPhotonVision(Camera.FrontApriltag), new ApriltagVisionIOPhotonVision(Camera.BackApriltag));
-				this.shooter = new Shooter(new ShooterIOSpark());
 				this.intake = new Intake(new IntakeIOSpark());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSpark());
 				this.indexer = new Indexer(new IndexerIOSpark());
@@ -185,7 +173,6 @@ public class RobotContainer {
 								robotToCamera0,
 								swerveDriveSimulation::getSimulatedDriveTrainPose));*/
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {});
-				this.shooter = new Shooter(new ShooterIOSim());
 				this.intake = new Intake(new IntakeIOSim());
 				this.hoodtake = new Hoodtake(new HoodtakeIOSim());
 				this.indexer = new Indexer(new IndexerIOSim());
@@ -200,7 +187,6 @@ public class RobotContainer {
 					new ModuleIO() {}
 				);
 				this.vision = new ApriltagVision(drive::addVisionMeasurement, new ApriltagVisionIO() {}, new ApriltagVisionIO() {});
-				this.shooter = new Shooter(new ShooterIO() {});
 				this.intake = new Intake(new IntakeIO() {});
 				this.hoodtake = new Hoodtake(new HoodtakeIO() {});
 				this.indexer = new Indexer(new IndexerIO() {});
@@ -214,15 +200,8 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Shooter/topSpeedRPM", 1150);
-		SmartDashboard.putNumber("Shooter/botSpeedRPM", 1250);
 		SmartDashboard.putNumber("Intake/IntakingVolts", 4.5);
-		SmartDashboard.putNumber("Shooter/topP", ShooterConstants.TOP_WHEEL_kP);
-		SmartDashboard.putNumber("Shooter/botP", ShooterConstants.BOT_WHEEL_kP);
-		SmartDashboard.putNumber("Shooter/topI", ShooterConstants.TOP_WHEEL_kI);
-		SmartDashboard.putNumber("Shooter/botI", ShooterConstants.BOT_WHEEL_kI);
-		SmartDashboard.putNumber("Shooter/topD", ShooterConstants.TOP_WHEEL_kD);
-		SmartDashboard.putNumber("Shooter/botD", ShooterConstants.BOT_WHEEL_kD);
+
 	}
 
 	private void setupAutoCommands() {
@@ -231,7 +210,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Deposit Coral D", new AutoDepositCoralD(drive, intake));
 		
 	
-		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> autonCommandBuilder.getCommand(drive, hoodtake, shooter), Set.of(drive, hoodtake, shooter)));
+		NamedCommands.registerCommand("AutonBuilder", Commands.defer(() -> autonCommandBuilder.getCommand(drive, hoodtake), Set.of(drive, hoodtake)));
 	}
 
 	private void setupDefaultCommands() {
@@ -248,10 +227,6 @@ public class RobotContainer {
 			)
 		);
 
-		this.shooter.setDefaultCommand(
-			this.shooter.setBottomVoltage(() -> Volts.of(0))
-			.andThen(this.shooter.setTopVoltage(() -> Volts.of(0)))
-		);
 
 		this.hoodtake.setDefaultCommand(
 			this.hoodtake.defaultCommand()
@@ -302,29 +277,24 @@ public class RobotContainer {
 		 * () -> new Rotation2d()));
 		 */
 
-		// Switch to cross pattern when options button is pressed
-		// controller.rightMenu().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
 		// Reset gyro to 0° when A button is pressed
 		controller.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
 			.ignoringDisable(true));
 
-		this.controller.leftTrigger().toggleOnTrue(
-			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
-				this.shooter.setFlywheelVelocities(
-					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
-					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
-				),
-				// this.shooter.setTopVoltage(() -> Volts.of(6)),
-				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
-				Commands.waitUntil(() -> false)
-			)
-		);
-
-		// this.controller.x().whileTrue(
-		// 	new ShootAtTargetFromDistance(controller, drive, shooter, hoodtake)
+		// this.controller.leftTrigger().toggleOnTrue(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
+		// 		this.shooter.setFlywheelVelocities(
+		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
+		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
+		// 		),
+		// 		// this.shooter.setTopVoltage(() -> Volts.of(6)),
+		// 		// this.shooter.setBottomVoltage(() -> Volts.of(3)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
 		// );
+
 
 		this.controller.rightTrigger().whileTrue(
 			this.indexer.shoot()
@@ -378,11 +348,6 @@ public class RobotContainer {
 			)
 		);
 
-		this.controller.x().whileTrue(
-			new AlignToNet(controller, drive)
-			.andThen(Commands.waitUntil(() -> false))
-		);
-
 		this.controller.right().whileTrue(
 			Commands.defer(
 				() -> new HoodtakeFromReef(drive, hoodtake, drive::getTargetAlgae),
@@ -408,17 +373,17 @@ public class RobotContainer {
 		backupController.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
 			.ignoringDisable(true));
 
-		this.backupController.leftTrigger().whileTrue(
-			Commands.sequence(
-				this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
-				this.shooter.setFlywheelVelocities(
-					() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
-					() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
-				),
-				// this.shooter.setBottomVoltage(() -> Volts.of(3)),
-				Commands.waitUntil(() -> false)
-			)
-		);
+		// this.backupController.leftTrigger().whileTrue(
+		// 	Commands.sequence(
+		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
+		// 		this.shooter.setFlywheelVelocities(
+		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
+		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
+		// 		),
+		// 		// this.shooter.setBottomVoltage(() -> Volts.of(3)),
+		// 		Commands.waitUntil(() -> false)
+		// 	)
+		// );
 
 		// this.backupcontroller.x().whileTrue(
 		// 	new ShootAtTargetFromDistance(backupcontroller, drive, shooter, hoodtake)

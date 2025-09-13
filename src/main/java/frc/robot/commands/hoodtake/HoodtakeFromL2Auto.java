@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
-import frc.robot.subsystems.shooter.Shooter;
 
 public class HoodtakeFromL2Auto extends SequentialCommandGroup {
     

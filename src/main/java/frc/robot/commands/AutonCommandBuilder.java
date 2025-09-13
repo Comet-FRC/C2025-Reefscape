@@ -17,13 +17,12 @@ import frc.robot.commands.hoodtake.HoodtakeFromReefAuto;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.TargetAlgae;
 import frc.robot.subsystems.hoodtake.Hoodtake;
-import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.AllianceColor;
 
 public class AutonCommandBuilder {
     private LoggedNetworkString strategyInput = new LoggedNetworkString("/SmartDashboard/Auton", "DEC");
 
-    public Command getCommand(Drive drive, Hoodtake hoodtake, Shooter shooter) {
+    public Command getCommand(Drive drive, Hoodtake hoodtake) {
         // System.out.println("Building Command");
 
         Command command = Commands.none();
@@ -51,12 +50,7 @@ public class AutonCommandBuilder {
                 command = command.andThen(
                     Commands.parallel(
                         new HoodtakeFromReefAuto(drive, hoodtake, () -> targetAlgae)
-                            .andThen(hoodtake.setWheelVoltage(() -> Volts.of(1))),
-                        Commands.sequence(
-                            shooter.setBottomVoltage(() -> Volts.of(1)),
-                            Commands.waitSeconds(1.0),
-                            shooter.setBottomVoltage(() -> Volts.of(0))
-                        )
+                            .andThen(hoodtake.setWheelVoltage(() -> Volts.of(1)))
                     )
                 );
             }
