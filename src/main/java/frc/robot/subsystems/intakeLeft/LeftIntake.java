@@ -37,7 +37,7 @@ public class LeftIntake extends SubsystemBase {
 	@Override
 	public void periodic() {
 		io.updateInputs(inputs);
-		Logger.processInputs("Intake", inputs);
+		Logger.processInputs("Left Intake", inputs);
 
 		armVisualizer.setArmAngle(inputs.pivotPosition);
 		armVisualizer.publish();

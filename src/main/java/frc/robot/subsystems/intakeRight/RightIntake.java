@@ -36,7 +36,7 @@ public class RightIntake extends SubsystemBase {
 	@Override
 	public void periodic() {
 		io.updateInputs(inputs);
-		Logger.processInputs("Intake", inputs);
+		Logger.processInputs("Right Intake", inputs);
 
 		armVisualizer.setArmAngle(inputs.pivotPosition);
 		armVisualizer.publish();

@@ -7,13 +7,13 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 
 public final class RightIntakeConstants {
-	public static final int INTAKE_MOTOR_ID = 15;
-	public static final int PIVOT_MOTOR_ID = 16;
+	public static final int INTAKE_MOTOR_ID = 13;
+	public static final int PIVOT_MOTOR_ID = 14;
 
 	public static final Angle STARTING_ANGLE = Degrees.of(96.0);
 
 	public static final double WHEEL_CONVERSION_FACTOR = 2 * Math.PI;
-	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/25.0) * (9.0/12.0); // 16:1 gear ratio, 18/12 sprocket ratio
+	public static final double PIVOT_CONVERSION_FACTOR = 2 * Math.PI * (1.0/25.0) * (1/1); // 16:1 gear ratio, 18/12 sprocket ratio
 
 	public static final double PIVOT_kP = 10;
 	public static final double PIVOT_kI = 0;

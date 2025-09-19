@@ -203,6 +203,7 @@ public class RobotContainer {
 		DriverStation.silenceJoystickConnectionWarning(true);
 
 		SmartDashboard.putNumber("Intake/IntakingVolts", 4.5);
+		SmartDashboard.putNumber("Intake/IntakeAngle", 4.5);
 
 	}
 
@@ -331,7 +332,7 @@ public class RobotContainer {
 			Commands.sequence(
 				this.rightIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
 				// this.intake.setWheelVelocity(() -> RPM.of(500)),
-				this.rightIntake.setPivotPosition(() -> Degrees.of(30)),
+				this.rightIntake.setPivotPosition(() -> Degrees.of((SmartDashboard.getNumber("Intake/IntakeAngle", 2)))),
 				Commands.waitUntil(() -> false)
 			)
 		);

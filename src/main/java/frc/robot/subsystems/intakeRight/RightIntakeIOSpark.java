@@ -92,8 +92,8 @@ public class RightIntakeIOSpark implements RightIntakeIO {
 		SparkMaxConfig config = new SparkMaxConfig();
 
 		config
-			.inverted(false)
-			.idleMode(IdleMode.kBrake)
+			.inverted(true)
+			.idleMode(IdleMode.kCoast)
 			.smartCurrentLimit(40); // TODO: Check if this is enough current
 		config.encoder
 			.positionConversionFactor(RightIntakeConstants.PIVOT_CONVERSION_FACTOR)
