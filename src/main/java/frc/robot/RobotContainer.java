@@ -202,8 +202,10 @@ public class RobotContainer {
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
-		SmartDashboard.putNumber("Intake/IntakingVolts", 4.5);
-		SmartDashboard.putNumber("Intake/IntakeAngle", 4.5);
+		SmartDashboard.putNumber("Intake/RightIntakingVolts", 5);
+		SmartDashboard.putNumber("Intake/RightIntakeAngle", 30);
+		SmartDashboard.putNumber("Intake/LeftIntakingVolts", 5);
+		SmartDashboard.putNumber("Intake/LeftIntakeAngle", 30);
 
 	}
 
@@ -312,9 +314,19 @@ public class RobotContainer {
 		// left intake
 		this.controller.leftBumper().whileTrue(
 			Commands.sequence(
-				this.leftIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
+				this.leftIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/LeftIntakingVolts", 5))),
 				// this.intake.setWheelVelocity(() -> RPM.of(500)),
-				this.leftIntake.setPivotPosition(() -> Degrees.of(30)),
+				this.leftIntake.setPivotPosition(() -> Degrees.of((SmartDashboard.getNumber("Intake/LeftIntakeAngle", 30)))),
+				Commands.waitUntil(() -> false)
+			)
+		);
+
+		// right intake
+		this.controller.rightBumper().whileTrue(
+			Commands.sequence(
+				this.rightIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/RightIntakingVolts", 5))),
+				// this.intake.setWheelVelocity(() -> RPM.of(500)),
+				this.rightIntake.setPivotPosition(() -> Degrees.of((SmartDashboard.getNumber("Intake/RightIntakeAngle", 30)))),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -323,16 +335,6 @@ public class RobotContainer {
 		this.controller.leftTrigger().whileTrue(
 			Commands.sequence(
 				new ScoreProcessor(leftIntake, indexer),
-				Commands.waitUntil(() -> false)
-			)
-		);
-
-		// right intake
-		this.controller.rightBumper().whileTrue(
-			Commands.sequence(
-				this.rightIntake.setWheelVoltage(() -> Volts.of(SmartDashboard.getNumber("Intake/IntakingVolts", 5))),
-				// this.intake.setWheelVelocity(() -> RPM.of(500)),
-				this.rightIntake.setPivotPosition(() -> Degrees.of((SmartDashboard.getNumber("Intake/IntakeAngle", 2)))),
 				Commands.waitUntil(() -> false)
 			)
 		);
@@ -400,21 +402,6 @@ public class RobotContainer {
 		backupController.a().onTrue(Commands.runOnce(() -> drive.resetHeadingWithAlliance(), drive)
 			.ignoringDisable(true));
 
-		// this.backupController.leftTrigger().whileTrue(
-		// 	Commands.sequence(
-		// 		this.hoodtake.setPivotPosition(() -> Degrees.of(90)),
-		// 		this.shooter.setFlywheelVelocities(
-		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/topSpeedRPM", 2000)),
-		// 			() -> RPM.of(SmartDashboard.getNumber("Shooter/botSpeedRPM", 2000))
-		// 		),
-		// 		// this.shooter.setBottomVoltage(() -> Volts.of(3)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// this.backupcontroller.x().whileTrue(
-		// 	new ShootAtTargetFromDistance(backupcontroller, drive, shooter, hoodtake)
-		// );
 
 		this.backupController.rightTrigger().whileTrue(
 			Commands.sequence(
@@ -422,23 +409,6 @@ public class RobotContainer {
 				// Commands.waitUntil(() -> false)
 			)
 		);
-
-		// // intake
-		// this.backupController.leftBumper().whileTrue(
-		// 	Commands.sequence(
-		// 		this.intake.setWheelVoltage(() -> Volts.of(3.5)),
-		// 		this.intake.setPivotPosition(() -> Degrees.of(35)),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
-
-		// // processor
-		// this.backupController.rightBumper().whileTrue(
-		// 	Commands.sequence(
-		// 		new ScoreProcessor(intake, indexer),
-		// 		Commands.waitUntil(() -> false)
-		// 	)
-		// );
 
 		// L3 Hoodtake
 
